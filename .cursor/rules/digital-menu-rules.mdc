@@ -1,0 +1,156 @@
+# Digital Menu Order - Flutter Web App Cursor Rules
+# This project is a restaurant ordering system accessible via QR code scanning
+
+rules:
+  # --- Project Overview ---
+  - "This is a Flutter web app for restaurant digital menu ordering. Users scan QR codes on tables to access the web app, view menus, add items to cart, and place orders."
+  - "The app must support multi-language functionality, especially Arabic (RTL support required)."
+  - "Target platforms: Web (primary), with responsive design for mobile and tablet."
+
+  # --- Project Architecture ---
+  - "Follow MVC architecture: models/ for data, views/ for UI, controllers/ for business logic."
+  - "Providers are allowed only for state management, injected at top-level via MultiProvider."
+  - "No business logic in views; views must only contain UI and minimal formatting."
+  - "Controllers must call services/repositories for API and database operations."
+  - "Use dependency injection pattern for better testability and maintainability."
+
+  # --- Folder Structure ---
+  - "Organize code in these folders: models/, views/, controllers/, widgets/, providers/, services/, theme/, routes/, utils/, constants/, localization/."
+  - "Keep models in models/, controllers in controllers/, views in views/, widgets in widgets/, providers in providers/, theme in theme/, routes in routes/."
+  - "Place reusable UI components in widgets/ folder."
+  - "Store API services and data repositories in services/ folder."
+  - "Keep localization files in localization/ folder with proper naming (en.json, ar.json)."
+
+  # --- Theming & UI ---
+  - "Use centralized theme.dart file for fonts, colors, and sizes; do not hardcode styles in widgets."
+  - "Font sizes, paddings, spacings must come from theme or constants file."
+  - "Responsive layouts must be built with LayoutBuilder/MediaQuery; avoid fixed pixel values."
+  - "UI must be responsive for both mobile portrait and tablet portrait with same design flow."
+  - "Create separate theme files for light and dark modes if needed."
+  - "Use Material Design 3 principles for modern UI components."
+  - "Implement proper loading states, error states, and empty states for all screens."
+
+  # --- Internationalization (i18n) ---
+  - "All user-facing text must be localized using Flutter's intl package."
+  - "Support Arabic (RTL) and English (LTR) languages as minimum requirement."
+  - "Use proper RTL layout support with Directionality widget where needed."
+  - "Store all text strings in localization files, never hardcode in widgets."
+  - "Use proper date, number, and currency formatting for different locales."
+  - "Test UI layout with both LTR and RTL text directions."
+
+  # --- Code Size & Structure ---
+  - "Any single screen file must not exceed 1000 lines; split UI into smaller widgets if needed."
+  - "Re-usable widgets must go into widgets/ folder; do not duplicate code across screens."
+  - "Each method must not exceed ~50 lines; break into private helper methods if larger."
+  - "Create separate files for complex widgets (e.g., menu_item_card.dart, cart_item_widget.dart)."
+  - "Use mixins for shared functionality across multiple classes."
+
+  # --- Routing & Navigation ---
+  - "Routing must use onGenerateRoute with named routes."
+  - "Do not use direct MaterialPageRoute pushes inline; always go through route generator."
+  - "Routes must be listed in routes.dart and managed centrally."
+  - "Implement proper navigation flow: QR Scan → Menu → Cart → Order Confirmation."
+  - "Use proper route guards for authentication if needed."
+  - "Handle deep linking for QR code URLs properly."
+
+  # --- State Management ---
+  - "Use Provider for app state; avoid setState except for local, short-lived UI-only state."
+  - "Each Provider must have clear responsibilities (AuthProvider, OrderProvider, CartProvider, MenuProvider, LanguageProvider)."
+  - "Dispose of providers, streams, and controllers properly to avoid memory leaks."
+  - "Use ChangeNotifier for simple state, StreamProvider for real-time data."
+  - "Implement proper state persistence for cart and user preferences."
+
+  # --- Data Models ---
+  - "Create proper data models for Menu, MenuItem, Cart, Order, User, etc."
+  - "Use json_annotation for serialization/deserialization."
+  - "Implement proper validation for all data models."
+  - "Use enums for status fields (OrderStatus, PaymentStatus, etc.)."
+  - "Create DTOs for API communication separate from domain models."
+
+  # --- API & Services ---
+  - "Create service classes for API communication (MenuService, OrderService, AuthService)."
+  - "Use proper error handling and retry mechanisms for network calls."
+  - "Implement offline support where possible (cached menu data)."
+  - "Use proper HTTP status code handling and user-friendly error messages."
+  - "Implement proper loading states for all async operations."
+
+  # --- Cart & Order Management ---
+  - "Implement persistent cart that survives page refreshes."
+  - "Use proper cart state management with add/remove/update operations."
+  - "Calculate totals, taxes, and fees properly with proper rounding."
+  - "Implement order validation before submission."
+  - "Store order history and allow reordering functionality."
+
+  # --- QR Code Integration ---
+  - "Handle QR code scanning to extract restaurant/table information."
+  - "Implement proper URL parsing for table-specific menu access."
+  - "Validate QR code data before proceeding to menu."
+  - "Handle invalid or expired QR codes gracefully."
+
+  # --- Documentation & Comments ---
+  - "All public classes, methods, and providers must have DartDoc-style comments (///)."
+  - "Complex logic blocks must have inline comments explaining intent."
+  - "Each file must start with a short docstring explaining its purpose."
+  - "Document API endpoints and their expected request/response formats."
+  - "Include usage examples in widget documentation."
+
+  # --- Performance ---
+  - "Avoid rebuilding entire widget trees; use const constructors where possible."
+  - "Extract widgets to StatelessWidget/ConsumerWidget to limit rebuild areas."
+  - "Use Selector from Provider for selective rebuilds instead of full Consumer when needed."
+  - "Use ListView.builder / GridView.builder for large lists; do not build with .map().toList()."
+  - "Implement proper image caching and optimization for menu item images."
+  - "Use lazy loading for menu categories and items."
+  - "Optimize bundle size for web deployment."
+
+  # --- Error Handling & Logging ---
+  - "Do not print() in production code; use a logger utility."
+  - "Always handle API errors in controllers and propagate safe messages to UI."
+  - "Never ignore Futures; handle errors with try/catch."
+  - "Implement proper error boundaries for widget errors."
+  - "Log user actions for analytics and debugging purposes."
+  - "Show user-friendly error messages in the appropriate language."
+
+  # --- File & Folder Naming ---
+  - "Use snake_case for file names (home_screen.dart, order_controller.dart, menu_item_card.dart)."
+  - "Use PascalCase for class names (HomeScreen, OrderController, MenuItemCard)."
+  - "Use camelCase for variables and methods (getMenuItems, cartItems)."
+  - "Use SCREAMING_SNAKE_CASE for constants (API_BASE_URL, MAX_CART_ITEMS)."
+
+  # --- Testing ---
+  - "Write unit tests for all controllers and business logic."
+  - "Write widget tests for critical UI components."
+  - "Test both LTR and RTL layouts."
+  - "Test responsive design on different screen sizes."
+  - "Mock API calls in tests for reliable testing."
+
+  # --- Security ---
+  - "Validate all user inputs on both client and server side."
+  - "Sanitize data before displaying in UI."
+  - "Use proper authentication and authorization where needed."
+  - "Implement rate limiting for API calls."
+  - "Never expose sensitive data in client-side code."
+
+  # --- Web-Specific Considerations ---
+  - "Optimize for web performance and loading times."
+  - "Use proper web-specific widgets and behaviors."
+  - "Implement proper URL handling for deep linking."
+  - "Test on different browsers (Chrome, Firefox, Safari, Edge)."
+  - "Use proper web fonts and ensure they load correctly."
+  - "Implement proper PWA features if needed (service worker, manifest)."
+
+  # --- Accessibility ---
+  - "Implement proper semantic labels for screen readers."
+  - "Ensure proper color contrast ratios."
+  - "Support keyboard navigation where applicable."
+  - "Use proper focus management for web accessibility."
+
+  # --- Code Quality ---
+  - "Follow Dart/Flutter style guide and use dart format."
+  - "Use meaningful variable and method names."
+  - "Avoid magic numbers; use named constants instead."
+  - "Keep functions small and focused on single responsibility."
+  - "Use proper null safety practices throughout the codebase."
+---
+alwaysApply: true
+---

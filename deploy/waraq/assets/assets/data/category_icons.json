@@ -1,0 +1,164 @@
+{
+  "categories": [
+    {
+      "keywords": ["beef", "steak", "meat", "grill", "lamb", "mutton", "لحم", "لحوم"],
+      "icon": "restaurant",
+      "color": "#8D6E63"
+    },
+    {
+      "keywords": ["chicken", "broast", "grilled chicken", "fried chicken", "wings", "nugget", "nuggets", "دجاج", "فراخ"],
+      "icon": "kebab_dining",
+      "color": "#FFC107"
+    },
+    {
+      "keywords": ["seafood", "fish", "shrimp", "crab", "prawn", "lobster", "mussels", "مأكولات بحرية", "سمك", "جمبري"],
+      "icon": "set_meal",
+      "color": "#2196F3"
+    },
+    {
+      "keywords": ["burger", "cheeseburger", "hamburger", "برجر"],
+      "icon": "lunch_dining",
+      "color": "#795548"
+    },
+    {
+      "keywords": ["sandwich", "sub", "club", "bagel", "ساندويتش"],
+      "icon": "fastfood",
+      "color": "#A1887F"
+    },
+    {
+      "keywords": ["shawarma", "wrap", "roll", "doner", "gyro", "شاورما"],
+      "icon": "flatware",
+      "color": "#8D6E63"
+    },
+    {
+      "keywords": ["pizza", "italian", "pie", "بيتزا"],
+      "icon": "local_pizza",
+      "color": "#FF7043"
+    },
+    {
+      "keywords": ["pasta", "spaghetti", "noodles", "lasagna", "macaroni", "ماكرونة", "نودلز"],
+      "icon": "ramen_dining",
+      "color": "#F44336"
+    },
+    {
+      "keywords": ["rice", "biryani", "fried rice", "curry rice", "risotto", "رز", "كبسة"],
+      "icon": "rice_bowl",
+      "color": "#FFB300"
+    },
+    {
+      "keywords": ["bbq", "barbecue", "grill", "roasted", "شوي"],
+      "icon": "outdoor_grill",
+      "color": "#BF360C"
+    },
+    {
+      "keywords": ["appetizer", "starter", "side", "snack", "finger food", "spring roll", "مقبلات", "فاتح شهية"],
+      "icon": "fastfood",
+      "color": "#FF9800"
+    },
+    {
+      "keywords": ["salad", "greens", "healthy", "coleslaw", "سلطة", "سلطات"],
+      "icon": "eco",
+      "color": "#4CAF50"
+    },
+    {
+      "keywords": ["soup", "broth", "شوربة", "حساء"],
+      "icon": "soup_kitchen",
+      "color": "#FF5722"
+    },
+    {
+      "keywords": ["bread", "bun", "naan", "roti", "toast", "خبز"],
+      "icon": "bakery_dining",
+      "color": "#D7CCC8"
+    },
+    {
+      "keywords": ["dessert", "sweet", "ice cream", "cake", "pudding", "brownie", "donut", "waffle", "cookie", "حلويات", "حلوى"],
+      "icon": "cake",
+      "color": "#E91E63"
+    },
+    {
+      "keywords": ["beverages", "drinks", "coffee", "tea", "juice", "smoothie", "milkshake", "mocktail", "soda", "مشروبات", "عصائر"],
+      "icon": "local_drink",
+      "color": "#4CAF50"
+    },
+    {
+      "keywords": ["breakfast", "egg", "omelette", "pancake", "toast", "cereal", "فطور", "بيض"],
+      "icon": "breakfast_dining",
+      "color": "#FFD54F"
+    },
+    {
+      "keywords": ["combo", "platter", "meal", "mix", "plate", "وجبة", "وجبات"],
+      "icon": "restaurant_menu",
+      "color": "#9E9E9E"
+    },
+    {
+      "keywords": ["shawarma", "doner", "gyro", "roll", "wrap", "شاورما"],
+      "icon": "flatware",
+      "color": "#A1887F"
+    },
+    {
+      "keywords": ["taco", "burrito", "quesadilla", "nacho", "mexican"],
+      "icon": "tapas",
+      "color": "#FF5722"
+    },
+    {
+      "keywords": ["asian", "chinese", "japanese", "thai", "sushi", "ramen", "dim sum"],
+      "icon": "ramen_dining",
+      "color": "#009688"
+    },
+    {
+      "keywords": ["indian", "curry", "masala", "paneer", "tikka", "biryani"],
+      "icon": "local_fire_department",
+      "color": "#D32F2F"
+    },
+    {
+      "keywords": ["kids", "children", "baby meal", "وجبة أطفال"],
+      "icon": "child_care",
+      "color": "#F48FB1"
+    },
+    {
+      "keywords": ["ice cream", "gelato", "sundae", "cone"],
+      "icon": "icecream",
+      "color": "#F06292"
+    },
+    {
+      "keywords": ["tea", "coffee", "latte", "espresso", "cappuccino", "chai"],
+      "icon": "coffee",
+      "color": "#6D4C41"
+    },
+    {
+      "keywords": ["juice", "smoothie", "fresh juice", "mocktail"],
+      "icon": "local_cafe",
+      "color": "#81C784"
+    },
+    {
+      "keywords": ["fries", "chips", "crispy", "potato"],
+      "icon": "emoji_food_beverage",
+      "color": "#FBC02D"
+    },
+    {
+      "keywords": ["kebab", "seekh", "shish", "grill"],
+      "icon": "skewer",
+      "color": "#8D6E63"
+    },
+    {
+      "keywords": ["platter", "mix grill", "family meal", "combo pack"],
+      "icon": "dining",
+      "color": "#9E9E9E"
+    },
+    {
+      "keywords": ["vegan", "vegetarian", "plant based", "organic"],
+      "icon": "spa",
+      "color": "#66BB6A"
+    },
+    {
+      "keywords": ["sushi", "japanese", "maki", "nigiri"],
+      "icon": "dinner_dining",
+      "color": "#009688"
+    },
+    {
+      "keywords": ["pancake", "waffle", "breakfast sweet"],
+      "icon": "breakfast_dining",
+      "color": "#FFE082"
+    }
+  ]
+}

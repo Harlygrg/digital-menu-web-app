@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="DineEase — A smart digital menu and order placing web app for restaurants and cafes.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="DineEase">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>DineEase</title>
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Register Firebase Service Worker before Flutter boots -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        // Get the base path from the base tag
+        var base = document.querySelector('base');
+        var basePath = base ? base.getAttribute('href') : '/';
+        // Ensure basePath ends with /
+        if (!basePath.endsWith('/')) {
+          basePath += '/';
+        }
+        
+        // Construct the service worker path relative to base
+        var serviceWorkerPath = basePath + 'firebase-messaging-sw.js';
+        
+        console.log('🔧 Registering service worker at:', serviceWorkerPath);
+        console.log('🔧 Base path:', basePath);
+        
+        navigator.serviceWorker.register(serviceWorkerPath, {
+          scope: basePath
+        })
+          .then(function(registration) {
+            console.log('✅ Firebase Service Worker registered successfully');
+            console.log('   Scope:', registration.scope);
+            return navigator.serviceWorker.ready;
+          })
+          .then(function(registration) {
+            console.log('✅ Firebase Service Worker is ready');
+          })
+          .catch(function(error) {
+            console.error('❌ Firebase Service Worker registration failed:', error);
+          });
+      });
+    } else {
+      console.warn('⚠️ Service Worker not supported in this browser');
+    }
+  </script>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
