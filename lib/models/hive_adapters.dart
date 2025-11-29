@@ -161,6 +161,7 @@ class ItemModelAdapter extends TypeAdapter<ItemModel> {
       unitPriceList: (reader.read() as List).cast<UnitPriceListModel>(),
       productdetails: (reader.read() as List).cast<ProductDetailsModel>(),
       relatedModifiers: (reader.read() as List).cast<int>(),
+      preparationtime: reader.readString()
     );
   }
 

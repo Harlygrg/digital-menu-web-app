@@ -3,8 +3,9 @@
 // Works for both browser and PWA installations
 
 // Import Firebase scripts (use compat version for service workers)
-importScripts("https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js");
+// Using version 10.7.0 - latest stable compat version
+importScripts("https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js");
 
 // Initialize Firebase in the service worker
 // These values should match your Firebase project configuration

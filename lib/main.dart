@@ -22,9 +22,15 @@ import 'models/cart_item_model.dart';
 import 'firebase_options.dart';
 import 'services/notification_service.dart';
 import 'services/api/api_service.dart';
+import 'config/app_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load external runtime configuration FIRST (before any API calls)
+  // This allows clients to change the API URL by editing build/web/config.json
+  // without rebuilding the Flutter app
+  await AppConfig.load();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -56,39 +62,39 @@ void main() async {
 
 /// Extracts branch_id from URL parameters (web/PWA) and saves it to local storage
 Future<void> _extractAndSaveBranchId() async {
-  debugPrint('🔍 _extractAndSaveBranchId: Starting extraction...');
+// debugPrint('🔍 _extractAndSaveBranchId: Starting extraction...');
   String? branchId;
   try {
     // Check URL parameters
     if (Uri.base.hasQuery) {
       branchId = Uri.base.queryParameters['branch_id'];
-      debugPrint('🔍 URL has query parameters: ${Uri.base.query}');
+// debugPrint('🔍 URL has query parameters: ${Uri.base.query}');
     } else {
-      debugPrint('ℹ️ URL has no query parameters');
+// debugPrint('ℹ️ URL has no query parameters');
     }
     
     if (branchId != null && branchId.isNotEmpty) {
-      debugPrint('✅ Branch ID found in URL: $branchId');
+// debugPrint('✅ Branch ID found in URL: $branchId');
       final success = await LocalStorage.saveBranchId(branchId);
       
       if (success) {
-        debugPrint('✅ Branch ID successfully saved to local storage: $branchId');
+// debugPrint('✅ Branch ID successfully saved to local storage: $branchId');
       } else {
-        debugPrint('❌ Failed to save branch ID to local storage');
+// debugPrint('❌ Failed to save branch ID to local storage');
       }
     } else {
-      debugPrint('ℹ️ No branch_id parameter found in URL');
+// debugPrint('ℹ️ No branch_id parameter found in URL');
       
       // Check if we have a previously saved branch ID
       final savedBranchId = await LocalStorage.getBranchId();
       if (savedBranchId != null && savedBranchId.isNotEmpty) {
-        debugPrint('✅ Using previously saved branch ID: $savedBranchId');
+// debugPrint('✅ Using previously saved branch ID: $savedBranchId');
       } else {
-        debugPrint('ℹ️ No previously saved branch ID found');
+// debugPrint('ℹ️ No previously saved branch ID found');
       }
     }
   } catch (e) {
-    debugPrint('❌ Error extracting branch ID from URL: $e');
+// debugPrint('❌ Error extracting branch ID from URL: $e');
   }
 }
 
@@ -115,7 +121,7 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
     // Listen to navigation stream from notification service
     _notificationService.navigationStream.listen((route) {
       if (_navigatorKey.currentState != null) {
-        debugPrint('🚀 Navigating to: $route');
+// debugPrint('🚀 Navigating to: $route');
         _navigatorKey.currentState!.pushNamed(route);
       }
     });

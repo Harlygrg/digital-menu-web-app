@@ -59,7 +59,7 @@ class Responsive {
   /// Get responsive horizontal padding for desktop layout
   static double horizontalPadding(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    print('screenWidth < _desktopBreakpoint:${screenWidth < _desktopBreakpoint}');
+// print('screenWidth < _desktopBreakpoint:${screenWidth < _desktopBreakpoint}');
     if (screenWidth < _desktopBreakpoint) {
 
       return padding(context, 16);

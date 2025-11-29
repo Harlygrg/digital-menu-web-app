@@ -67,7 +67,7 @@ class TableProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error in fetchTableList: $e');
+// print('Error in fetchTableList: $e');
       _errorMessage = 'Error loading table list: ${e.toString()}';
       _isLoading = false;
       notifyListeners();
@@ -218,7 +218,7 @@ class TableProvider extends ChangeNotifier {
       _errorMessage = 'Authentication expired. Please restart the app to re-authenticate.';
       notifyListeners();
     } catch (e) {
-      print('Error during force re-authentication: $e');
+// print('Error during force re-authentication: $e');
     }
   }
 

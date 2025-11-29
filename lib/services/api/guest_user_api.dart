@@ -32,7 +32,7 @@ class GuestUserApi {
     BuildContext? context,
   }) async {
     debugPrint('registerGuestUser called');
-    debugPrint('Device ID: $deviceId');
+    // debugPrint('Device ID: $deviceId');
     try {
       if (deviceId.isEmpty) {
         throw Exception('Device ID cannot be empty');
@@ -129,8 +129,8 @@ class GuestUserApi {
       
       debugPrint('✅ Fresh FCM token fetched from Firebase');
       debugPrint('📤 Sending fresh token to server...');
-      debugPrint('   Device ID: $deviceId');
-      debugPrint('   Token preview: ${freshFcmToken.substring(0, 20)}...');
+      // debugPrint('   Device ID: $deviceId');
+      // debugPrint('   Token preview: ${freshFcmToken.substring(0, 20)}...');
       
       final apiService = ApiService();
       final response = await apiService.addUserFcmToken(

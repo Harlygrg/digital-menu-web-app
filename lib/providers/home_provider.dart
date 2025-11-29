@@ -93,7 +93,7 @@ class HomeProvider extends ChangeNotifier {
     String branchId = '1',
     bool silentRefresh = false,
   }) async {
-    debugPrint('📦 HomeProvider: fetchProductRelatedData for branch $branchId (silent: $silentRefresh)');
+// debugPrint('📦 HomeProvider: fetchProductRelatedData for branch $branchId (silent: $silentRefresh)');
     try {
       // Only show loading state if not a silent refresh
       if (!silentRefresh) {
@@ -143,7 +143,7 @@ class HomeProvider extends ChangeNotifier {
             ?.map((item) => ModifierModel.fromJson(item))
             .toList() ?? [];
         
-        debugPrint('✅ Loaded ${_categories.length} categories, ${_allItems.length} items, ${_modifiers.length} modifiers');
+// debugPrint('✅ Loaded ${_categories.length} categories, ${_allItems.length} items, ${_modifiers.length} modifiers');
         
         _hasEverLoadedData = true; // Mark that data has been loaded
         _isLoading = false;
@@ -156,7 +156,7 @@ class HomeProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('❌ Error in fetchProductRelatedData: $e');
+// debugPrint('❌ Error in fetchProductRelatedData: $e');
       _errorMessage = 'Error loading data: ${e.toString()}';
       _isLoading = false;
       notifyListeners();
@@ -354,7 +354,7 @@ class HomeProvider extends ChangeNotifier {
       _errorMessage = 'Authentication expired. Please restart the app to re-authenticate.';
       notifyListeners();
     } catch (e) {
-      debugPrint('❌ Error during force re-authentication: $e');
+// debugPrint('❌ Error during force re-authentication: $e');
     }
   }
 
@@ -363,14 +363,14 @@ class HomeProvider extends ChangeNotifier {
   /// Optimized to yield frames during parsing for smoother UI performance
   Future<void> refreshProductListSilently({String branchId = '1'}) async {
     try {
-      debugPrint('🔄 Refreshing product list silently...');
+// debugPrint('🔄 Refreshing product list silently...');
       
       final apiService = ApiService();
       
       // Check if we have a valid access token before making the request
       final accessToken = await LocalStorage.getAccessToken();
       if (accessToken == null) {
-        debugPrint('⚠️ No access token available for silent refresh');
+// debugPrint('⚠️ No access token available for silent refresh');
         return;
       }
       
@@ -403,15 +403,15 @@ class HomeProvider extends ChangeNotifier {
             ?.map((item) => ModifierModel.fromJson(item))
             .toList() ?? [];
         
-        debugPrint('✅ Product list refreshed silently: ${_allItems.length} items');
+// debugPrint('✅ Product list refreshed silently: ${_allItems.length} items');
         
         // Notify listeners once at the end to batch updates
         notifyListeners();
       } else {
-        debugPrint('⚠️ Failed to refresh product list silently');
+// debugPrint('⚠️ Failed to refresh product list silently');
       }
     } catch (e) {
-      debugPrint('❌ Error during silent product list refresh: $e');
+// debugPrint('❌ Error during silent product list refresh: $e');
       // Don't show error message for silent refresh
     }
   }

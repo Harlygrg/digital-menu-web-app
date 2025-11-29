@@ -230,13 +230,17 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   /// Build orders list
   Widget _buildOrdersList(OrderTrackingController controller) {
+    // Sort orders by date - latest first
+    final sortedOrders = List<UserOrder>.from(controller.userOrders)
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    
     return RefreshIndicator(
       onRefresh: () => controller.refreshOrders(),
       child: ListView.builder(
         padding: EdgeInsets.all(Responsive.padding(context, 16)),
-        itemCount: controller.userOrders.length,
+        itemCount: sortedOrders.length,
         itemBuilder: (context, index) {
-          final order = controller.userOrders[index];
+          final order = sortedOrders[index];
           _checkAndShowStatusChange(order);
           return _buildOrderCard(order);
         },

@@ -31,12 +31,12 @@ class BranchProvider extends ChangeNotifier {
     try {
       _savedBranchId = await LocalStorage.getBranchId();
       if (_savedBranchId != null) {
-        debugPrint('✅ Saved branch ID loaded in provider: $_savedBranchId');
+// debugPrint('✅ Saved branch ID loaded in provider: $_savedBranchId');
       } else {
-        debugPrint('ℹ️ No saved branch ID found in provider initialization');
+// debugPrint('ℹ️ No saved branch ID found in provider initialization');
       }
     } catch (e) {
-      debugPrint('❌ Error loading saved branch ID: $e');
+// debugPrint('❌ Error loading saved branch ID: $e');
     }
   }
 
@@ -68,24 +68,24 @@ class BranchProvider extends ChangeNotifier {
         await Future.delayed(Duration.zero);
         
         _branches = response.branches.where((branch) => branch.isActive).toList();
-        debugPrint('✅ Fetched ${_branches.length} active branches');
+// debugPrint('✅ Fetched ${_branches.length} active branches');
         
         // Reload saved branch ID to ensure we have the latest
         _savedBranchId = await LocalStorage.getBranchId();
         
         // If there's a saved branch ID, try to match it with fetched branches
         if (_savedBranchId != null && _savedBranchId!.isNotEmpty) {
-          debugPrint('🔍 Looking for saved branch ID: $_savedBranchId');
+// debugPrint('🔍 Looking for saved branch ID: $_savedBranchId');
           
           try {
             _selectedBranch = _branches.firstWhere(
               (branch) => branch.id.toString() == _savedBranchId,
             );
-            debugPrint('✅ Matched saved branch: ${_selectedBranch?.cname} (ID: $_savedBranchId)');
+// debugPrint('✅ Matched saved branch: ${_selectedBranch?.cname} (ID: $_savedBranchId)');
           } catch (e) {
             // Branch not found in the list
-            debugPrint('⚠️ Saved branch ID $_savedBranchId not found in active branches');
-            debugPrint('   Available branch IDs: ${_branches.map((b) => b.id).join(", ")}');
+// debugPrint('⚠️ Saved branch ID $_savedBranchId not found in active branches');
+// debugPrint('   Available branch IDs: ${_branches.map((b) => b.id).join(", ")}');
             
             // Clear the invalid saved ID
             await LocalStorage.clearBranchId();
@@ -93,7 +93,7 @@ class BranchProvider extends ChangeNotifier {
             _selectedBranch = null;
           }
         } else {
-          debugPrint('ℹ️ No saved branch ID to match');
+// debugPrint('ℹ️ No saved branch ID to match');
           _selectedBranch = null;
         }
 
@@ -103,7 +103,7 @@ class BranchProvider extends ChangeNotifier {
         // Only notify once at the end to batch all updates into a single rebuild
         notifyListeners();
         
-        debugPrint('📊 Branch Provider State: hasBranchSelected = $hasBranchSelected, selectedBranch = ${_selectedBranch?.cname}');
+// debugPrint('📊 Branch Provider State: hasBranchSelected = $hasBranchSelected, selectedBranch = ${_selectedBranch?.cname}');
       } else {
         _errorMessage = 'Failed to load branch list';
         _isLoading = false;
@@ -111,7 +111,7 @@ class BranchProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('❌ Error fetching branch list: $e');
+// debugPrint('❌ Error fetching branch list: $e');
       _errorMessage = 'Error loading branches: ${e.toString()}';
       _isLoading = false;
       _isInitialized = true;
@@ -134,7 +134,7 @@ class BranchProvider extends ChangeNotifier {
       if (previousBranchId != null && previousBranchId != branch.id.toString()) {
         // Branch is changing - clear cart
         clearCart();
-        debugPrint('🛒 Cart cleared due to branch change');
+// debugPrint('🛒 Cart cleared due to branch change');
       }
 
       // Update selected branch
@@ -143,11 +143,11 @@ class BranchProvider extends ChangeNotifier {
       
       // Save to SharedPreferences
       await LocalStorage.saveBranchId(branch.id.toString());
-      debugPrint('✅ Branch selected and saved: ${branch.cname} (ID: ${branch.id})');
+// debugPrint('✅ Branch selected and saved: ${branch.cname} (ID: ${branch.id})');
       
       notifyListeners();
     } catch (e) {
-      debugPrint('❌ Error selecting branch: $e');
+// debugPrint('❌ Error selecting branch: $e');
       _errorMessage = 'Error selecting branch: ${e.toString()}';
       notifyListeners();
     }
@@ -159,10 +159,10 @@ class BranchProvider extends ChangeNotifier {
       _selectedBranch = null;
       _savedBranchId = null;
       await LocalStorage.clearBranchId();
-      debugPrint('🗑️ Branch selection cleared');
+// debugPrint('🗑️ Branch selection cleared');
       notifyListeners();
     } catch (e) {
-      debugPrint('❌ Error clearing branch selection: $e');
+// debugPrint('❌ Error clearing branch selection: $e');
     }
   }
 
@@ -176,14 +176,14 @@ class BranchProvider extends ChangeNotifier {
       final savedBranchId = _savedBranchId ?? await LocalStorage.getBranchId();
       
       if (savedBranchId != null && savedBranchId.isNotEmpty) {
-        debugPrint('🔍 Getting branch by ID: $savedBranchId');
+// debugPrint('🔍 Getting branch by ID: $savedBranchId');
         return _branches.firstWhere(
           (branch) => branch.id.toString() == savedBranchId,
         );
       }
       return null;
     } catch (e) {
-      debugPrint('⚠️ Branch with saved ID not found: $e');
+// debugPrint('⚠️ Branch with saved ID not found: $e');
       return null;
     }
   }

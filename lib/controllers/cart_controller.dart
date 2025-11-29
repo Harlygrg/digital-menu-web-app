@@ -29,7 +29,7 @@ class CartController extends ChangeNotifier {
       await _loadCartFromHive();
       await _loadOrderNotesFromHive();
     } catch (e) {
-      debugPrint('Error initializing cart from Hive: $e');
+// debugPrint('Error initializing cart from Hive: $e');
     }
   }
 
@@ -123,7 +123,7 @@ class CartController extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      debugPrint('Error adding item to cart: $e');
+// debugPrint('Error adding item to cart: $e');
       rethrow;
     }
   }
@@ -181,7 +181,7 @@ class CartController extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      debugPrint('Error adding item to cart: $e');
+// debugPrint('Error adding item to cart: $e');
       rethrow;
     }
   }
@@ -378,9 +378,9 @@ class CartController extends ChangeNotifier {
         await _cartBox!.put('cart_item_$i', _cartItems[i]);
       }
       
-      debugPrint('Cart saved to Hive: ${_cartItems.length} items');
+// debugPrint('Cart saved to Hive: ${_cartItems.length} items');
     } catch (e) {
-      debugPrint('Error saving cart to Hive: $e');
+// debugPrint('Error saving cart to Hive: $e');
     }
   }
 
@@ -401,12 +401,12 @@ class CartController extends ChangeNotifier {
         }
       }
       
-      debugPrint('Cart loaded from Hive: ${_cartItems.length} items');
+// debugPrint('Cart loaded from Hive: ${_cartItems.length} items');
       
       // Notify listeners to update UI
       notifyListeners();
     } catch (e) {
-      debugPrint('Error loading cart from Hive: $e');
+// debugPrint('Error loading cart from Hive: $e');
       // On error, start with empty cart
       _cartItems.clear();
     }
@@ -417,9 +417,9 @@ class CartController extends ChangeNotifier {
     try {
       _cartBox ??= await Hive.openBox<CartItemModel>('cartBox');
       await _cartBox!.clear();
-      debugPrint('Cart cleared from Hive');
+// debugPrint('Cart cleared from Hive');
     } catch (e) {
-      debugPrint('Error clearing cart from Hive: $e');
+// debugPrint('Error clearing cart from Hive: $e');
     }
   }
 
@@ -428,9 +428,9 @@ class CartController extends ChangeNotifier {
     try {
       _orderNotesBox ??= await Hive.openBox('orderNotesBox');
       await _orderNotesBox!.put('order_notes', _orderNotes);
-      debugPrint('Order notes saved to Hive: $_orderNotes');
+// debugPrint('Order notes saved to Hive: $_orderNotes');
     } catch (e) {
-      debugPrint('Error saving order notes to Hive: $e');
+// debugPrint('Error saving order notes to Hive: $e');
     }
   }
 
@@ -439,10 +439,10 @@ class CartController extends ChangeNotifier {
     try {
       _orderNotesBox ??= await Hive.openBox('orderNotesBox');
       _orderNotes = _orderNotesBox!.get('order_notes', defaultValue: '') as String;
-      debugPrint('Order notes loaded from Hive: $_orderNotes');
+// debugPrint('Order notes loaded from Hive: $_orderNotes');
       notifyListeners();
     } catch (e) {
-      debugPrint('Error loading order notes from Hive: $e');
+// debugPrint('Error loading order notes from Hive: $e');
       _orderNotes = '';
     }
   }
@@ -452,9 +452,9 @@ class CartController extends ChangeNotifier {
     try {
       _orderNotesBox ??= await Hive.openBox('orderNotesBox');
       await _orderNotesBox!.delete('order_notes');
-      debugPrint('Order notes cleared from Hive');
+// debugPrint('Order notes cleared from Hive');
     } catch (e) {
-      debugPrint('Error clearing order notes from Hive: $e');
+// debugPrint('Error clearing order notes from Hive: $e');
     }
   }
 }

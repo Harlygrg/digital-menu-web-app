@@ -50,22 +50,22 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Phase 2: FCM initialization (non-blocking) - Happens in background after UI is visible
   Future<void> _startAppInitialization() async {
     try {
-      debugPrint('🚀 Starting optimized app initialization...');
+// debugPrint('🚀 Starting optimized app initialization...');
       
       // PHASE 1: Core initialization (MUST complete before UI renders)
       // This loads the main content as fast as possible
-      debugPrint('📱 Phase 1: Loading core content...');
+// debugPrint('📱 Phase 1: Loading core content...');
       await _controller.initialize(context: context);
-      debugPrint('✅ Phase 1 complete: Main content loaded');
+// debugPrint('✅ Phase 1 complete: Main content loaded');
       
       // PHASE 2: FCM initialization (happens in background, non-blocking)
       // This doesn't block UI rendering and can happen asynchronously
-      debugPrint('🔔 Phase 2: Initializing Firebase Messaging in background...');
+// debugPrint('🔔 Phase 2: Initializing Firebase Messaging in background...');
       _initializeFirebaseMessagingInBackground();
       
-      debugPrint('✅ App initialization complete');
+// debugPrint('✅ App initialization complete');
     } catch (e) {
-      debugPrint('❌ Error during app initialization: $e');
+// debugPrint('❌ Error during app initialization: $e');
       // Even if there's an error, we should still try to initialize FCM in background
       _initializeFirebaseMessagingInBackground();
     }
@@ -77,16 +77,16 @@ class _HomeScreenState extends State<HomeScreen> {
     // Run in background without blocking
     Future.microtask(() async {
       try {
-        debugPrint('🔔 Starting FCM initialization...');
+// debugPrint('🔔 Starting FCM initialization...');
         
         // Setup background message handler
         FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
         
         // Wait for service worker on web
         if (kIsWeb) {
-          debugPrint('⏳ Waiting for service worker...');
+// debugPrint('⏳ Waiting for service worker...');
           await _waitForServiceWorkerReady();
-          debugPrint('✅ Service worker ready');
+// debugPrint('✅ Service worker ready');
           
           // Small delay to ensure service worker is fully active
           await Future.delayed(const Duration(milliseconds: 500));
@@ -100,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
         // not from any locally stored value. This ensures we always have
         // the current permission state, even if user changed it in browser settings.
         final browserPermission = notificationService.getBrowserNotificationPermission();
-        debugPrint('📱 Browser notification permission (live): $browserPermission');
+// debugPrint('📱 Browser notification permission (live): $browserPermission');
         
         // DEPRECATED: Old approach that relied on locally stored permission state
         // This caused mismatches when users changed browser settings
@@ -110,19 +110,19 @@ class _HomeScreenState extends State<HomeScreen> {
         if (kIsWeb) {
           if (browserPermission == 'granted') {
             // Permission already granted - skip dialog and get token directly
-            debugPrint('✅ Browser permission already granted, getting FCM token...');
+// debugPrint('✅ Browser permission already granted, getting FCM token...');
             await notificationService.initialize(
               vapidKey: DefaultFirebaseOptions.webVapidKey,
               context: context,
             );
           } else if (browserPermission == 'denied') {
             // Permission explicitly denied by user in browser
-            debugPrint('❌ Browser permission explicitly denied by user');
-            debugPrint('ℹ️ User must enable notifications in browser settings to receive updates');
+// debugPrint('❌ Browser permission explicitly denied by user');
+// debugPrint('ℹ️ User must enable notifications in browser settings to receive updates');
             return; // Exit early - can't request permission if denied
           } else {
             // Permission not yet requested (default state)
-            debugPrint('📱 Permission not yet requested, showing dialog...');
+// debugPrint('📱 Permission not yet requested, showing dialog...');
             
             // DEPRECATED: Old approach saved permission to local storage
             // await LocalStorage.setNotificationPermissionAsked(true);
@@ -131,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
             final shouldRequestPermission = await _showNotificationPermissionDialog();
             
             if (!shouldRequestPermission) {
-              debugPrint('ℹ️ User declined notification permission from app dialog');
+// debugPrint('ℹ️ User declined notification permission from app dialog');
               
               // DEPRECATED: Old approach saved declined state to local storage
               // await LocalStorage.setNotificationPermissionGranted(false);
@@ -140,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }
             
             // User accepted app dialog, now request browser permission
-            debugPrint('✅ User accepted app dialog, initializing FCM (will trigger browser prompt)...');
+// debugPrint('✅ User accepted app dialog, initializing FCM (will trigger browser prompt)...');
             await notificationService.initialize(
               vapidKey: DefaultFirebaseOptions.webVapidKey,
               context: context,
@@ -157,19 +157,19 @@ class _HomeScreenState extends State<HomeScreen> {
         // Get FCM token
         // Note: The token is fetched from Firebase but NOT stored locally
         // It will be automatically registered with the server via NotificationService
-        debugPrint('🔍 Getting FCM token...');
+// debugPrint('🔍 Getting FCM token...');
         final String fcmToken = await notificationService.getFcmToken();
         
         if (fcmToken.isNotEmpty) {
-          debugPrint('✅ FCM Token obtained: ${fcmToken.substring(0, 20)}...');
+// debugPrint('✅ FCM Token obtained: ${fcmToken.substring(0, 20)}...');
           
           // DEPRECATED: Old approach saved permission state to local storage
           // This caused mismatches when users changed browser settings later
           // await LocalStorage.setNotificationPermissionGranted(true);
           
-          debugPrint('✅ FCM token automatically registered with server via NotificationService');
+// debugPrint('✅ FCM token automatically registered with server via NotificationService');
         } else {
-          debugPrint('⚠️ FCM token is empty');
+// debugPrint('⚠️ FCM token is empty');
           
           // DEPRECATED: Old approach saved permission state to local storage
           // await LocalStorage.setNotificationPermissionGranted(false);
@@ -178,20 +178,20 @@ class _HomeScreenState extends State<HomeScreen> {
         // Setup token refresh listener
         // Note: Token is NOT saved to local storage - it's automatically sent to server
         notificationService.tokenStream.listen((newToken) async {
-          debugPrint('🔄 Token refreshed: $newToken');
-          debugPrint('ℹ️ Token will be automatically sent to server via NotificationService');
+// debugPrint('🔄 Token refreshed: $newToken');
+// debugPrint('ℹ️ Token will be automatically sent to server via NotificationService');
         });
         
         // Setup message listener
         notificationService.messageStream.listen((message) {
-          debugPrint('📨 Message received:');
-          debugPrint('  Title: ${message.notification?.title}');
-          debugPrint('  Body: ${message.notification?.body}');
+// debugPrint('📨 Message received:');
+// debugPrint('  Title: ${message.notification?.title}');
+// debugPrint('  Body: ${message.notification?.body}');
         });
         
-        debugPrint('✅ FCM initialization complete');
+// debugPrint('✅ FCM initialization complete');
       } catch (e) {
-        debugPrint('⚠️ Error during FCM initialization (non-critical): $e');
+// debugPrint('⚠️ Error during FCM initialization (non-critical): $e');
         // FCM errors are non-critical - app should still work without notifications
       }
     });
@@ -347,11 +347,11 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final serviceWorker = html.window.navigator.serviceWorker;
       if (serviceWorker == null) {
-        debugPrint('⚠️ Service Worker API not available');
+// debugPrint('⚠️ Service Worker API not available');
         return;
       }
       
-      debugPrint('🔍 Checking for service worker registration...');
+// debugPrint('🔍 Checking for service worker registration...');
       
       // Wait for service worker to be ready (up to 10 seconds)
       final completer = Completer<void>();
@@ -368,21 +368,21 @@ class _HomeScreenState extends State<HomeScreen> {
           final isActive = registration.active != null;
           
           if (isActive) {
-            debugPrint('✅ Service worker found and registered');
-            debugPrint('   Scope: ${registration.scope}');
+// debugPrint('✅ Service worker found and registered');
+// debugPrint('   Scope: ${registration.scope}');
           } else {
-            debugPrint('⚠️ Service worker registered but not active yet');
+// debugPrint('⚠️ Service worker registered but not active yet');
             if (attempts >= maxAttempts) {
-              debugPrint('⚠️ Service worker not active after ${maxAttempts * 500}ms, proceeding anyway');
+// debugPrint('⚠️ Service worker not active after ${maxAttempts * 500}ms, proceeding anyway');
             }
           }
           
           if (!completer.isCompleted) completer.complete();
         } catch (e) {
-          debugPrint('⚠️ Error checking service worker (attempt $attempts/$maxAttempts): $e');
+// debugPrint('⚠️ Error checking service worker (attempt $attempts/$maxAttempts): $e');
           if (attempts >= maxAttempts) {
             timer.cancel();
-            debugPrint('⚠️ Proceeding without service worker confirmation');
+// debugPrint('⚠️ Proceeding without service worker confirmation');
             if (!completer.isCompleted) completer.complete();
           }
         }
@@ -390,7 +390,7 @@ class _HomeScreenState extends State<HomeScreen> {
       
       await completer.future;
     } catch (e) {
-      debugPrint('❌ Error waiting for service worker: $e');
+// debugPrint('❌ Error waiting for service worker: $e');
     }
   }
 

@@ -62,14 +62,14 @@ class NotificationService {
   Future<String?> initialize({String? vapidKey, BuildContext? context}) async {
     if (_isInitialized) {
       if (kDebugMode) {
-        print('⚠️ NotificationService already initialized');
+       // print('⚠️ NotificationService already initialized');
       }
       return _currentToken;
     }
 
     try {
       if (kDebugMode) {
-        print('🔔 Initializing Firebase Messaging...');
+       // print('🔔 Initializing Firebase Messaging...');
       }
 
       // Store context for later use
@@ -85,25 +85,25 @@ class NotificationService {
       if (kIsWeb) {
         final browserPermission = getBrowserNotificationPermission();
         if (kDebugMode) {
-          print('🔍 Checking browser permission (live): $browserPermission');
+         // print('🔍 Checking browser permission (live): $browserPermission');
         }
         
         if (browserPermission == 'granted') {
           // Permission already granted, no need to request again
           if (kDebugMode) {
-            print('✅ Permission already granted, skipping request');
+           // print('✅ Permission already granted, skipping request');
           }
           permission = true;
         } else if (browserPermission == 'denied') {
           // Permission explicitly denied by user
           if (kDebugMode) {
-            print('❌ Permission denied by user in browser settings');
+           // print('❌ Permission denied by user in browser settings');
           }
           return null;
         } else {
           // Permission not yet requested (default state), request it now
           if (kDebugMode) {
-            print('📱 Permission not yet requested, requesting now...');
+           // print('📱 Permission not yet requested, requesting now...');
           }
           permission = await requestPermission();
         }
@@ -114,7 +114,7 @@ class NotificationService {
       
       if (!permission) {
         if (kDebugMode) {
-          print('❌ Notification permission denied');
+         // print('❌ Notification permission denied');
         }
         return null;
       }
@@ -131,7 +131,7 @@ class NotificationService {
 
       if (_currentToken != null) {
         if (kDebugMode) {
-          print('✅ FCM Token obtained: $_currentToken');
+         // print('✅ FCM Token obtained: $_currentToken');
         }
         _tokenStreamController.add(_currentToken!);
         
@@ -140,7 +140,7 @@ class NotificationService {
         await _sendTokenToServer();
       } else {
         if (kDebugMode) {
-          print('❌ Failed to obtain FCM token');
+         // print('❌ Failed to obtain FCM token');
         }
       }
 
@@ -164,13 +164,13 @@ class NotificationService {
       _isInitialized = true;
       
       if (kDebugMode) {
-        print('✅ Firebase Messaging initialized successfully');
+       // print('✅ Firebase Messaging initialized successfully');
       }
 
       return _currentToken;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error initializing Firebase Messaging: $e');
+       // print('❌ Error initializing Firebase Messaging: $e');
       }
       return null;
     }
@@ -194,7 +194,7 @@ class NotificationService {
         // Access the browser's Notification.permission property
         // This is the LIVE permission status from the browser
         final permission = html.Notification.permission;
-        debugPrint('🔍 Browser notification permission (live): $permission');
+        // debugPrint('🔍 Browser notification permission (live): $permission');
         return permission ?? 'default';
       } catch (e) {
         debugPrint('⚠️ Error getting browser notification permission: $e');
@@ -231,7 +231,7 @@ class NotificationService {
       );
 
       debugPrint('🔔 Permission status: ${settings.authorizationStatus}');
-      debugPrint('🔔 Permission details: alert=${settings.alert}, badge=${settings.badge}, sound=${settings.sound}');
+      // debugPrint('🔔 Permission details: alert=${settings.alert}, badge=${settings.badge}, sound=${settings.sound}');
 
       final granted = settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional;
@@ -251,7 +251,7 @@ class NotificationService {
     _firebaseMessaging.onTokenRefresh.listen(
       (newToken) async {
         if (kDebugMode) {
-          print('🔄 FCM Token refreshed: $newToken');
+         // print('🔄 FCM Token refreshed: $newToken');
         }
         _currentToken = newToken;
         _tokenStreamController.add(newToken);
@@ -262,7 +262,7 @@ class NotificationService {
       },
       onError: (error) {
         if (kDebugMode) {
-          print('❌ Error on token refresh: $error');
+         // print('❌ Error on token refresh: $error');
         }
       },
     );
@@ -273,10 +273,10 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen(
       (RemoteMessage message) {
         if (kDebugMode) {
-          print('📨 Foreground message received:');
-          print('  Title: ${message.notification?.title}');
-          print('  Body: ${message.notification?.body}');
-          print('  Data: ${message.data}');
+         // print('📨 Foreground message received:');
+         // print('  Title: ${message.notification?.title}');
+         // print('  Body: ${message.notification?.body}');
+         // print('  Data: ${message.data}');
         }
 
         _messageStreamController.add(message);
@@ -286,7 +286,7 @@ class NotificationService {
       },
       onError: (error) {
         if (kDebugMode) {
-          print('❌ Error receiving foreground message: $error');
+         // print('❌ Error receiving foreground message: $error');
         }
       },
     );
@@ -298,10 +298,10 @@ class NotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen(
       (RemoteMessage message) {
         if (kDebugMode) {
-          print('📨 Background notification clicked:');
-          print('  Title: ${message.notification?.title}');
-          print('  Body: ${message.notification?.body}');
-          print('  Data: ${message.data}');
+         // print('📨 Background notification clicked:');
+         // print('  Title: ${message.notification?.title}');
+         // print('  Body: ${message.notification?.body}');
+         // print('  Data: ${message.data}');
         }
         
         // Navigate to order tracking screen
@@ -309,7 +309,7 @@ class NotificationService {
       },
       onError: (error) {
         if (kDebugMode) {
-          print('❌ Error handling background notification click: $error');
+         // print('❌ Error handling background notification click: $error');
         }
       },
     );
@@ -323,10 +323,10 @@ class NotificationService {
       
       if (initialMessage != null) {
         if (kDebugMode) {
-          print('📨 App opened from notification (terminated state):');
-          print('  Title: ${initialMessage.notification?.title}');
-          print('  Body: ${initialMessage.notification?.body}');
-          print('  Data: ${initialMessage.data}');
+         // print('📨 App opened from notification (terminated state):');
+         // print('  Title: ${initialMessage.notification?.title}');
+         // print('  Body: ${initialMessage.notification?.body}');
+         // print('  Data: ${initialMessage.data}');
         }
         
         // Delay navigation slightly to ensure app is fully initialized
@@ -336,7 +336,7 @@ class NotificationService {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error checking initial message: $e');
+       // print('❌ Error checking initial message: $e');
       }
     }
   }
@@ -351,8 +351,8 @@ class NotificationService {
         
         if (data is Map && data['type'] == 'NOTIFICATION_CLICK') {
           if (kDebugMode) {
-            print('📨 Service worker notification click message received');
-            print('  URL: ${data['url']}');
+           // print('📨 Service worker notification click message received');
+           // print('  URL: ${data['url']}');
           }
           
           // Navigate to the specified route
@@ -361,11 +361,11 @@ class NotificationService {
       });
       
       if (kDebugMode) {
-        print('✅ Service worker listener setup complete');
+       // print('✅ Service worker listener setup complete');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error setting up service worker listener: $e');
+       // print('❌ Error setting up service worker listener: $e');
       }
     }
   }
@@ -374,7 +374,7 @@ class NotificationService {
   void _showForegroundNotificationPopup(RemoteMessage message) {
     if (_context == null || !_context!.mounted) {
       if (kDebugMode) {
-        print('⚠️ Cannot show popup: context not available');
+       // print('⚠️ Cannot show popup: context not available');
       }
       return;
     }
@@ -446,7 +446,7 @@ class NotificationService {
   void _navigateToOrderTracking() {
     if (_context == null || !_context!.mounted) {
       if (kDebugMode) {
-        print('⚠️ Cannot navigate: context not available');
+       // print('⚠️ Cannot navigate: context not available');
       }
       // Emit navigation event for external listeners
       _navigationStreamController.add('/order-tracking');
@@ -455,18 +455,18 @@ class NotificationService {
     
     try {
       if (kDebugMode) {
-        print('🚀 Navigating to order tracking screen...');
+       // print('🚀 Navigating to order tracking screen...');
       }
       
       // Push to order tracking screen
       Navigator.of(_context!).pushNamed('/order-tracking');
       
       if (kDebugMode) {
-        print('✅ Navigation completed');
+       // print('✅ Navigation completed');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error navigating: $e');
+       // print('❌ Error navigating: $e');
       }
     }
   }
@@ -476,7 +476,7 @@ class NotificationService {
   Future<String?> refreshToken({String? vapidKey}) async {
     try {
       if (kDebugMode) {
-        print('🔄 Refreshing FCM token...');
+       // print('🔄 Refreshing FCM token...');
       }
 
       // Delete old token
@@ -493,7 +493,7 @@ class NotificationService {
 
       if (_currentToken != null) {
         if (kDebugMode) {
-          print('✅ Token refreshed: $_currentToken');
+         // print('✅ Token refreshed: $_currentToken');
         }
         _tokenStreamController.add(_currentToken!);
         
@@ -505,7 +505,7 @@ class NotificationService {
       return _currentToken;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error refreshing token: $e');
+       // print('❌ Error refreshing token: $e');
       }
       return null;
     }
@@ -515,18 +515,18 @@ class NotificationService {
   Future<void> deleteToken() async {
     try {
       if (kDebugMode) {
-        print('🗑️ Deleting FCM token...');
+       // print('🗑️ Deleting FCM token...');
       }
 
       await _firebaseMessaging.deleteToken();
       _currentToken = null;
 
       if (kDebugMode) {
-        print('✅ FCM token deleted');
+       // print('✅ FCM token deleted');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error deleting token: $e');
+       // print('❌ Error deleting token: $e');
       }
     }
   }
@@ -535,17 +535,17 @@ class NotificationService {
   Future<void> subscribeToTopic(String topic) async {
     try {
       if (kDebugMode) {
-        print('📢 Subscribing to topic: $topic');
+       // print('📢 Subscribing to topic: $topic');
       }
 
       await _firebaseMessaging.subscribeToTopic(topic);
 
       if (kDebugMode) {
-        print('✅ Subscribed to topic: $topic');
+       // print('✅ Subscribed to topic: $topic');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error subscribing to topic: $e');
+       // print('❌ Error subscribing to topic: $e');
       }
     }
   }
@@ -554,17 +554,17 @@ class NotificationService {
   Future<void> unsubscribeFromTopic(String topic) async {
     try {
       if (kDebugMode) {
-        print('📢 Unsubscribing from topic: $topic');
+       // print('📢 Unsubscribing from topic: $topic');
       }
 
       await _firebaseMessaging.unsubscribeFromTopic(topic);
 
       if (kDebugMode) {
-        print('✅ Unsubscribed from topic: $topic');
+       // print('✅ Unsubscribed from topic: $topic');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error unsubscribing from topic: $e');
+       // print('❌ Error unsubscribing from topic: $e');
       }
     }
   }
@@ -605,7 +605,7 @@ class NotificationService {
 
       if (_currentToken != null && _currentToken!.isNotEmpty) {
         debugPrint('✅ getFcmToken: Token obtained successfully');
-        debugPrint('🔑 Token preview: ${_currentToken!.substring(0, 20)}...');
+        // debugPrint('🔑 Token preview: ${_currentToken!.substring(0, 20)}...');
         _tokenStreamController.add(_currentToken!);
         
         // Automatically send token to server
@@ -663,15 +663,15 @@ class NotificationService {
       
       if (deviceId == null || deviceId.isEmpty) {
         if (kDebugMode) {
-          print('⚠️ Cannot send FCM token - device ID not available yet');
-          print('ℹ️ Token will be sent after device registration');
+         // print('⚠️ Cannot send FCM token - device ID not available yet');
+         // print('ℹ️ Token will be sent after device registration');
         }
         return;
       }
       
       if (kDebugMode) {
-        print('📤 Sending FCM token to server...');
-        print('   Device ID: $deviceId');
+       // print('📤 Sending FCM token to server...');
+       // print('   Device ID: $deviceId');
       }
       
       // Fetch fresh token from Firebase before sending to API
@@ -687,7 +687,7 @@ class NotificationService {
       
       if (freshToken == null || freshToken.isEmpty) {
         if (kDebugMode) {
-          print('⚠️ Cannot send FCM token - failed to fetch token from Firebase');
+         // print('⚠️ Cannot send FCM token - failed to fetch token from Firebase');
         }
         return;
       }
@@ -695,13 +695,13 @@ class NotificationService {
       // Prevent duplicate API calls if token hasn't changed
       if (_lastSentToken == freshToken) {
         if (kDebugMode) {
-          print('⏭️ Skipping API call - token already sent to server');
+         // print('⏭️ Skipping API call - token already sent to server');
         }
         return;
       }
       
       if (kDebugMode) {
-        print('   Token (fresh from Firebase): ${freshToken.substring(0, 20)}...');
+       // print('   Token (fresh from Firebase): ${freshToken.substring(0, 20)}...');
       }
       
       // Call the API to register the FCM token
@@ -712,12 +712,12 @@ class NotificationService {
       _lastSentToken = freshToken;
       
       if (kDebugMode) {
-        print('✅ FCM token successfully sent to server');
+       // print('✅ FCM token successfully sent to server');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error sending FCM token to server: $e');
-        print('ℹ️ This is not critical - token will be retried on next refresh');
+       // print('❌ Error sending FCM token to server: $e');
+       // print('ℹ️ This is not critical - token will be retried on next refresh');
       }
     }
   }
@@ -737,10 +737,10 @@ class NotificationService {
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (kDebugMode) {
-    print('📨 Background message received:');
-    print('  Title: ${message.notification?.title}');
-    print('  Body: ${message.notification?.body}');
-    print('  Data: ${message.data}');
+   // print('📨 Background message received:');
+   // print('  Title: ${message.notification?.title}');
+   // print('  Body: ${message.notification?.body}');
+   // print('  Data: ${message.data}');
   }
 }
 

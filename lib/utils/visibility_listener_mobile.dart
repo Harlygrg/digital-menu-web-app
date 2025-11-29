@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 /// This is a no-op on mobile as app lifecycle handles visibility
 void setupVisibilityChangeListener(Function() onVisible) {
   if (kDebugMode) {
-    print('👁️ Visibility listener not needed on mobile (using app lifecycle)');
+// print('👁️ Visibility listener not needed on mobile (using app lifecycle)');
   }
   // No-op for mobile - the app lifecycle already handles this
 }

@@ -146,13 +146,36 @@ class ProductDescriptionPopup extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: Responsive.padding(context, 8)),
-                        // Price
-                        Text(
-                          item.priceRange,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                        // Price and Preparation Time
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              item.priceRange,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            if (item.preparationtime.isNotEmpty)
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.access_time,
+                                    size: Responsive.fontSize(context, 18),
+                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                  ),
+                                  SizedBox(width: Responsive.padding(context, 4)),
+                                  Text(
+                                    item.preparationtime,
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
                         ),
                         SizedBox(height: Responsive.padding(context, 16)),
                         // Description

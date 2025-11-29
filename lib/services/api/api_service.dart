@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../../constants/api_constants.dart';
@@ -22,11 +24,11 @@ class ApiService {
   /// Initialize the Dio client
   void initialize() {
     if (_isInitialized) {
-      print('API service already initialized, skipping...');
+      // print('API service already initialized, skipping...');
       return;
     }
     
-    print('Initializing API service...');
+    // print('Initializing API service...');
     _dio = Dio(BaseOptions(
       baseUrl: ApiConstants.baseUrl,
       connectTimeout: Duration(milliseconds: ApiConstants.connectionTimeout),
@@ -44,7 +46,7 @@ class ApiService {
     _dio!.interceptors.add(RetryInterceptor());
     
     _isInitialized = true;
-    print('API service initialized successfully');
+    // print('API service initialized successfully');
   }
 
   /// Ensure the API service is initialized before use
@@ -54,7 +56,7 @@ class ApiService {
     }
   }
   void setupDioLogging() {
-    debugPrint('setupDioLogging called');
+    // debugPrint('setupDioLogging called');
     if (_dio != null) {
       _dio!.interceptors.add(
         LogInterceptor(
@@ -64,7 +66,7 @@ class ApiService {
           responseHeader: false,   // Headers can be long — optional
           responseBody: true,      // Logs response data
           error: true,             // Logs errors
-          logPrint: (obj) => print(obj), // You can replace this with custom logger
+          logPrint: (obj) => {}, // print(obj), // You can replace this with custom logger
         ),
       );
     }
@@ -78,7 +80,7 @@ class ApiService {
        ApiConstants.getProduct,
         queryParameters: {'branch_id': branchId},
       );
-      debugPrint('getProducts:${response.data}');
+      // debugPrint('getProducts:${jsonEncode(response.data)}');
       if (response.statusCode == 200) {
         return response.data;
       } else {
@@ -86,11 +88,11 @@ class ApiService {
       }
     } on DioException catch (e) {
       setupDioLogging();
-      print('DioException during fetch product: ${e.message}');
+      // print('DioException during fetch product: ${e.message}');
       _handleDioError(e);
       rethrow;
     } catch (e) {
-      print('Error fetching product related data: $e');
+      // print('Error fetching product related data: $e');
       rethrow;
     }
   }
@@ -98,17 +100,17 @@ class ApiService {
   Future<Map<String, dynamic>> registerGuestUserApiCall({
     required String deviceId,
   }) async {
-    print('registerGuestUserApiCall');
-    print('Device ID: $deviceId');
+    // print('registerGuestUserApiCall');
+    // print('Device ID: $deviceId');
     try {
       _ensureInitialized();
       
-      debugPrint('Making POST request to ${ApiConstants.guestUserRegister}');
+      // debugPrint('Making POST request to ${ApiConstants.guestUserRegister}');
       var data = {
         "device":  deviceId,
         "login_type": "from web",
       };
-      debugPrint('registerGuestUserApiCall data: ${data}');
+      // debugPrint('registerGuestUserApiCall data: ${data}');
       final response = await _dio!.post(
         ApiConstants.guestUserRegister,
         data: data,
@@ -120,11 +122,11 @@ class ApiService {
         throw Exception('Failed to register guest user: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      print('DioException during guest user registration: ${e.message}');
+      // print('DioException during guest user registration: ${e.message}');
       _handleDioError(e);
       rethrow;
     } catch (e) {
-      print('Error registering guest user: $e');
+      // print('Error registering guest user: $e');
       rethrow;
     }
   }
@@ -140,12 +142,12 @@ class ApiService {
   /// - [DioException] on network errors
   /// - [Exception] on token refresh failures
   Future<Map<String, dynamic>> refreshTokenApiCall() async {
-    debugPrint('🔄 refreshTokenApiCall - calling refresh token endpoint');
+    // debugPrint('🔄 refreshTokenApiCall - calling refresh token endpoint');
     
     try {
       _ensureInitialized();
       
-      debugPrint('Making POST request to ${ApiConstants.refreshToken}');
+      // debugPrint('Making POST request to ${ApiConstants.refreshToken}');
       
       // The refresh token will be automatically injected by TokenInterceptor
       final response = await _dio!.post(
@@ -158,17 +160,17 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        debugPrint('✅ Refresh token API call successful');
+        // debugPrint('✅ Refresh token API call successful');
         return response.data;
       } else {
         throw Exception('Failed to refresh token: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      debugPrint('❌ DioException during token refresh: ${e.message}');
+      // debugPrint('❌ DioException during token refresh: ${e.message}');
       _handleDioError(e);
       rethrow;
     } catch (e) {
-      debugPrint('❌ Error refreshing token: $e');
+      // debugPrint('❌ Error refreshing token: $e');
       rethrow;
     }
   }
@@ -178,33 +180,34 @@ class ApiService {
     required String deviceId,
     required String fcmToken,
   }) async {
-    print('addUserFcmToken called');
+    // print('addUserFcmToken called');
     try {
       _ensureInitialized();
       var bodyParams = {
         "device": deviceId,
         "token": fcmToken,
         "usertype": "user",
+        "cid":1
       };
       
-      print('Making POST request to ${ApiConstants.addUserFcm}::${bodyParams}');
+      // print('Making POST request to ${ApiConstants.addUserFcm}::${bodyParams}');
       final response = await _dio!.post(
         ApiConstants.addUserFcm,
         data: bodyParams,
       );
 
       if (response.statusCode == 200) {
-        print('FCM token added successfully: ${response.data}');
+        // print('FCM token added successfully: ${response.data}');
         return response.data;
       } else {
         throw Exception('Failed to add FCM token: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      print('DioException during FCM token addition: ${e.message}');
+      // print('DioException during FCM token addition: ${e.message}');
       _handleDioError(e);
       rethrow;
     } catch (e) {
-      print('Error adding FCM token: $e');
+      // print('Error adding FCM token: $e');
       rethrow;
     }
   }
@@ -217,26 +220,26 @@ class ApiService {
     try {
       _ensureInitialized();
       
-      debugPrint('Fetching table list for branch: $branchId');
+      // debugPrint('Fetching table list for branch: $branchId');
       final response = await _dio!.get(
         'getTableList',
         queryParameters: {'branch_id': branchId},
       );
       
-      debugPrint('Table list API response status: ${response.statusCode}');
+      // debugPrint('Table list API response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
-        debugPrint('Table list API response data: ${response.data}');
+        // debugPrint('Table list API response data: ${response.data}');
         return TableListResponse.fromJson(response.data);
       } else {
         throw Exception('Failed to load table list: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      debugPrint('DioException during table list fetch: ${e.message}');
+      // debugPrint('DioException during table list fetch: ${e.message}');
       _handleDioError(e);
       rethrow;
     } catch (e) {
-      debugPrint('Error fetching table list: $e');
+      // debugPrint('Error fetching table list: $e');
       rethrow;
     }
   }
@@ -248,23 +251,23 @@ class ApiService {
     try {
       _ensureInitialized();
       
-      debugPrint('Fetching order types...');
+      // debugPrint('Fetching order types...');
       final response = await _dio!.get(ApiConstants.getOrderTypes);
       
-      debugPrint('Order types API response status: ${response.statusCode}');
+      // debugPrint('Order types API response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
-        debugPrint('Order types API response data: ${response.data}');
+        // debugPrint('Order types API response data: ${response.data}');
         return OrderTypesResponse.fromJson(response.data);
       } else {
         throw Exception('Failed to load order types: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      debugPrint('DioException during order types fetch: ${e.message}');
+      // debugPrint('DioException during order types fetch: ${e.message}');
       _handleDioError(e);
       rethrow;
     } catch (e) {
-      debugPrint('Error fetching order types: $e');
+      // debugPrint('Error fetching order types: $e');
       rethrow;
     }
   }
@@ -276,23 +279,23 @@ class ApiService {
     try {
       _ensureInitialized();
       
-      debugPrint('Fetching branch list...');
+      // debugPrint('Fetching branch list...');
       final response = await _dio!.get(ApiConstants.getBranchList);
       
-      debugPrint('Branch list API response status: ${response.statusCode}');
+      // debugPrint('Branch list API response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
-        debugPrint('Branch list API response data: ${response.data}');
+        // debugPrint('Branch list API response data: ${response.data}');
         return BranchListResponse.fromJson(response.data);
       } else {
         throw Exception('Failed to load branch list: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      debugPrint('DioException during branch list fetch: ${e.message}');
+      // debugPrint('DioException during branch list fetch: ${e.message}');
       _handleDioError(e);
       rethrow;
     } catch (e) {
-      debugPrint('Error fetching branch list: $e');
+      // debugPrint('Error fetching branch list: $e');
       rethrow;
     }
   }
@@ -307,16 +310,16 @@ class ApiService {
     try {
       _ensureInitialized();
       
-      debugPrint('Creating order...');
-      debugPrint('Order request data: ${requestData.toJson()}');
+      // debugPrint('Creating order...');
+      // debugPrint('Order request data: ${requestData.toJson()}');
       
       final response = await _dio!.post(
         ApiConstants.createOrder,
         data: requestData.toJson(),
       );
       
-      debugPrint('Create order API response status: ${response.statusCode}');
-      debugPrint('Create order API response data: ${response.data}');
+      // debugPrint('Create order API response status: ${response.statusCode}');
+      // debugPrint('Create order API response data: ${response.data}');
       
       if (response.statusCode == 200) {
         return CreateOrderResponseModel.fromJson(response.data);
@@ -324,11 +327,11 @@ class ApiService {
         throw Exception('Failed to create order: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      debugPrint('DioException during order creation: ${e.message}');
+      // debugPrint('DioException during order creation: ${e.message}');
       _handleDioError(e);
       rethrow;
     } catch (e) {
-      debugPrint('Error creating order: $e');
+      // debugPrint('Error creating order: $e');
       rethrow;
     }
   }
@@ -343,16 +346,16 @@ class ApiService {
     try {
       _ensureInitialized();
       
-      debugPrint('Adding customer...');
-      debugPrint('Customer request data: ${request.toJson()}');
+      // debugPrint('Adding customer...');
+      // debugPrint('Customer request data: ${request.toJson()}');
       
       final response = await _dio!.post(
         ApiConstants.addCustomer,
         data: request.toJson(),
       );
       
-      debugPrint('Add customer API response status: ${response.statusCode}');
-      debugPrint('Add customer API response data: ${response.data}');
+      // debugPrint('Add customer API response status: ${response.statusCode}');
+      // debugPrint('Add customer API response data: ${response.data}');
       
       if (response.statusCode == 200) {
         return CustomerAddResponse.fromJson(response.data);
@@ -360,11 +363,11 @@ class ApiService {
         throw Exception('Failed to add customer: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      debugPrint('DioException during customer addition: ${e.message}');
+      // debugPrint('DioException during customer addition: ${e.message}');
       _handleDioError(e);
       rethrow;
     } catch (e) {
-      debugPrint('Error adding customer: $e');
+      // debugPrint('Error adding customer: $e');
       rethrow;
     }
   }
@@ -377,7 +380,7 @@ class ApiService {
     try {
       _ensureInitialized();
       
-      debugPrint('Checking product availability for product ID: $productId');
+      // debugPrint('Checking product availability for product ID: $productId');
       
       final response = await _dio!.get(
         ApiConstants.checkProductAvailability,
@@ -386,8 +389,8 @@ class ApiService {
         },
       )     ;
       
-      debugPrint('Check product availability API response status: ${response.statusCode}');
-      debugPrint('Check product availability API response data: ${response.data}');
+      // debugPrint('Check product availability API response status: ${response.statusCode}');
+      // debugPrint('Check product availability API response data: ${response.data}');
       
       if (response.statusCode == 200) {
         // Success response means product is available.
@@ -397,7 +400,7 @@ class ApiService {
         return false;
       }
     } on DioException catch (e) {
-      debugPrint('DioException during product availability check: ${e.message}');
+      // debugPrint('DioException during product availability check: ${e.message}');
       
       // Handle specific error cases
       if (e.response?.statusCode == 400) {
@@ -405,14 +408,14 @@ class ApiService {
       } else if (e.response?.statusCode == 401) {
         throw Exception('Session expired. Please log in again.');
       } else if (e.response?.statusCode == 404) {
-        print('e.response:${e.response}');
-        print('e.message:${e.message}');
+        // print('e.response:${e.response}');
+        // print('e.message:${e.message}');
         throw Exception('⚠️ This item is no longer available. Refreshing menu...');
       } else {
         throw Exception('Unable to check item availability. Please try again.');
       }
     } catch (e) {
-      debugPrint('Error checking product availability: $e');
+      // debugPrint('Error checking product availability: $e');
       throw Exception('Unable to check item availability. Please try again.');
     }
   }
@@ -424,11 +427,11 @@ class ApiService {
     try {
       _ensureInitialized();
       
-      debugPrint('Fetching user orders...');
+      // debugPrint('Fetching user orders...');
       final response = await _dio!.get(ApiConstants.getUserOrders);
       
-      debugPrint('Get user orders API response status: ${response.statusCode}');
-      debugPrint('Get user orders API response data: ${response.data}');
+      // debugPrint('Get user orders API response status: ${response.statusCode}');
+      // debugPrint('Get user orders API response data: ${jsonEncode(response.data)}');
       
       if (response.statusCode == 200) {
         return UserOrdersResponse.fromJson(response.data);
@@ -436,11 +439,11 @@ class ApiService {
         throw Exception('Failed to load user orders: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      debugPrint('DioException during user orders fetch: ${e.message}');
+      // debugPrint('DioException during user orders fetch: ${e.message}');
       _handleDioError(e);
       rethrow;
     } catch (e) {
-      debugPrint('Error fetching user orders: $e');
+      // debugPrint('Error fetching user orders: $e');
       rethrow;
     }
   }
@@ -453,7 +456,6 @@ class ApiService {
   Future<Map<String, dynamic>> cancelOrder({required int orderId}) async {
     try {
       _ensureInitialized();
-      
       debugPrint('Cancelling order: $orderId');
       final response = await _dio!.post(
         ApiConstants.cancelOrder,
@@ -471,8 +473,10 @@ class ApiService {
         throw Exception('Failed to cancel order: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      debugPrint('DioException during order cancellation: ${e.message}');
-      
+      debugPrint('DioException during order cancellation: ${e.message},stataus code:${e.response?.statusCode},');
+      debugPrint('DioException during order cancellation data: ${e.response?.data},');
+
+
       // Handle specific error cases for cancel order
       if (e.response?.statusCode == 400) {
         throw Exception('Order ID is required');
@@ -480,7 +484,10 @@ class ApiService {
         throw Exception('Session expired. Please login again.');
       } else if (e.response?.statusCode == 404) {
         throw Exception('Order not found.');
-      } else {
+      } else if (e.response?.statusCode == 422) {
+        throw Exception('${e.response?.data['message']}');
+      }
+      else {
         _handleDioError(e);
         rethrow;
       }
@@ -492,11 +499,11 @@ class ApiService {
 
   /// Handles Dio errors and throws appropriate exceptions
   static void _handleDioError(DioException error) {
-    print('DioException details: ${error.toString()}');
-    print('Error type: ${error.type}');
-    print('Error message: ${error.message}');
-    print('Response data: ${error.response?.data}');
-    print('Response status code: ${error.response?.statusCode}');
+    // print('DioException details: ${error.toString()}');
+    // print('Error type: ${error.type}');
+    // print('Error message: ${error.message}');
+    // print('Response data: ${error.response?.data}');
+    // print('Response status code: ${error.response?.statusCode}');
 
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
@@ -553,7 +560,7 @@ class RetryInterceptor extends Interceptor {
       final retryCount = err.requestOptions.extra['retryCount'] ?? 0;
 
       if (retryCount < maxRetries) {
-        print('Retrying request (${retryCount + 1}/$maxRetries) after ${retryDelays[retryCount]}');
+        // print('Retrying request (${retryCount + 1}/$maxRetries) after ${retryDelays[retryCount]}');
 
         await Future.delayed(retryDelays[retryCount]);
 
@@ -621,7 +628,7 @@ class TokenInterceptor extends Interceptor {
       options.headers['X-Refresh-Token'] = refreshToken;
     }
 
-    print('Request headers: ${options.headers}');
+    // print('Request headers: ${options.headers}');
 
     return handler.next(options);
   }
@@ -633,7 +640,7 @@ class TokenInterceptor extends Interceptor {
       final responseData = err.response?.data;
       final message = responseData is Map ? responseData['message']?.toString() ?? '' : '';
       
-      debugPrint('🔴 Received 401 error. Message: $message');
+      // debugPrint('🔴 Received 401 error. Message: $message');
 
       // Check if this error is due to an invalid/expired access token
       final isInvalidToken = message.toLowerCase().contains('invalid access token') || 
@@ -651,12 +658,12 @@ class TokenInterceptor extends Interceptor {
                                  !skipRefresh;
 
       if (shouldRefreshToken) {
-        debugPrint('🔄 Invalid access token detected. Attempting to refresh...');
+        // debugPrint('🔄 Invalid access token detected. Attempting to refresh...');
 
         try {
           // If already refreshing, wait for the current refresh to complete
           if (_isRefreshing) {
-            debugPrint('⏳ Token refresh already in progress. Queuing request...');
+            // debugPrint('⏳ Token refresh already in progress. Queuing request...');
             
             // Wait for refresh to complete
             await _waitForTokenRefresh();
@@ -670,14 +677,14 @@ class TokenInterceptor extends Interceptor {
 
           // Import the GuestUserApi dynamically to avoid circular dependency
           // Call the refresh token method
-          debugPrint('🔄 Calling refreshAccessToken...');
+          // debugPrint('🔄 Calling refreshAccessToken...');
           
           // We need to call the refresh through the guest_user_api
           // This will be imported at the top of the file
           final refreshResponse = await _performTokenRefresh();
           
           if (refreshResponse) {
-            debugPrint('✅ Token refreshed successfully. Retrying original request...');
+            // debugPrint('✅ Token refreshed successfully. Retrying original request...');
             
             // Notify all waiting requests
             _notifyWaitingRequests();
@@ -685,13 +692,13 @@ class TokenInterceptor extends Interceptor {
             // Retry the original request with new token
             return _retryRequest(err.requestOptions, handler);
           } else {
-            debugPrint('❌ Token refresh failed');
+            // debugPrint('❌ Token refresh failed');
             await LocalStorage.clearAuthData();
             _notifyWaitingRequests();
             return handler.next(err);
           }
         } catch (e) {
-          debugPrint('❌ Error during token refresh: $e');
+          // debugPrint('❌ Error during token refresh: $e');
           _isRefreshing = false;
           await LocalStorage.clearAuthData();
           _notifyWaitingRequests();
@@ -702,7 +709,7 @@ class TokenInterceptor extends Interceptor {
       } else {
         // Not an invalid token error or excluded endpoint
         if (isRefreshEndpoint) {
-          debugPrint('🔴 Refresh token endpoint failed. Clearing auth data.');
+          // debugPrint('🔴 Refresh token endpoint failed. Clearing auth data.');
           await LocalStorage.clearAuthData();
         }
         return handler.next(err);
@@ -727,13 +734,13 @@ class TokenInterceptor extends Interceptor {
         if (newAccessToken != null && newRefreshToken != null) {
           // Save new tokens
           await LocalStorage.saveTokens(newAccessToken, newRefreshToken);
-          debugPrint('✅ Tokens saved successfully after refresh');
+          // debugPrint('✅ Tokens saved successfully after refresh');
           return true;
         }
       }
       return false;
     } catch (e) {
-      debugPrint('❌ Token refresh failed: $e');
+      // debugPrint('❌ Token refresh failed: $e');
       return false;
     }
   }
@@ -744,7 +751,7 @@ class TokenInterceptor extends Interceptor {
     ErrorInterceptorHandler handler,
   ) async {
     try {
-      debugPrint('🔄 Retrying original request: ${requestOptions.path}');
+      // debugPrint('🔄 Retrying original request: ${requestOptions.path}');
       
       // Get the new access token
       final newAccessToken = await LocalStorage.getAccessToken();
@@ -769,7 +776,7 @@ class TokenInterceptor extends Interceptor {
         ),
       );
     } catch (e) {
-      debugPrint('❌ Error retrying request: $e');
+      // debugPrint('❌ Error retrying request: $e');
       return handler.reject(
         DioException(
           requestOptions: requestOptions,
@@ -791,7 +798,7 @@ class TokenInterceptor extends Interceptor {
     }
 
     if (attempts >= maxAttempts) {
-      debugPrint('⚠️ Token refresh wait timeout');
+      // debugPrint('⚠️ Token refresh wait timeout');
     }
   }
 

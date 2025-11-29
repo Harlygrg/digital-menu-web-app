@@ -127,7 +127,7 @@ class OrderProvider extends ChangeNotifier {
         return null;
       }
     } catch (e) {
-      debugPrint('Error in createOrder: $e');
+// debugPrint('Error in createOrder: $e');
       _errorMessage = _parseErrorMessage(e.toString());
       _isLoading = false;
       notifyListeners();
@@ -140,10 +140,10 @@ class OrderProvider extends ChangeNotifier {
     try {
       // Save order details using a simple approach
       // For a production app, consider using a more robust storage solution
-      debugPrint('Order saved: ID=${response.orderId}, Online ID=${response.onlineOrderId}, Order No=${response.orderNo}');
-      debugPrint('Order details saved to local storage');
+// debugPrint('Order saved: ID=${response.orderId}, Online ID=${response.onlineOrderId}, Order No=${response.orderNo}');
+// debugPrint('Order details saved to local storage');
     } catch (e) {
-      debugPrint('Error saving order to local storage: $e');
+// debugPrint('Error saving order to local storage: $e');
     }
   }
 

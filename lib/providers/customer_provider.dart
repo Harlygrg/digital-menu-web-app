@@ -34,18 +34,18 @@ class CustomerProvider extends ChangeNotifier {
   /// This should be called when the app starts
   Future<void> initialize() async {
     try {
-      debugPrint('CustomerProvider: Initializing...');
+// debugPrint('CustomerProvider: Initializing...');
       _customerId = await _repository.getCustomerId();
       
       if (_customerId != null) {
-        debugPrint('CustomerProvider: Found saved customer ID: $_customerId');
+// debugPrint('CustomerProvider: Found saved customer ID: $_customerId');
       } else {
-        debugPrint('CustomerProvider: No saved customer ID found');
+// debugPrint('CustomerProvider: No saved customer ID found');
       }
       
       notifyListeners();
     } catch (e) {
-      debugPrint('CustomerProvider: Error during initialization: $e');
+// debugPrint('CustomerProvider: Error during initialization: $e');
     }
   }
 
@@ -65,7 +65,7 @@ class CustomerProvider extends ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
-      debugPrint('CustomerProvider: Adding customer - name: $name, phone: $phone');
+// debugPrint('CustomerProvider: Adding customer - name: $name, phone: $phone');
 
       // Ensure we have a valid access token before making the request
       await _ensureAuthentication();
@@ -79,12 +79,12 @@ class CustomerProvider extends ChangeNotifier {
       _customerId = customerId;
       _isLoading = false;
       
-      debugPrint('CustomerProvider: Customer added successfully - ID: $customerId');
+// debugPrint('CustomerProvider: Customer added successfully - ID: $customerId');
       
       notifyListeners();
       return customerId;
     } catch (e) {
-      debugPrint('CustomerProvider: Error adding customer: $e');
+// debugPrint('CustomerProvider: Error adding customer: $e');
       _errorMessage = _parseErrorMessage(e.toString());
       _isLoading = false;
       notifyListeners();
@@ -101,17 +101,17 @@ class CustomerProvider extends ChangeNotifier {
       final accessToken = await LocalStorage.getAccessToken();
       
       if (accessToken != null && accessToken.isNotEmpty) {
-        debugPrint('CustomerProvider: Access token already exists');
+// debugPrint('CustomerProvider: Access token already exists');
         return;
       }
       
-      debugPrint('CustomerProvider: No access token found, registering as guest user...');
+// debugPrint('CustomerProvider: No access token found, registering as guest user...');
       
       // Generate or retrieve device ID
       final deviceId = await _getDeviceId();
       
       // Fetch FCM token directly from Firebase (never from local storage)
-      debugPrint('CustomerProvider: Fetching fresh FCM token from Firebase...');
+// debugPrint('CustomerProvider: Fetching fresh FCM token from Firebase...');
       final firebaseMessaging = FirebaseMessaging.instance;
       String? fcmToken;
       
@@ -125,13 +125,13 @@ class CustomerProvider extends ChangeNotifier {
         }
         
         if (fcmToken != null && fcmToken.isNotEmpty) {
-          debugPrint('CustomerProvider: Fresh FCM token obtained from Firebase');
+// debugPrint('CustomerProvider: Fresh FCM token obtained from Firebase');
         } else {
-          debugPrint('CustomerProvider: FCM token is empty (notification permissions may not be granted)');
+// debugPrint('CustomerProvider: FCM token is empty (notification permissions may not be granted)');
           fcmToken = ''; // Use empty string if token is not available
         }
       } catch (e) {
-        debugPrint('CustomerProvider: Error fetching FCM token from Firebase: $e');
+// debugPrint('CustomerProvider: Error fetching FCM token from Firebase: $e');
         fcmToken = ''; // Use empty string on error
       }
       
@@ -141,12 +141,12 @@ class CustomerProvider extends ChangeNotifier {
       );
       
       if (response.success && response.data?.accessToken != null) {
-        debugPrint('CustomerProvider: Guest user registration successful');
+// debugPrint('CustomerProvider: Guest user registration successful');
       } else {
         throw Exception('Failed to register guest user');
       }
     } catch (e) {
-      debugPrint('CustomerProvider: Error during authentication: $e');
+// debugPrint('CustomerProvider: Error during authentication: $e');
       throw Exception('Authentication failed. Please restart the app.');
     }
   }
@@ -164,10 +164,10 @@ class CustomerProvider extends ChangeNotifier {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final deviceId = 'web_customer_$timestamp';
       
-      debugPrint('CustomerProvider: Generated device ID: $deviceId');
+// debugPrint('CustomerProvider: Generated device ID: $deviceId');
       return deviceId;
     } catch (e) {
-      debugPrint('CustomerProvider: Error getting device ID: $e');
+// debugPrint('CustomerProvider: Error getting device ID: $e');
       // Fallback to timestamp-based ID
       return 'fallback_${DateTime.now().millisecondsSinceEpoch}';
     }
@@ -178,17 +178,17 @@ class CustomerProvider extends ChangeNotifier {
   /// This will remove the customer ID from both memory and local storage
   Future<void> clearCustomer() async {
     try {
-      debugPrint('CustomerProvider: Clearing customer data');
+// debugPrint('CustomerProvider: Clearing customer data');
       
       await _repository.clearCustomerId();
       _customerId = null;
       _errorMessage = null;
       
-      debugPrint('CustomerProvider: Customer data cleared');
+// debugPrint('CustomerProvider: Customer data cleared');
       
       notifyListeners();
     } catch (e) {
-      debugPrint('CustomerProvider: Error clearing customer: $e');
+// debugPrint('CustomerProvider: Error clearing customer: $e');
     }
   }
 
@@ -197,15 +197,15 @@ class CustomerProvider extends ChangeNotifier {
   /// This can be used to reload customer data if needed
   Future<void> refreshCustomerId() async {
     try {
-      debugPrint('CustomerProvider: Refreshing customer ID');
+// debugPrint('CustomerProvider: Refreshing customer ID');
       
       _customerId = await _repository.getCustomerId();
       
-      debugPrint('CustomerProvider: Customer ID refreshed: $_customerId');
+// debugPrint('CustomerProvider: Customer ID refreshed: $_customerId');
       
       notifyListeners();
     } catch (e) {
-      debugPrint('CustomerProvider: Error refreshing customer ID: $e');
+// debugPrint('CustomerProvider: Error refreshing customer ID: $e');
     }
   }
 
@@ -213,7 +213,7 @@ class CustomerProvider extends ChangeNotifier {
   /// 
   /// Provides user-friendly error messages based on the error
   String _parseErrorMessage(String error) {
-    debugPrint('CustomerProvider: Parsing error: $error');
+// debugPrint('CustomerProvider: Parsing error: $error');
     
     if (error.contains('400')) {
       return 'Invalid information provided. Please check your details.';
@@ -269,7 +269,7 @@ class CustomerProvider extends ChangeNotifier {
       
       return true;
     } catch (e) {
-      debugPrint('CustomerProvider: Error checking registration status: $e');
+// debugPrint('CustomerProvider: Error checking registration status: $e');
       return true; // Assume registration needed on error
     }
   }

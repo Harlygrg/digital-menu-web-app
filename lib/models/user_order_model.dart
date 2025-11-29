@@ -56,6 +56,102 @@ DateTime _safeParseDateTime(dynamic value) {
   return DateTime.now();
 }
 
+/// Order Detail Model
+/// 
+/// This model represents an individual item in the order_details array.
+/// Each item can be a normal item (itmtype=0) or a modifier/addon (itmtype=1).
+class OrderDetail {
+  final int slno;
+  final int itemId;
+  final String itemname;
+  final int itmtype; // 0 = normal item, 1 = modifier/addon
+  final int qty;
+  final double rate;
+  final double total;
+  final String? itmremarks;
+  final int unitID;
+  final String unitname;
+  final int? mainItemSlno; // Reference to parent item's slno if this is a modifier
+  
+  const OrderDetail({
+    required this.slno,
+    required this.itemId,
+    required this.itemname,
+    required this.itmtype,
+    required this.qty,
+    required this.rate,
+    required this.total,
+    this.itmremarks,
+    required this.unitID,
+    required this.unitname,
+    this.mainItemSlno,
+  });
+  
+  /// Create OrderDetail from JSON
+  factory OrderDetail.fromJson(Map<String, dynamic> json) {
+    return OrderDetail(
+      slno: _safeToInt(json['slno']),
+      itemId: _safeToInt(json['item_id']),
+      itemname: _safeToString(json['itemname']),
+      itmtype: _safeToInt(json['itmtype']),
+      qty: _safeToInt(json['qty']),
+      rate: _safeToDouble(json['rate']),
+      total: _safeToDouble(json['total']),
+      itmremarks: json['itmremarks'] != null ? _safeToString(json['itmremarks']) : null,
+      unitID: _safeToInt(json['unitID']),
+      unitname: _safeToString(json['unitname']),
+      mainItemSlno: json['main_item_slno'] != null ? _safeToInt(json['main_item_slno']) : null,
+    );
+  }
+  
+  /// Convert OrderDetail to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'slno': slno,
+      'item_id': itemId,
+      'itemname': itemname,
+      'itmtype': itmtype,
+      'qty': qty,
+      'rate': rate,
+      'total': total,
+      'itmremarks': itmremarks,
+      'unitID': unitID,
+      'unitname': unitname,
+      'main_item_slno': mainItemSlno,
+    };
+  }
+  
+  /// Check if this is a normal item
+  bool get isNormalItem => itmtype == 0;
+  
+  /// Check if this is a modifier/addon
+  bool get isModifier => itmtype == 1;
+  
+  /// Get formatted price
+  String get formattedPrice {
+    return 'QR ${rate.toStringAsFixed(2)}';
+  }
+  
+  /// Get formatted total
+  String get formattedTotal {
+    return 'QR ${total.toStringAsFixed(2)}';
+  }
+  
+  @override
+  String toString() {
+    return 'OrderDetail(slno: $slno, itemId: $itemId, itemname: $itemname, itmtype: $itmtype, qty: $qty)';
+  }
+  
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is OrderDetail && other.slno == slno && other.itemId == itemId;
+  }
+  
+  @override
+  int get hashCode => slno.hashCode ^ itemId.hashCode;
+}
+
 /// User Order Model
 /// 
 /// This model represents a user order from the getUserOrders API response.
@@ -86,6 +182,8 @@ class UserOrder {
   final String orderNotes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final int noOfGuest;
+  final List<OrderDetail> orderDetails;
   
   /// Order status: 0 = Pending, 1 = Accepted, 2 = Cancelled, 3 = Completed
   final int orderStatus;
@@ -110,7 +208,9 @@ class UserOrder {
     required this.createdAt,
     required this.updatedAt,
     required this.orderStatus,
-    required this.tableName
+    required this.tableName,
+    required this.noOfGuest,
+    required this.orderDetails,
   });
 
   /// Create UserOrder from JSON
@@ -136,6 +236,10 @@ class UserOrder {
       updatedAt: _safeParseDateTime(json['updated_at']),
       orderStatus: _safeToInt(json['order_status']),
       tableName: _safeToString(json['tableName']),
+      noOfGuest: _safeToInt(json['no_of_guest']),
+      orderDetails: (json['order_details'] as List<dynamic>?)
+          ?.map((detailJson) => OrderDetail.fromJson(detailJson as Map<String, dynamic>))
+          .toList() ?? [],
     );
   }
 
@@ -161,6 +265,9 @@ class UserOrder {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'order_status': orderStatus,
+      'tableName': tableName,
+      'no_of_guest': noOfGuest,
+      'order_details': orderDetails.map((detail) => detail.toJson()).toList(),
     };
   }
 

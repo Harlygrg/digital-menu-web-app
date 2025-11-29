@@ -8,6 +8,7 @@ import '../../../models/option_models.dart';
 import '../../../controllers/cart_controller.dart';
 import '../../../providers/home_provider.dart';
 import '../../../theme/theme.dart';
+import 'modifier_info_popup.dart';
 
 /// Helper to present the AddToCart popup as a dialog.
 /// Returns the payload passed to [onSubmit] via `Navigator.pop`.
@@ -214,7 +215,7 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
         final padding12 = Responsive.padding(context, 12);
         final radius12 = 12.0;
         final String title =  isEnglish ? widget.item.iname : (widget.item.nameinol.isNotEmpty ? widget.item.nameinol : widget.item.iname);
-
+        final cacheWidth = (100 * MediaQuery.of(context).devicePixelRatio).toInt();
         return Directionality(
           textDirection: langState.textDirection,
           child: ConstrainedBox(
@@ -242,10 +243,37 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     // Static product image wrapped in RepaintBoundary
-                                    _StaticProductImage(
-                                      imageBase64: widget.item.image,
-                                      width: Responsive.isMobile(context) ? 64 : 84,
-                                      height: Responsive.isMobile(context) ? 64 : 84,
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: ImageUtils.buildImageFromBase64(
+                                        widget.item.image,
+                                        imageUrl: widget.item.imageUrl,
+                                        width: Responsive.isMobile(context) ? 64 : 84,
+                                        height: Responsive.isMobile(context) ? 64 : 84,
+                                        fit: BoxFit.cover,
+                                        cacheWidth: cacheWidth,
+                                        cacheHeight: cacheWidth,
+                                        placeholder: Container(
+                                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                                          child: Center(
+                                            child: Icon(
+                                              Icons.fastfood,
+                                              size: Responsive.fontSize(context, 24),
+                                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                                            ),
+                                          ),
+                                        ),
+                                        errorWidget: Container(
+                                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                          width: Responsive.isMobile(context) ? 64 : 84,
+                                          height: Responsive.isMobile(context) ? 64 : 84,
+                                          child: Icon(
+                                            Icons.fastfood,
+                                            size: Responsive.fontSize(context, 30),
+                                            color: Theme.of(context).colorScheme.primary,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                     SizedBox(width: padding12),
                                     Expanded(
@@ -276,13 +304,34 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                                             ),
                                           ),
                                           SizedBox(height: Responsive.padding(context, 10)),
-                                          Text(
-                                            'QR${widget.item.price.toStringAsFixed(2)}',
-                                            style: theme.textTheme.titleMedium?.copyWith(
-                                              fontSize: Responsive.fontSize(context, 16),
-                                              fontWeight: FontWeight.w800,
-                                              color: theme.colorScheme.onSurface,
-                                            ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                'QR${widget.item.price.toStringAsFixed(2)}',
+                                                style: theme.textTheme.titleMedium?.copyWith(
+                                                  fontSize: Responsive.fontSize(context, 16),
+                                                  fontWeight: FontWeight.w800,
+                                                  color: theme.colorScheme.onSurface,
+                                                ),
+                                              ),
+                                              if (widget.item.preparationtime.isNotEmpty) ...[
+                                                SizedBox(width: Responsive.padding(context, 12)),
+                                                Icon(
+                                                  Icons.access_time,
+                                                  size: Responsive.fontSize(context, 16),
+                                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                                ),
+                                                SizedBox(width: Responsive.padding(context, 4)),
+                                                Text(
+                                                  widget.item.preparationtime,
+                                                  style: theme.textTheme.titleMedium?.copyWith(
+                                                    fontSize: Responsive.fontSize(context, 14),
+                                                    fontWeight: FontWeight.w600,
+                                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
                                           ),
                                         ],
                                       ),
@@ -432,57 +481,6 @@ class _LanguageState {
 }
 
 /// Static product image widget that won't rebuild on state changes
-class _StaticProductImage extends StatelessWidget {
-  final String imageBase64;
-  final double width;
-  final double height;
-
-  const _StaticProductImage({
-    required this.imageBase64,
-    required this.width,
-    required this.height,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    // Decode base64 once and cache it
-    final imageData = ImageUtils.base64ToUint8List(imageBase64);
-    
-    return RepaintBoundary(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: SizedBox(
-          width: width,
-          height: height,
-          child: imageData != null
-              ? Image.memory(
-                  imageData,
-                  fit: BoxFit.cover,
-                  gaplessPlayback: true, // Prevent flickering during rebuilds
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                      child: Icon(
-                        Icons.fastfood,
-                        color: theme.colorScheme.primary,
-                      ),
-                    );
-                  },
-                )
-              : Container(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                  child: Icon(
-                    Icons.fastfood,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-}
 
 
 class _SectionLabel extends StatelessWidget {
@@ -656,10 +654,10 @@ class _AddonCard extends StatelessWidget {
                       ),
                     ),
                     GestureDetector(
-                      // onTap: () => ModifierInfoPopup.show(
-                      //   context: context,
-                      //   modifier: addon,
-                      // ),
+                      onTap: () => ModifierInfoPopup.show(
+                        context: context,
+                        modifier: addon,
+                      ),
                       child: Container(
                         padding: EdgeInsets.all(Responsive.padding(context, 4)),
                         decoration: BoxDecoration(

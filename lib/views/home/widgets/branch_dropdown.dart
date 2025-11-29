@@ -39,12 +39,12 @@ class BranchDropdownWidget extends StatelessWidget {
 
         // If branch is already selected (matched with saved ID), show only the name
         if (hasBranchSelected && selectedBranch != null) {
-          debugPrint('🏪 Showing branch name: ${selectedBranch.cname}');
+// debugPrint('🏪 Showing branch name: ${selectedBranch.cname}');
           return _buildBranchNameDisplay(context, selectedBranch.cname);
         }
 
         // Otherwise show the dropdown for selection
-        debugPrint('📋 Showing branch dropdown (no branch selected)');
+// debugPrint('📋 Showing branch dropdown (no branch selected)');
         return _buildBranchDropdown(context, branchProvider, homeProvider);
       },
     );

@@ -7,7 +7,7 @@ String? getQueryParameterImpl(String paramName) {
     final uri = Uri.parse(html.window.location.href);
     return uri.queryParameters[paramName];
   } catch (e) {
-    print('Error extracting query parameter $paramName: $e');
+// print('Error extracting query parameter $paramName: $e');
     return null;
   }
 }
@@ -18,7 +18,7 @@ Map<String, String> getAllQueryParametersImpl() {
     final uri = Uri.parse(html.window.location.href);
     return uri.queryParameters;
   } catch (e) {
-    print('Error extracting query parameters: $e');
+// print('Error extracting query parameters: $e');
     return {};
   }
 }

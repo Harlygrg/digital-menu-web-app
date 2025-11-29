@@ -47,7 +47,7 @@ class OrderTrackingController extends ChangeNotifier {
     _userId = userId;
     
     if (kDebugMode) {
-      print('🎯 Initializing OrderTrackingController for user: $userId');
+// print('🎯 Initializing OrderTrackingController for user: $userId');
     }
 
     // Initial fetch
@@ -79,7 +79,7 @@ class OrderTrackingController extends ChangeNotifier {
 
     try {
       if (kDebugMode) {
-        print('🔄 Refreshing user orders...');
+// print('🔄 Refreshing user orders...');
       }
 
       final response = await _apiService.getUserOrders();
@@ -92,13 +92,13 @@ class OrderTrackingController extends ChangeNotifier {
       _error = null;
 
       if (kDebugMode) {
-        print('✅ User orders refreshed: ${response.orders.length} orders');
-        print('   Active: ${activeOrders.length}');
+// print('✅ User orders refreshed: ${response.orders.length} orders');
+// print('   Active: ${activeOrders.length}');
       }
     } catch (e) {
       _error = 'Failed to fetch orders: $e';
       if (kDebugMode) {
-        print('❌ Error refreshing orders: $e');
+// print('❌ Error refreshing orders: $e');
       }
     } finally {
       _isLoading = false;
@@ -120,7 +120,7 @@ class OrderTrackingController extends ChangeNotifier {
   Future<UserOrder?> fetchOrderById(String orderId) async {
     try {
       if (kDebugMode) {
-        print('🔍 Fetching order: $orderId');
+// print('🔍 Fetching order: $orderId');
       }
 
       // For now, return from local list since we don't have individual order fetch API
@@ -132,7 +132,7 @@ class OrderTrackingController extends ChangeNotifier {
       return order;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error fetching order: $e');
+// print('❌ Error fetching order: $e');
       }
       return null;
     }
@@ -143,7 +143,7 @@ class OrderTrackingController extends ChangeNotifier {
     stopPeriodicPolling(); // Stop existing timer if any
 
     if (kDebugMode) {
-      print('⏰ Starting periodic polling (every ${_pollingInterval.inSeconds}s)');
+// print('⏰ Starting periodic polling (every ${_pollingInterval.inSeconds}s)');
     }
 
     _pollingTimer = Timer.periodic(_pollingInterval, (_) {
@@ -155,7 +155,7 @@ class OrderTrackingController extends ChangeNotifier {
   void stopPeriodicPolling() {
     if (_pollingTimer != null) {
       if (kDebugMode) {
-        print('⏸️ Stopping periodic polling');
+// print('⏸️ Stopping periodic polling');
       }
       _pollingTimer?.cancel();
       _pollingTimer = null;
@@ -166,7 +166,7 @@ class OrderTrackingController extends ChangeNotifier {
   void _setupNotificationListener() {
     _notificationService.messageStream.listen((message) {
       if (kDebugMode) {
-        print('🔔 Notification received: ${message.data}');
+// print('🔔 Notification received: ${message.data}');
       }
 
       // Check if it's an order update notification
@@ -175,7 +175,7 @@ class OrderTrackingController extends ChangeNotifier {
         final status = message.data['status'];
 
         if (kDebugMode) {
-          print('📦 Order update: $orderId -> $status');
+// print('📦 Order update: $orderId -> $status');
         }
 
         // Refresh orders to get latest data
@@ -209,10 +209,10 @@ class OrderTrackingController extends ChangeNotifier {
       if (oldOrder.onlineOrderId == newOrder.onlineOrderId && 
           oldOrder.orderStatus != newOrder.orderStatus) {
         if (kDebugMode) {
-          print('🔔 Order status changed:');
-          print('   Order: ${newOrder.onlineOrderId}');
-          print('   Old Status: ${oldOrder.statusDisplayName} (${oldOrder.orderStatus})');
-          print('   New Status: ${newOrder.statusDisplayName} (${newOrder.orderStatus})');
+// print('🔔 Order status changed:');
+// print('   Order: ${newOrder.onlineOrderId}');
+// print('   Old Status: ${oldOrder.statusDisplayName} (${oldOrder.orderStatus})');
+// print('   New Status: ${newOrder.statusDisplayName} (${newOrder.orderStatus})');
         }
 
         // Note: In-app notification will be shown by UI layer
@@ -243,7 +243,7 @@ class OrderTrackingController extends ChangeNotifier {
   /// Clear all orders (useful for logout)
   void clearOrders() {
     if (kDebugMode) {
-      print('🗑️ Clearing all orders');
+// print('🗑️ Clearing all orders');
     }
     
     _userOrders = [];
@@ -258,7 +258,7 @@ class OrderTrackingController extends ChangeNotifier {
     if (_userId == userId) return;
 
     if (kDebugMode) {
-      print('👤 Setting user ID: $userId');
+// print('👤 Setting user ID: $userId');
     }
 
     _userId = userId;
@@ -274,7 +274,7 @@ class OrderTrackingController extends ChangeNotifier {
   Future<bool> cancelOrder(String orderId) async {
     try {
       if (kDebugMode) {
-        print('❌ Cancelling order: $orderId');
+// print('❌ Cancelling order: $orderId');
       }
       
       // Find the order to get the numeric ID
@@ -287,7 +287,7 @@ class OrderTrackingController extends ChangeNotifier {
       final response = await _apiService.cancelOrder(orderId: order.id);
       
       if (kDebugMode) {
-        print('✅ Order cancelled successfully: ${response['message']}');
+// print('✅ Order cancelled successfully: ${response['message']}');
       }
       
       // Refresh orders to get updated list
@@ -296,7 +296,7 @@ class OrderTrackingController extends ChangeNotifier {
       return true;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error cancelling order: $e');
+// print('❌ Error cancelling order: $e');
       }
       rethrow; // Re-throw to let the UI handle the error message
     }
@@ -326,7 +326,7 @@ class OrderTrackingController extends ChangeNotifier {
   @override
   void dispose() {
     if (kDebugMode) {
-      print('♻️ Disposing OrderTrackingController');
+// print('♻️ Disposing OrderTrackingController');
     }
 
     _mounted = false;

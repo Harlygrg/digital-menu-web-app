@@ -1,7 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cached_network_image/cached_network_image.dart';
+// Conditional imports for web
+import 'image_utils_web_stub.dart'
+    if (dart.library.html) 'image_utils_web.dart';
 
 /// Utility class for handling base64 images
 class ImageUtils {
@@ -59,8 +63,19 @@ class ImageUtils {
     
     // Fallback to network image if imageUrl is provided
     if (imageUrl != null && imageUrl.isNotEmpty) {
+      // For web: use HTML img element to avoid CORS issues
+      if (kIsWeb) {
+        return buildWebImageElement(
+          imageUrl.trim(),
+          width: width,
+          height: height,
+          fit: fit,
+        );
+      }
+      
+      // For mobile platforms: keep using CachedNetworkImage
       return CachedNetworkImage(
-        imageUrl: imageUrl,
+        imageUrl: imageUrl.trim(),
         width: width,
         height: height,
         fit: fit,
@@ -70,8 +85,15 @@ class ImageUtils {
         fadeOutDuration: const Duration(milliseconds: 100),
         placeholder: placeholder != null ? (context, url) => placeholder : null,
         errorWidget: errorWidget != null
-            ? (context, url, error) => errorWidget
-            : (context, url, error) => _buildDefaultErrorWidget(width, height),
+            ? (context, url, error) {
+          debugPrint('CachedNetworkImage error:${error.toString()}, url:$url');
+          return errorWidget;
+        }
+            : (context, url, error) {
+          debugPrint('CachedNetworkImage error 2:${error.toString()}, url2:$url');
+
+          return  _buildDefaultErrorWidget(width, height);
+        },
       );
     }
     
@@ -115,9 +137,22 @@ class ImageUtils {
     
     // Fallback to network image if imageUrl is provided
     if (imageUrl != null && imageUrl.isNotEmpty) {
+      // For web: use HTML img element with ClipOval to avoid CORS issues
+      if (kIsWeb) {
+        return ClipOval(
+          child: buildWebImageElement(
+            imageUrl.trim(),
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+          ),
+        );
+      }
+      
+      // For mobile: keep CachedNetworkImage
       return ClipOval(
         child: CachedNetworkImage(
-          imageUrl: imageUrl,
+          imageUrl: imageUrl.trim(),
           width: size,
           height: size,
           fit: BoxFit.cover,

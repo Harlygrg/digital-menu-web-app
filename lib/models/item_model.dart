@@ -151,6 +151,7 @@ class ItemModel {
   final List<UnitPriceListModel> unitPriceList;
   final List<ProductDetailsModel> productdetails;
   final List<int> relatedModifiers;
+  final String preparationtime;
 
   const ItemModel({
     required this.id,
@@ -183,6 +184,7 @@ class ItemModel {
     required this.unitPriceList,
     required this.productdetails,
     required this.relatedModifiers,
+    required this.preparationtime
   });
 
   /// Create from JSON
@@ -224,6 +226,7 @@ class ItemModel {
       relatedModifiers: (json['related_modifiers'] as List<dynamic>?)
           ?.map((item) => item as int)
           .toList() ?? [],
+      preparationtime: json['preparationtime'] ?? ''
     );
   }
 
@@ -260,6 +263,7 @@ class ItemModel {
       'UnitPriceList': unitPriceList.map((item) => item.toJson()).toList(),
       'productdetails': productdetails.map((item) => item.toJson()).toList(),
       'related_modifiers': relatedModifiers,
+      'preparationtime':preparationtime
     };
   }
 
@@ -370,6 +374,7 @@ class ItemModel {
       unitPriceList: unitPriceList ?? this.unitPriceList,
       productdetails: productdetails ?? this.productdetails,
       relatedModifiers: relatedModifiers ?? this.relatedModifiers,
+      preparationtime: preparationtime
     );
   }
 

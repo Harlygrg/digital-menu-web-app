@@ -31,7 +31,7 @@ class LocalStorage {
       await prefs.setString(_refreshTokenKey, refreshToken);
       return true;
     } catch (e) {
-      print("Error saving tokens: $e");
+      // print("Error saving tokens: $e");
       return false;
     }
   }
@@ -44,7 +44,7 @@ class LocalStorage {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_accessTokenKey);
     } catch (e) {
-      print("Error getting access token: $e");
+      // print("Error getting access token: $e");
       return null;
     }
   }
@@ -57,7 +57,7 @@ class LocalStorage {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_refreshTokenKey);
     } catch (e) {
-      print("Error getting refresh token: $e");
+      // print("Error getting refresh token: $e");
       return null;
     }
   }
@@ -74,7 +74,7 @@ class LocalStorage {
       await prefs.setString(_deviceIdKey, deviceId);
       return true;
     } catch (e) {
-      print("Error saving device ID: $e");
+      // print("Error saving device ID: $e");
       return false;
     }
   }
@@ -87,7 +87,7 @@ class LocalStorage {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_deviceIdKey);
     } catch (e) {
-      print("Error getting device ID: $e");
+      // print("Error getting device ID: $e");
       return null;
     }
   }
@@ -101,7 +101,7 @@ class LocalStorage {
       await prefs.setBool(_isGuestUserRegisteredKey, value);
       return true;
     } catch (e) {
-      print("Error setting guest user registered status: $e");
+      // print("Error setting guest user registered status: $e");
       return false;
     }
   }
@@ -114,7 +114,7 @@ class LocalStorage {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getBool(_isGuestUserRegisteredKey) ?? false;
     } catch (e) {
-      print("Error checking guest user registered status: $e");
+      // print("Error checking guest user registered status: $e");
       return false;
     }
   }
@@ -130,7 +130,7 @@ class LocalStorage {
       await prefs.remove(_isGuestUserRegisteredKey);
       return true;
     } catch (e) {
-      print("Error clearing auth data: $e");
+      // print("Error clearing auth data: $e");
       return false;
     }
   }
@@ -147,7 +147,7 @@ class LocalStorage {
       await prefs.setString(_branchIdKey, branchId);
       return true;
     } catch (e) {
-      print("Error saving branch ID: $e");
+      // print("Error saving branch ID: $e");
       return false;
     }
   }
@@ -160,7 +160,7 @@ class LocalStorage {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_branchIdKey);
     } catch (e) {
-      print("Error getting branch ID: $e");
+      // print("Error getting branch ID: $e");
       return null;
     }
   }
@@ -174,7 +174,7 @@ class LocalStorage {
       await prefs.remove(_branchIdKey);
       return true;
     } catch (e) {
-      print("Error clearing branch ID: $e");
+      // print("Error clearing branch ID: $e");
       return false;
     }
   }
@@ -191,7 +191,7 @@ class LocalStorage {
       await prefs.setInt(_customerIdKey, customerId);
       return true;
     } catch (e) {
-      print("Error saving customer ID: $e");
+      // print("Error saving customer ID: $e");
       return false;
     }
   }
@@ -204,7 +204,7 @@ class LocalStorage {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getInt(_customerIdKey);
     } catch (e) {
-      print("Error getting customer ID: $e");
+      // print("Error getting customer ID: $e");
       return null;
     }
   }
@@ -218,7 +218,7 @@ class LocalStorage {
       await prefs.remove(_customerIdKey);
       return true;
     } catch (e) {
-      print("Error clearing customer ID: $e");
+      // print("Error clearing customer ID: $e");
       return false;
     }
   }
@@ -249,10 +249,10 @@ class LocalStorage {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_fcmTokenKey, fcmToken);
-      print("⚠️ WARNING: Storing FCM token locally is deprecated. Always fetch from Firebase.");
+      // print("⚠️ WARNING: Storing FCM token locally is deprecated. Always fetch from Firebase.");
       return true;
     } catch (e) {
-      print("Error saving FCM token: $e");
+      // print("Error saving FCM token: $e");
       return false;
     }
   }
@@ -279,7 +279,7 @@ class LocalStorage {
   static Future<String?> getFcmToken() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      print("⚠️ WARNING: Retrieving FCM token from local storage is deprecated. Always fetch from Firebase.");
+      // print("⚠️ WARNING: Retrieving FCM token from local storage is deprecated. Always fetch from Firebase.");
       return prefs.getString(_fcmTokenKey);
     } catch (e) {
       print("Error getting FCM token: $e");

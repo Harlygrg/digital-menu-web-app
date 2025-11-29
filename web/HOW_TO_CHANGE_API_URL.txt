@@ -1,0 +1,71 @@
+================================================================================
+  HOW TO CHANGE THE API URL AFTER DEPLOYMENT (NO REBUILD REQUIRED!)
+================================================================================
+
+You can change the API base URL by editing the config.json file.
+No Flutter knowledge or rebuilding is needed!
+
+LOCATION OF CONFIG FILE:
+------------------------
+Development:    web/config.json
+After Build:    build/web/config.json
+After Deploy:   https://your-domain.com/config.json
+
+STEP-BY-STEP INSTRUCTIONS:
+--------------------------
+
+1. Locate the config.json file in your deployment folder
+
+2. Open it with any text editor (Notepad, TextEdit, etc.)
+
+3. Edit the apiBase field to your desired URL:
+
+   {
+     "apiBase": "https://your-api-server.com/api/v1/"
+   }
+
+4. IMPORTANT: Always include:
+   - The protocol (https:// or http://)
+   - A trailing slash (/) at the end
+
+5. Save the file
+
+6. Refresh your browser - the app will use the new URL!
+
+EXAMPLES:
+---------
+
+Default URL:
+{
+  "apiBase": "https://msibusinesssolutions.com/digitalmenu/api/v1/"
+}
+
+Custom Production URL:
+{
+  "apiBase": "https://api.myrestaurant.com/menu/v1/"
+}
+
+Local Testing URL:
+{
+  "apiBase": "http://localhost:8080/api/v1/"
+}
+
+TROUBLESHOOTING:
+----------------
+
+- Make sure the JSON syntax is correct (use a JSON validator online)
+- The file must be named exactly "config.json" (case-sensitive)
+- The file must be in the same folder as index.html
+- Always include quotes around the URL
+- Don't forget the trailing slash
+
+If something goes wrong, the app will automatically use the default URL
+and continue working. Check the browser console (press F12) for details.
+
+================================================================================
+
+
+
+
+
+

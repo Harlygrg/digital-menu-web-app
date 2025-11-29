@@ -1,10 +1,19 @@
+import '../config/app_config.dart';
+
 /// API Constants
 /// 
 /// This class contains all the API-related constants used throughout the application.
 /// It centralizes the base URL and any other API configuration constants.
+/// 
+/// Note: The base URL is now loaded from an external config.json file at runtime.
+/// This allows clients to change the API URL after deployment without rebuilding.
+/// See lib/config/app_config.dart for more details.
 class ApiConstants {
   /// Base URL for all API endpoints
-  static const String baseUrl = "https://msibusinesssolutions.com/digitalmenu/api/v1/";//"https://msibusinesssolutions.com/johny_web_qr/api/v1/";
+  /// 
+  /// This now references AppConfig.apiBase which is loaded from /config.json
+  /// Clients can edit build/web/config.json to change this URL after deployment
+  static String get baseUrl => AppConfig.apiBase;
   
   /// Guest user registration endpoint
   static const String guestUserRegister = "guestuserregister";

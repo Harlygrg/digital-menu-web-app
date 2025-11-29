@@ -24,9 +24,9 @@ class CategoryIconHelper {
       _categoryData = List<Map<String, dynamic>>.from(jsonData['categories'] ?? []);
       _isInitialized = true;
       
-      debugPrint('✅ Category icon data loaded successfully: ${_categoryData?.length} categories');
+// debugPrint('✅ Category icon data loaded successfully: ${_categoryData?.length} categories');
     } catch (e) {
-      debugPrint('❌ Error loading category icon data: $e');
+// debugPrint('❌ Error loading category icon data: $e');
       _categoryData = [];
       _isInitialized = true;
     }
@@ -40,7 +40,7 @@ class CategoryIconHelper {
   static Widget getCategoryIcon(String categoryName, BuildContext context) {
     // Ensure data is loaded
     if (!_isInitialized || _categoryData == null) {
-      debugPrint('⚠️ Category data not loaded yet, using default icon');
+// debugPrint('⚠️ Category data not loaded yet, using default icon');
       return _getDefaultIcon(context);
     }
 
@@ -58,7 +58,7 @@ class CategoryIconHelper {
           final colorHex = category['color'] as String?;
           
           if (iconName != null) {
-            debugPrint('🎯 Matched "$categoryName" → $iconName');
+// debugPrint('🎯 Matched "$categoryName" → $iconName');
             
             return Icon(
               _getIconData(iconName),
@@ -71,7 +71,7 @@ class CategoryIconHelper {
     }
 
     // No match found, return default icon
-    debugPrint('🔍 No match found for "$categoryName", using default icon');
+// debugPrint('🔍 No match found for "$categoryName", using default icon');
     return _getDefaultIcon(context);
   }
 
@@ -136,7 +136,7 @@ class CategoryIconHelper {
       case 'local_cafe':
         return Icons.local_cafe;
       default:
-        debugPrint('⚠️ Unknown icon name: $iconName, using default');
+// debugPrint('⚠️ Unknown icon name: $iconName, using default');
         return Icons.restaurant_menu;
     }
   }
@@ -150,7 +150,7 @@ class CategoryIconHelper {
       buffer.write(hexString.replaceFirst('#', ''));
       return Color(int.parse(buffer.toString(), radix: 16));
     } catch (e) {
-      debugPrint('⚠️ Error parsing color "$hexString": $e');
+// debugPrint('⚠️ Error parsing color "$hexString": $e');
       return Colors.grey;
     }
   }
@@ -159,7 +159,7 @@ class CategoryIconHelper {
   static void clearCache() {
     _categoryData = null;
     _isInitialized = false;
-    debugPrint('🗑️ Category icon cache cleared');
+// debugPrint('🗑️ Category icon cache cleared');
   }
 }
 

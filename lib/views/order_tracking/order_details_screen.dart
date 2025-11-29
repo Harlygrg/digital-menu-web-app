@@ -82,6 +82,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           
           SizedBox(height: Responsive.padding(context, 16)),
           
+          // Order items card
+          _buildOrderItemsCard(),
+          
+          SizedBox(height: Responsive.padding(context, 16)),
+          
           // Order notes card
           if (widget.order.orderNotes.isNotEmpty && widget.order.orderNotes != 'No notes')
             _buildOrderNotesCard(),
@@ -263,6 +268,280 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Build order items card
+  Widget _buildOrderItemsCard() {
+    // Group items with their modifiers using slno
+    Map<int, List<OrderDetail>> itemsWithModifiers = {};
+    
+    // First pass: add all normal items using slno as key
+    for (var detail in widget.order.orderDetails) {
+      if (detail.isNormalItem) {
+        itemsWithModifiers[detail.slno] = [];
+      }
+    }
+    
+    // Second pass: add modifiers to their parent items using main_item_slno
+    for (var detail in widget.order.orderDetails) {
+      if (detail.isModifier && detail.mainItemSlno != null) {
+        if (itemsWithModifiers.containsKey(detail.mainItemSlno)) {
+          itemsWithModifiers[detail.mainItemSlno]!.add(detail);
+        }
+      }
+    }
+    
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(Responsive.padding(context, 16)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Consumer<HomeProvider>(
+              builder: (context, provider, child) {
+                return Text(
+                  provider.isEnglish ? 'Order Items' : 'عناصر الطلب',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: Responsive.fontSize(context, 18),
+                        fontWeight: FontWeight.bold,
+                      ),
+                );
+              },
+            ),
+            
+            SizedBox(height: Responsive.padding(context, 16)),
+            
+            // Display items
+            ...widget.order.orderDetails
+                .where((detail) => detail.isNormalItem)
+                .map((item) {
+              // Get modifiers for this item using slno
+              List<OrderDetail> modifiers = itemsWithModifiers[item.slno] ?? [];
+              
+              return _buildOrderItemTile(item, modifiers);
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build a single order item tile with its modifiers
+  Widget _buildOrderItemTile(OrderDetail item, List<OrderDetail> modifiers) {
+    return Container(
+      margin: EdgeInsets.only(bottom: Responsive.padding(context, 12)),
+      padding: EdgeInsets.all(Responsive.padding(context, 12)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Item name and quantity
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Quantity badge
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.padding(context, 8),
+                  vertical: Responsive.padding(context, 4),
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${item.qty}x',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontSize: Responsive.fontSize(context, 14),
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                ),
+              ),
+              
+              SizedBox(width: Responsive.padding(context, 12)),
+              
+              // Item details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Item name
+                    Text(
+                      item.itemname,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontSize: Responsive.fontSize(context, 16),
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    
+                    SizedBox(height: Responsive.padding(context, 4)),
+                    
+                    // Unit name
+                    if (item.unitname.isNotEmpty && item.unitname != 'Addon')
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: Responsive.padding(context, 8),
+                          vertical: Responsive.padding(context, 2),
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.grey200,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          item.unitname,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontSize: Responsive.fontSize(context, 12),
+                                color: AppColors.textSecondary,
+                              ),
+                        ),
+                      ),
+                    
+                    // Item remarks
+                    if (item.itmremarks != null && item.itmremarks!.isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.only(top: Responsive.padding(context, 4)),
+                        child: Text(
+                          item.itmremarks!,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontSize: Responsive.fontSize(context, 12),
+                                fontStyle: FontStyle.italic,
+                                color: AppColors.textSecondary,
+                              ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              
+              // Item price
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    item.formattedTotal,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontSize: Responsive.fontSize(context, 16),
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                  ),
+                  if (item.rate > 0)
+                    Text(
+                      '${item.formattedPrice} each',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: Responsive.fontSize(context, 11),
+                            color: AppColors.textSecondary,
+                          ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          
+          // Modifiers/Addons - Full width section
+          if (modifiers.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(top: Responsive.padding(context, 12)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: modifiers.map((modifier) {
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: Responsive.padding(context, 6)),
+                    child: Container(
+                      padding: EdgeInsets.all(Responsive.padding(context, 8)),
+                      decoration: BoxDecoration(
+                        color: AppColors.grey100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.accent.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Icon
+                          Icon(
+                            Icons.add_circle_outline,
+                            size: Responsive.fontSize(context, 14),
+                            color: AppColors.accent,
+                          ),
+                          SizedBox(width: Responsive.padding(context, 8)),
+                          
+                          // Quantity badge
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: Responsive.padding(context, 6),
+                              vertical: Responsive.padding(context, 2),
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '${modifier.qty}x',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontSize: Responsive.fontSize(context, 11),
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.white,
+                                  ),
+                            ),
+                          ),
+                          
+                          SizedBox(width: Responsive.padding(context, 8)),
+                          
+                          // Modifier name
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  modifier.itemname,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        fontSize: Responsive.fontSize(context, 13),
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                ),
+                                if (modifier.rate > 0)
+                                  Text(
+                                    '${modifier.formattedPrice} each',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          fontSize: Responsive.fontSize(context, 11),
+                                          color: AppColors.textSecondary,
+                                        ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          
+                          // Total price
+                          if (modifier.total > 0)
+                            Text(
+                              modifier.formattedTotal,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontSize: Responsive.fontSize(context, 13),
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.accent,
+                                  ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -472,7 +751,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontSize: Responsive.fontSize(context, 14),
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
           ),
           Expanded(
@@ -502,7 +781,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontSize: Responsive.fontSize(context, 14),
                   fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
-                  color: isTotal ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: isTotal ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
           ),
           Text(

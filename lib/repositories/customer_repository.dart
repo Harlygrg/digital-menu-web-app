@@ -26,7 +26,7 @@ class CustomerRepository {
     required String phone,
   }) async {
     try {
-      debugPrint('CustomerRepository: Adding customer - name: $name, phone: $phone');
+// debugPrint('CustomerRepository: Adding customer - name: $name, phone: $phone');
       int branchId  = 1;
       final request = CustomerAddRequest(
         name: name,
@@ -36,11 +36,11 @@ class CustomerRepository {
       
       final response = await _apiService.addCustomer(request: request);
       
-      debugPrint('CustomerRepository: Customer added successfully - ID: ${response.customerId}');
+// debugPrint('CustomerRepository: Customer added successfully - ID: ${response.customerId}');
       
       return response;
     } catch (e) {
-      debugPrint('CustomerRepository: Error adding customer: $e');
+// debugPrint('CustomerRepository: Error adding customer: $e');
       rethrow;
     }
   }
@@ -53,18 +53,18 @@ class CustomerRepository {
   /// Returns: Future<bool> indicating success or failure
   Future<bool> saveCustomerId(int customerId) async {
     try {
-      debugPrint('CustomerRepository: Saving customer ID: $customerId');
+// debugPrint('CustomerRepository: Saving customer ID: $customerId');
       final result = await LocalStorage.saveCustomerId(customerId);
       
       if (result) {
-        debugPrint('CustomerRepository: Customer ID saved successfully');
+// debugPrint('CustomerRepository: Customer ID saved successfully');
       } else {
-        debugPrint('CustomerRepository: Failed to save customer ID');
+// debugPrint('CustomerRepository: Failed to save customer ID');
       }
       
       return result;
     } catch (e) {
-      debugPrint('CustomerRepository: Error saving customer ID: $e');
+// debugPrint('CustomerRepository: Error saving customer ID: $e');
       return false;
     }
   }
@@ -77,14 +77,14 @@ class CustomerRepository {
       final customerId = await LocalStorage.getCustomerId();
       
       if (customerId != null) {
-        debugPrint('CustomerRepository: Retrieved customer ID: $customerId');
+// debugPrint('CustomerRepository: Retrieved customer ID: $customerId');
       } else {
-        debugPrint('CustomerRepository: No customer ID found in storage');
+// debugPrint('CustomerRepository: No customer ID found in storage');
       }
       
       return customerId;
     } catch (e) {
-      debugPrint('CustomerRepository: Error retrieving customer ID: $e');
+// debugPrint('CustomerRepository: Error retrieving customer ID: $e');
       return null;
     }
   }
@@ -94,18 +94,18 @@ class CustomerRepository {
   /// Returns: Future<bool> indicating success or failure
   Future<bool> clearCustomerId() async {
     try {
-      debugPrint('CustomerRepository: Clearing customer ID');
+// debugPrint('CustomerRepository: Clearing customer ID');
       final result = await LocalStorage.clearCustomerId();
       
       if (result) {
-        debugPrint('CustomerRepository: Customer ID cleared successfully');
+// debugPrint('CustomerRepository: Customer ID cleared successfully');
       } else {
-        debugPrint('CustomerRepository: Failed to clear customer ID');
+// debugPrint('CustomerRepository: Failed to clear customer ID');
       }
       
       return result;
     } catch (e) {
-      debugPrint('CustomerRepository: Error clearing customer ID: $e');
+// debugPrint('CustomerRepository: Error clearing customer ID: $e');
       return false;
     }
   }
@@ -123,7 +123,7 @@ class CustomerRepository {
     required String phone,
   }) async {
     try {
-      debugPrint('CustomerRepository: Adding and saving customer');
+// debugPrint('CustomerRepository: Adding and saving customer');
       
       // Add customer via API
       final response = await addCustomer(name: name, phone: phone);
@@ -140,12 +140,12 @@ class CustomerRepository {
       final saved = await saveCustomerId(response.customerId!);
       
       if (!saved) {
-        debugPrint('CustomerRepository: Warning - Failed to save customer ID to local storage');
+// debugPrint('CustomerRepository: Warning - Failed to save customer ID to local storage');
       }
       
       return response.customerId!;
     } catch (e) {
-      debugPrint('CustomerRepository: Error in addAndSaveCustomer: $e');
+// debugPrint('CustomerRepository: Error in addAndSaveCustomer: $e');
       rethrow;
     }
   }
@@ -158,7 +158,7 @@ class CustomerRepository {
       final customerId = await getCustomerId();
       return customerId != null;
     } catch (e) {
-      debugPrint('CustomerRepository: Error checking if customer is registered: $e');
+// debugPrint('CustomerRepository: Error checking if customer is registered: $e');
       return false;
     }
   }
