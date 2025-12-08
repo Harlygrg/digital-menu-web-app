@@ -4,6 +4,7 @@ import '../../models/create_order_response_model.dart';
 import '../../controllers/cart_controller.dart';
 import '../../theme/theme.dart';
 import '../../routes/routes.dart';
+import '../../widgets/order_qr.dart';
 
 /// Order Screen
 /// 
@@ -165,6 +166,11 @@ class _OrderScreenState extends State<OrderScreen> {
 
   /// Build order details card
   Widget _buildOrderDetailsCard(BuildContext context, ThemeData theme) {
+    final orderId = _orderResponse?.onlineOrderId?.toString() ?? 'N/A';
+    final pin = _orderResponse?.orderNo?.toString() ?? 'N/A';
+    final hasValidOrderData = _orderResponse?.onlineOrderId != null && 
+                               _orderResponse?.orderNo != null;
+
     return Container(
       padding: EdgeInsets.all(Responsive.padding(context, 20)),
       decoration: BoxDecoration(
@@ -193,31 +199,32 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
           SizedBox(height: Responsive.padding(context, 16)),
           
-          _buildDetailRow(
-            context,
-            theme,
-            'Order ID',
-            '${_orderResponse?.orderId ?? 'N/A'}',
-            Icons.receipt_long,
-          ),
-          SizedBox(height: Responsive.padding(context, 12)),
+          // _buildDetailRow(
+          //   context,
+          //   theme,
+          //   'Order ID',
+          //   '${_orderResponse?.orderId ?? 'N/A'}',
+          //   Icons.receipt_long,
+          // ),
+          // SizedBox(height: Responsive.padding(context, 20)),
           
-          _buildDetailRow(
-            context,
-            theme,
-            'Online Order ID',
-            '${_orderResponse?.onlineOrderId ?? 'N/A'}',
-            Icons.cloud_outlined,
-          ),
-          SizedBox(height: Responsive.padding(context, 12)),
-          
-          _buildDetailRow(
-            context,
-            theme,
-            'Pin Number',
-            '${_orderResponse?.orderNo ?? 'N/A'}',
-            Icons.confirmation_number,
-          ),
+          // QR Code Section
+          if (hasValidOrderData)
+            Center(
+              child: OrderQrWidget(
+                orderId: orderId,
+                pin: pin,
+                isEnglish: true,
+              ),
+            )
+          else
+            _buildDetailRow(
+              context,
+              theme,
+              'Pin Number',
+              pin,
+              Icons.confirmation_number,
+            ),
         ],
       ),
     );

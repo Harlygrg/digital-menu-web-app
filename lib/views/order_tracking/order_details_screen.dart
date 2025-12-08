@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../../controllers/order_tracking_controller.dart';
 import '../../models/user_order_model.dart';
 import '../../theme/theme.dart';
+import '../../widgets/order_qr.dart';
 
 /// Screen for displaying detailed order information
 class OrderDetailsScreen extends StatefulWidget {
@@ -189,15 +190,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 return Column(
                   children: [
                     _buildDetailRow(
-                      provider.isEnglish ? 'Pin Number' : 'رقم التعريف',
-                      widget.order.orderNo.toString()
-                    ),
-                    _buildDetailRow(
                       provider.isEnglish ? 'Order Type' : 'نوع الطلب',
                       widget.order.orderType == '1'
                           ? (provider.isEnglish ? "Dine in" : "تناول الطعام")
                           : (provider.isEnglish ? "Take away" : "الوجبات الجاهزة")
                     ),
+                    if( widget.order.orderType == '1')
                     _buildDetailRow(
                       provider.isEnglish ? 'Table' : 'الطاولة',
                       widget.order.tableName.toString()
@@ -207,6 +205,21 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                       _formatDateTime(widget.order.createdAt)
                     ),
                   ],
+                );
+              },
+            ),
+            
+            SizedBox(height: Responsive.padding(context, 16)),
+            
+            // QR Code Section
+            Consumer<HomeProvider>(
+              builder: (context, provider, child) {
+                return Center(
+                  child: OrderQrWidget(
+                    orderId: widget.order.onlineOrderId,
+                    pin: widget.order.orderNo.toString(),
+                    isEnglish: provider.isEnglish,
+                  ),
                 );
               },
             ),

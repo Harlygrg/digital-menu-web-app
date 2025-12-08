@@ -5,6 +5,9 @@ import 'package:digital_menu_order/main.dart';
 import 'package:digital_menu_order/providers/home_provider.dart';
 
 void main() {
+  // Note: OrderQrWidget tests are in test/order_qr_widget_test.dart
+  // to avoid dart:html import issues from main.dart
+  
   group('Digital Menu App Tests', () {
     testWidgets('App compiles and runs', (WidgetTester tester) async {
       await tester.pumpWidget(
