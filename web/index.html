@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -19,6 +19,11 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="DineEase — A smart digital menu and order placing web app for restaurants and cafes.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+
+  <!-- Preconnect to API domain for faster first request -->
+  <link rel="preconnect" href="https://msibusinesssolutions.com" crossorigin>
+  <link rel="dns-prefetch" href="https://msibusinesssolutions.com">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -31,7 +36,130 @@
 
   <title>DineEase</title>
   <link rel="manifest" href="manifest.json">
-  
+
+  <!-- Boot shell styles — matches HomeScreen layout to avoid CLS -->
+  <style>
+    /* Boot shell container — fills viewport, white background matching app surface */
+    #boot-shell {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: #FAFAFA;
+      display: flex;
+      flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      transition: opacity 0.3s ease-out;
+    }
+    #boot-shell.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* AppBar — matches AppBarSilver: white bg, ~56px height */
+    .shell-appbar {
+      height: 56px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      flex-shrink: 0;
+    }
+    .shell-appbar-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #212121;
+    }
+    /* Content area */
+    .shell-content {
+      flex: 1;
+      padding: 16px;
+      overflow: hidden;
+    }
+    /* Search bar skeleton */
+    .shell-search {
+      height: 44px;
+      background: #EEEEEE;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    /* Filter row skeleton */
+    .shell-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .shell-chip {
+      height: 32px;
+      width: 80px;
+      background: #EEEEEE;
+      border-radius: 16px;
+    }
+    .shell-chip:nth-child(2) { width: 96px; }
+    .shell-chip:nth-child(3) { width: 72px; }
+    /* Grid skeleton — matches 2-column mobile grid */
+    .shell-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .shell-card {
+      background: #FFFFFF;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .shell-card-img {
+      width: 100%;
+      aspect-ratio: 1.2;
+      background: #EEEEEE;
+    }
+    .shell-card-body {
+      padding: 10px;
+    }
+    .shell-card-title {
+      height: 12px;
+      width: 70%;
+      background: #EEEEEE;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    .shell-card-price {
+      height: 12px;
+      width: 40%;
+      background: #EEEEEE;
+      border-radius: 4px;
+    }
+    /* Shimmer animation */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .shell-search,
+    .shell-chip,
+    .shell-card-img,
+    .shell-card-title,
+    .shell-card-price {
+      background: linear-gradient(90deg, #EEEEEE 25%, #F5F5F5 50%, #EEEEEE 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+    /* Desktop: wider grid, centered content */
+    @media (min-width: 1200px) {
+      .shell-content {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .shell-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    @media (min-width: 600px) and (max-width: 1199px) {
+      .shell-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+
   <!-- Register Firebase Service Worker before Flutter boots -->
   <script>
     if ('serviceWorker' in navigator) {
@@ -47,30 +175,92 @@
         // Construct the service worker path relative to base
         var serviceWorkerPath = basePath + 'firebase-messaging-sw.js';
         
-        console.log('🔧 Registering service worker at:', serviceWorkerPath);
-        console.log('🔧 Base path:', basePath);
-        
         navigator.serviceWorker.register(serviceWorkerPath, {
           scope: basePath
         })
           .then(function(registration) {
-            console.log('✅ Firebase Service Worker registered successfully');
-            console.log('   Scope:', registration.scope);
             return navigator.serviceWorker.ready;
           })
-          .then(function(registration) {
-            console.log('✅ Firebase Service Worker is ready');
-          })
           .catch(function(error) {
-            console.error('❌ Firebase Service Worker registration failed:', error);
+            console.error('Firebase Service Worker registration failed:', error);
           });
       });
-    } else {
-      console.warn('⚠️ Service Worker not supported in this browser');
     }
   </script>
 </head>
 <body>
+  <!-- Boot shell — removed via JS when Flutter signals first frame or after timeout -->
+  <div id="boot-shell">
+    <div class="shell-appbar">
+      <span class="shell-appbar-title">DineEase</span>
+    </div>
+    <div class="shell-content">
+      <div class="shell-search"></div>
+      <div class="shell-filters">
+        <div class="shell-chip"></div>
+        <div class="shell-chip"></div>
+        <div class="shell-chip"></div>
+      </div>
+      <div class="shell-grid">
+        <div class="shell-card">
+          <div class="shell-card-img"></div>
+          <div class="shell-card-body">
+            <div class="shell-card-title"></div>
+            <div class="shell-card-price"></div>
+          </div>
+        </div>
+        <div class="shell-card">
+          <div class="shell-card-img"></div>
+          <div class="shell-card-body">
+            <div class="shell-card-title"></div>
+            <div class="shell-card-price"></div>
+          </div>
+        </div>
+        <div class="shell-card">
+          <div class="shell-card-img"></div>
+          <div class="shell-card-body">
+            <div class="shell-card-title"></div>
+            <div class="shell-card-price"></div>
+          </div>
+        </div>
+        <div class="shell-card">
+          <div class="shell-card-img"></div>
+          <div class="shell-card-body">
+            <div class="shell-card-title"></div>
+            <div class="shell-card-price"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Boot shell removal logic — runs entirely in JS, no Flutter dependency -->
+  <script>
+    (function() {
+      // Remove boot shell with fade-out animation
+      function removeBootShell() {
+        var shell = document.getElementById('boot-shell');
+        if (shell) {
+          shell.classList.add('hidden');
+          setTimeout(function() { shell.remove(); }, 350);
+        }
+      }
+
+      // Listen for Flutter first-frame event (dispatched from Dart)
+      window.addEventListener('flutter-first-frame', removeBootShell);
+
+      // Safety fallback: remove shell after 15s even if Flutter never signals
+      // This prevents a permanent overlay if Flutter crashes
+      setTimeout(function() {
+        var shell = document.getElementById('boot-shell');
+        if (shell) {
+          console.warn('Boot shell safety timeout — removing after 15s');
+          shell.remove();
+        }
+      }, 15000);
+    })();
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

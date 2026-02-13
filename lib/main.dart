@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'theme/theme.dart';
 import 'routes/routes.dart';
 import 'providers/home_provider.dart';
+import 'providers/language_provider.dart';
 import 'providers/table_provider.dart';
 import 'providers/order_type_provider.dart';
 import 'providers/branch_provider.dart';
@@ -131,6 +132,7 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => TableProvider()),
         ChangeNotifierProvider(create: (_) => OrderTypeProvider()),
@@ -140,8 +142,11 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
         ChangeNotifierProvider(create: (_) => OrderTrackingController()),
         ChangeNotifierProvider(create: (_) => CustomerProvider()..initialize()),
       ],
-      child: Consumer<HomeProvider>(
-        builder: (context, provider, child) {
+      // Selector listens ONLY to the language-relevant tuple, preventing
+      // full tree rebuilds when HomeProvider state (items, cart, etc.) changes.
+      child: Selector<LanguageProvider, ({bool isEnglish, TextDirection dir})>(
+        selector: (_, lang) => (isEnglish: lang.isEnglish, dir: lang.textDirection),
+        builder: (context, langState, cachedChild) {
           return MaterialApp(
             navigatorKey: _navigatorKey,
             title: 'Digital Menu Order',
@@ -165,7 +170,7 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
               Locale('en', 'US'),
               Locale('ar', 'SA'),
             ],
-            locale: provider.isEnglish 
+            locale: langState.isEnglish 
                 ? const Locale('en', 'US')
                 : const Locale('ar', 'SA'),
             
@@ -183,7 +188,7 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
               });
               
               return Directionality(
-                textDirection: provider.textDirection,
+                textDirection: langState.dir,
                 child: child!,
               );
             },

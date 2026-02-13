@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../views/landing/landing_shell_screen.dart';
 import '../views/home/home_screen.dart';
 import '../views/cart/cart_screen.dart';
 import '../views/table/table_screen.dart';
@@ -18,8 +19,10 @@ class AppRoutes {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case home:
+        // LandingShellScreen renders HomeScreen and dispatches
+        // the flutter-first-frame event to remove the HTML boot shell.
         return MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
+          builder: (context) => const LandingShellScreen(),
           settings: settings,
         );
       case cart:

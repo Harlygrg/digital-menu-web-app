@@ -143,6 +143,7 @@ class ItemModelAdapter extends TypeAdapter<ItemModel> {
       price: reader.readDouble(),
       cost: reader.readDouble(),
       image: reader.readString(),
+      imageUrl: reader.read() as String?,
       invPrdct: reader.readInt(),
       opqty: reader.readInt(),
       kot: reader.readString(),
@@ -178,6 +179,7 @@ class ItemModelAdapter extends TypeAdapter<ItemModel> {
     writer.writeDouble(obj.price);
     writer.writeDouble(obj.cost);
     writer.writeString(obj.image);
+    writer.write(obj.imageUrl);
     writer.writeInt(obj.invPrdct);
     writer.writeInt(obj.opqty);
     writer.writeString(obj.kot);
@@ -196,6 +198,7 @@ class ItemModelAdapter extends TypeAdapter<ItemModel> {
     writer.write(obj.unitPriceList);
     writer.write(obj.productdetails);
     writer.write(obj.relatedModifiers);
+    writer.writeString(obj.preparationtime);
   }
 }
 

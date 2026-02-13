@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/home_provider.dart';
+import '../../../providers/language_provider.dart';
 import '../../../controllers/home_controller.dart';
 import '../../../theme/theme.dart';
 
 /// Language dropdown widget for switching between English and Arabic
+///
+/// Syncs both [LanguageProvider] (for MaterialApp locale/direction) and
+/// [HomeProvider] (for internal filtering by language) on every change.
 class LanguageDropdownWidget extends StatelessWidget {
   final HomeController controller;
 
@@ -15,12 +19,12 @@ class LanguageDropdownWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<HomeProvider>(
-      builder: (context, provider, child) {
+    return Consumer<LanguageProvider>(
+      builder: (context, langProvider, child) {
         return Container(
           height: MediaQuery.of(context).size.width > 1200 ? 35 : 30,
           alignment: Alignment.center,
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: 8,
           ),
           decoration: ShapeDecoration(
@@ -31,7 +35,7 @@ class LanguageDropdownWidget extends StatelessWidget {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: provider.language,
+              value: langProvider.language,
               icon: const SizedBox.shrink(),
               focusColor: Colors.transparent,
               style: Theme.of(context).textTheme.bodySmall!.copyWith(
@@ -41,6 +45,10 @@ class LanguageDropdownWidget extends StatelessWidget {
               dropdownColor: Theme.of(context).colorScheme.surface,
               onChanged: (String? newValue) {
                 if (newValue != null) {
+                  // Sync both providers: LanguageProvider drives MaterialApp
+                  // locale/direction; HomeProvider retains _language for
+                  // internal search/filter logic.
+                  langProvider.setLanguage(newValue);
                   controller.setLanguage(newValue);
                 }
               },
@@ -54,7 +62,7 @@ class LanguageDropdownWidget extends StatelessWidget {
                       Text(
                         value == 'en' ? 'English' : 'عربي',
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: value == provider.language
+                          color: value == langProvider.language
                               ? Theme.of(context).colorScheme.primary
                               : Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
@@ -64,7 +72,7 @@ class LanguageDropdownWidget extends StatelessWidget {
                       Icon(
                         value == 'en' ? Icons.language : Icons.translate,
                         size: Responsive.fontSize(context, 16),
-                        color: value == provider.language
+                        color: value == langProvider.language
                             ? Theme.of(context).colorScheme.primary
                             : Theme.of(context).colorScheme.onSurface,
                       ),

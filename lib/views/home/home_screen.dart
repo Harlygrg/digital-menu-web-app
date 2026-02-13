@@ -509,8 +509,9 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
         ),
-        // Extend cache extent to preload items before they appear on screen
-        cacheExtent: 500.0,
+        // Reduced cache extent — preloads fewer off-screen items to lower
+        // memory pressure and speed up initial layout on low-end devices.
+        cacheExtent: 250.0,
         slivers: [
           // Search bar section
           SliverToBoxAdapter(
@@ -645,8 +646,8 @@ class _HomeScreenState extends State<HomeScreen> {
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
-            // Extend cache extent to preload items before they appear on screen
-            cacheExtent: 500.0,
+            // Reduced cache extent — see mobile layout comment
+            cacheExtent: 250.0,
             slivers: [
               // Search bar section
               SliverToBoxAdapter(

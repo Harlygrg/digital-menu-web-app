@@ -27,8 +27,13 @@ class ImageUtils {
     }
   }
 
-  /// Create an Image widget from base64 string or network URL
-  /// Priority: base64 -> imageUrl -> error widget
+  /// Create an Image widget from network URL or base64 string
+  /// Priority: imageUrl -> base64 -> error widget
+  ///
+  /// URL-based images are preferred because they avoid expensive main-thread
+  /// base64 decoding, benefit from browser-level caching, and support
+  /// progressive loading.  Base64 is kept only as a fallback for offline
+  /// or legacy data.
   static Widget buildImageFromBase64(
     String base64String, {
     String? imageUrl,
@@ -41,27 +46,7 @@ class ImageUtils {
     int? cacheWidth,
     int? cacheHeight,
   }) {
-    // Try base64 first (existing behavior)
-    if (base64String.isNotEmpty) {
-      final imageData = base64ToUint8List(base64String);
-      
-      if (imageData != null) {
-        return Image.memory(
-          imageData,
-          width: width,
-          height: height,
-          fit: fit,
-          gaplessPlayback: gaplessPlayback,
-          cacheWidth: cacheWidth,
-          cacheHeight: cacheHeight,
-          errorBuilder: (context, error, stackTrace) {
-            return errorWidget ?? _buildDefaultErrorWidget(width, height);
-          },
-        );
-      }
-    }
-    
-    // Fallback to network image if imageUrl is provided
+    // --- Priority 1: Network URL (faster, no decode cost) ---
     if (imageUrl != null && imageUrl.isNotEmpty) {
       // For web: use HTML img element to avoid CORS issues
       if (kIsWeb) {
@@ -96,13 +81,35 @@ class ImageUtils {
         },
       );
     }
+
+    // --- Priority 2: Base64 fallback (legacy / offline) ---
+    if (base64String.isNotEmpty) {
+      final imageData = base64ToUint8List(base64String);
+      
+      if (imageData != null) {
+        return Image.memory(
+          imageData,
+          width: width,
+          height: height,
+          fit: fit,
+          gaplessPlayback: gaplessPlayback,
+          cacheWidth: cacheWidth,
+          cacheHeight: cacheHeight,
+          errorBuilder: (context, error, stackTrace) {
+            return errorWidget ?? _buildDefaultErrorWidget(width, height);
+          },
+        );
+      }
+    }
     
     // Show error widget if both are unavailable
     return errorWidget ?? _buildDefaultErrorWidget(width, height);
   }
 
-  /// Create a circular image from base64 string or network URL
-  /// Priority: base64 -> imageUrl -> error widget
+  /// Create a circular image from network URL or base64 string
+  /// Priority: imageUrl -> base64 -> error widget
+  ///
+  /// URL-based images are preferred to avoid main-thread base64 decoding.
   static Widget buildCircularImageFromBase64(
     String base64String, {
     String? imageUrl,
@@ -113,29 +120,7 @@ class ImageUtils {
     int? cacheWidth,
     int? cacheHeight,
   }) {
-    // Try base64 first (existing behavior)
-    if (base64String.isNotEmpty) {
-      final imageData = base64ToUint8List(base64String);
-      
-      if (imageData != null) {
-        return ClipOval(
-          child: Image.memory(
-            imageData,
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-            gaplessPlayback: gaplessPlayback,
-            cacheWidth: cacheWidth,
-            cacheHeight: cacheHeight,
-            errorBuilder: (context, error, stackTrace) {
-              return errorWidget ?? _buildDefaultCircularErrorWidget(size);
-            },
-          ),
-        );
-      }
-    }
-    
-    // Fallback to network image if imageUrl is provided
+    // --- Priority 1: Network URL ---
     if (imageUrl != null && imageUrl.isNotEmpty) {
       // For web: use HTML img element with ClipOval to avoid CORS issues
       if (kIsWeb) {
@@ -166,6 +151,28 @@ class ImageUtils {
               : (context, url, error) => _buildDefaultCircularErrorWidget(size),
         ),
       );
+    }
+
+    // --- Priority 2: Base64 fallback ---
+    if (base64String.isNotEmpty) {
+      final imageData = base64ToUint8List(base64String);
+      
+      if (imageData != null) {
+        return ClipOval(
+          child: Image.memory(
+            imageData,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            gaplessPlayback: gaplessPlayback,
+            cacheWidth: cacheWidth,
+            cacheHeight: cacheHeight,
+            errorBuilder: (context, error, stackTrace) {
+              return errorWidget ?? _buildDefaultCircularErrorWidget(size);
+            },
+          ),
+        );
+      }
     }
     
     // Show error widget if both are unavailable

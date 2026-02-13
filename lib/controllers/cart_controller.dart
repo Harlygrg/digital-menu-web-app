@@ -407,8 +407,29 @@ class CartController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
 // debugPrint('Error loading cart from Hive: $e');
-      // On error, start with empty cart
+      // On error (likely corrupted data from schema changes), clear and start fresh
       _cartItems.clear();
+      await _clearCorruptedCartData();
+    }
+  }
+  
+  /// Clear corrupted cart data from Hive storage
+  /// This is called when deserialization fails due to schema changes
+  Future<void> _clearCorruptedCartData() async {
+    try {
+      // Close the box if it's open
+      if (_cartBox != null && _cartBox!.isOpen) {
+        await _cartBox!.close();
+      }
+      _cartBox = null;
+      
+      // Delete the corrupted box and recreate it
+      await Hive.deleteBoxFromDisk('cartBox');
+      _cartBox = await Hive.openBox<CartItemModel>('cartBox');
+      
+// debugPrint('Corrupted cart data cleared, starting fresh');
+    } catch (e) {
+// debugPrint('Error clearing corrupted cart data: $e');
     }
   }
 

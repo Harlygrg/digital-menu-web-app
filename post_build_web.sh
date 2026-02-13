@@ -17,8 +17,13 @@ BUILD_DIR="build/web"
 
 echo "🚀 Starting Flutter web build for client: ${CLIENT_NAME}"
 
-# Step 1: Build the Flutter web app
-flutter build web --release --base-href "/${CLIENT_NAME}/"
+# Step 1: Build the Flutter web app with performance flags
+# --tree-shake-icons  → removes unused Material Icons from the font bundle
+# --dart2js-optimization=O4  → most aggressive dead-code & minification level
+flutter build web --release \
+  --base-href "/${CLIENT_NAME}/" \
+  --tree-shake-icons \
+  --dart2js-optimization=O4
 
 # Step 2: Verify build output
 if [ ! -d "$BUILD_DIR" ]; then
