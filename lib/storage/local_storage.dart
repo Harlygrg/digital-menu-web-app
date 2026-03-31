@@ -11,6 +11,8 @@ class LocalStorage {
   static const String _deviceIdKey = "device_id";
   static const String _isGuestUserRegisteredKey = "is_guest_user_registered";
   static const String _branchIdKey = "branch_id";
+  static const String _orderTypeKey = "order_type";
+  static const String _tableIdKey = "table_id";
   static const String _customerIdKey = "customer_id";
   static const String _fcmTokenKey = "fcm_token";
   static const String _notificationPermissionAskedKey = "notification_permission_asked";
@@ -179,6 +181,88 @@ class LocalStorage {
     }
   }
 
+  /// Saves the selected order type to local storage
+  ///
+  /// [orderType] - The order type ID to save (as a string).
+  /// Returns: Future<bool> indicating success or failure
+  static Future<bool> saveOrderType(String orderType) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_orderTypeKey, orderType);
+      return true;
+    } catch (e) {
+      // print("Error saving order type: $e");
+      return false;
+    }
+  }
+
+  /// Retrieves the selected order type from local storage
+  ///
+  /// Returns: Future<String?> containing the order type ID or null if not found
+  static Future<String?> getOrderType() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_orderTypeKey);
+    } catch (e) {
+      // print("Error getting order type: $e");
+      return null;
+    }
+  }
+
+  /// Removes the stored order type
+  /// Returns: Future<bool> indicating success or failure
+  static Future<bool> clearOrderType() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_orderTypeKey);
+      return true;
+    } catch (e) {
+      // print("Error clearing order type: $e");
+      return false;
+    }
+  }
+
+  /// Saves the selected table ID to local storage
+  ///
+  /// [tableId] - The table ID to save (as a string).
+  /// Returns: Future<bool> indicating success or failure
+  static Future<bool> saveTableId(String tableId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_tableIdKey, tableId);
+      return true;
+    } catch (e) {
+      // print("Error saving table ID: $e");
+      return false;
+    }
+  }
+
+  /// Retrieves the selected table ID from local storage
+  ///
+  /// Returns: Future<String?> containing the table ID or null if not found
+  static Future<String?> getTableId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_tableIdKey);
+    } catch (e) {
+      // print("Error getting table ID: $e");
+      return null;
+    }
+  }
+
+  /// Removes the stored table ID
+  /// Returns: Future<bool> indicating success or failure
+  static Future<bool> clearTableId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_tableIdKey);
+      return true;
+    } catch (e) {
+      // print("Error clearing table ID: $e");
+      return false;
+    }
+  }
+
   /// Saves the customer ID to local storage
   /// 
   /// Parameters:
@@ -282,7 +366,7 @@ class LocalStorage {
       // print("⚠️ WARNING: Retrieving FCM token from local storage is deprecated. Always fetch from Firebase.");
       return prefs.getString(_fcmTokenKey);
     } catch (e) {
-      print("Error getting FCM token: $e");
+      // print("Error getting FCM token: $e");
       return null;
     }
   }
@@ -299,7 +383,7 @@ class LocalStorage {
       await prefs.remove(_fcmTokenKey);
       return true;
     } catch (e) {
-      print("Error clearing FCM token: $e");
+      // print("Error clearing FCM token: $e");
       return false;
     }
   }
@@ -316,7 +400,7 @@ class LocalStorage {
       await prefs.setBool(_notificationPermissionAskedKey, asked);
       return true;
     } catch (e) {
-      print("Error saving notification permission asked status: $e");
+      // print("Error saving notification permission asked status: $e");
       return false;
     }
   }
@@ -329,7 +413,7 @@ class LocalStorage {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getBool(_notificationPermissionAskedKey) ?? false;
     } catch (e) {
-      print("Error getting notification permission asked status: $e");
+      // print("Error getting notification permission asked status: $e");
       return false;
     }
   }
@@ -399,7 +483,7 @@ class LocalStorage {
       await prefs.clear();
       return true;
     } catch (e) {
-      print("Error clearing all data: $e");
+      // print("Error clearing all data: $e");
       return false;
     }
   }

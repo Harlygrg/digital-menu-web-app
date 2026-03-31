@@ -55,6 +55,7 @@ void main() async {
   await Hive.openBox<CartItemModel>('cartBox');
   
   await _extractAndSaveBranchId();
+  await _extractAndSaveOrderTypeAndTableId();
   
   ScrollBehaviorUtils.initializeWebScrollbarHiding();
   
@@ -69,33 +70,57 @@ Future<void> _extractAndSaveBranchId() async {
     // Check URL parameters
     if (Uri.base.hasQuery) {
       branchId = Uri.base.queryParameters['branch_id'];
-// debugPrint('🔍 URL has query parameters: ${Uri.base.query}');
+      // debugPrint('🔍 URL has query parameters: ${Uri.base.query}');
     } else {
-// debugPrint('ℹ️ URL has no query parameters');
+      // debugPrint('ℹ️ URL has no query parameters');
     }
     
     if (branchId != null && branchId.isNotEmpty) {
-// debugPrint('✅ Branch ID found in URL: $branchId');
+      // debugPrint('✅ Branch ID found in URL: $branchId');
       final success = await LocalStorage.saveBranchId(branchId);
       
       if (success) {
-// debugPrint('✅ Branch ID successfully saved to local storage: $branchId');
+        // debugPrint('✅ Branch ID successfully saved to local storage: $branchId');
       } else {
-// debugPrint('❌ Failed to save branch ID to local storage');
+        // debugPrint('❌ Failed to save branch ID to local storage');
       }
     } else {
-// debugPrint('ℹ️ No branch_id parameter found in URL');
+      // debugPrint('ℹ️ No branch_id parameter found in URL');
       
       // Check if we have a previously saved branch ID
       final savedBranchId = await LocalStorage.getBranchId();
       if (savedBranchId != null && savedBranchId.isNotEmpty) {
-// debugPrint('✅ Using previously saved branch ID: $savedBranchId');
+        // debugPrint('✅ Using previously saved branch ID: $savedBranchId');
       } else {
-// debugPrint('ℹ️ No previously saved branch ID found');
+        // debugPrint('ℹ️ No previously saved branch ID found');
       }
     }
   } catch (e) {
-// debugPrint('❌ Error extracting branch ID from URL: $e');
+    // debugPrint('❌ Error extracting branch ID from URL: $e');
+  }
+}
+
+/// Extracts order_type and table_id from URL parameters (web/PWA) and syncs local storage.
+/// When a key is missing or blank in the URL, the persisted value is cleared so a refresh
+/// without that query does not reuse a stale id from a previous session.
+Future<void> _extractAndSaveOrderTypeAndTableId() async {
+  try {
+    final orderType = Uri.base.queryParameters['order_type']?.trim();
+    final tableId = Uri.base.queryParameters['table_id']?.trim();
+
+    if (orderType == null || orderType.isEmpty) {
+      await LocalStorage.clearOrderType();
+    } else {
+      await LocalStorage.saveOrderType(orderType);
+    }
+
+    if (tableId == null || tableId.isEmpty) {
+      await LocalStorage.clearTableId();
+    } else {
+      await LocalStorage.saveTableId(tableId);
+    }
+  } catch (e) {
+    // Keep behavior safe: never break app startup due to deep-link parsing issues.
   }
 }
 

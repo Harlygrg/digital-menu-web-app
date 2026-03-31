@@ -93,7 +93,7 @@ class HomeProvider extends ChangeNotifier {
     String branchId = '1',
     bool silentRefresh = false,
   }) async {
-// debugPrint('📦 HomeProvider: fetchProductRelatedData for branch $branchId (silent: $silentRefresh)');
+    // debugPrint('---->📦 HomeProvider: fetchProductRelatedData for branch $branchId (silent: $silentRefresh)');
     try {
       // Only show loading state if not a silent refresh
       if (!silentRefresh) {
@@ -112,9 +112,9 @@ class HomeProvider extends ChangeNotifier {
       if (accessToken == null) {
         throw Exception('No access token available. Please register as a guest user first.');
       }
-      
-      final response = await apiService.getProductRelatedData(branchId: branchId);
-      
+      // debugPrint('------->>> fetch product related data success1:');
+      final response = await apiService.getProductRelatedData(branchId: branchId );
+      // debugPrint('------->>> fetch product related data success2:');
       if (response['success'] == true && response['data'] != null) {
         final data = response['data'];
         
@@ -143,7 +143,7 @@ class HomeProvider extends ChangeNotifier {
             ?.map((item) => ModifierModel.fromJson(item))
             .toList() ?? [];
         
-// debugPrint('✅ Loaded ${_categories.length} categories, ${_allItems.length} items, ${_modifiers.length} modifiers');
+        // debugPrint('✅ Loaded ${_categories.length} categories, ${_allItems.length} items, ${_modifiers.length} modifiers');
         
         _hasEverLoadedData = true; // Mark that data has been loaded
         _isLoading = false;
@@ -151,16 +151,38 @@ class HomeProvider extends ChangeNotifier {
         // Only notify once at the end to batch all updates into a single rebuild
         notifyListeners();
       } else {
-        _errorMessage = 'Failed to load data from server';
+        _errorMessage = _parseApiMessage(
+          response,
+          fallback: isEnglish
+              ? 'Failed to load menu data. Please try again.'
+              : 'فشل تحميل بيانات القائمة. يرجى المحاولة مرة أخرى.',
+        );
         _isLoading = false;
         notifyListeners();
       }
     } catch (e) {
-// debugPrint('❌ Error in fetchProductRelatedData: $e');
-      _errorMessage = 'Error loading data: ${e.toString()}';
+      // debugPrint('❌ Error in fetchProductRelatedData: $e');
+      final errorText = e.toString().replaceFirst('Exception:', '').trim();
+      _errorMessage = errorText.isNotEmpty
+          ? errorText
+          : (isEnglish
+              ? 'Error loading menu data. Please try again.'
+              : 'حدث خطأ أثناء تحميل بيانات القائمة. يرجى المحاولة مرة أخرى.');
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Parse server message safely and provide a localized fallback.
+  String _parseApiMessage(
+    Map<String, dynamic> response, {
+    required String fallback,
+  }) {
+    final message = response['message']?.toString().trim();
+    if (message != null && message.isNotEmpty) {
+      return message;
+    }
+    return fallback;
   }
 
   /// Toggle language between English and Arabic
@@ -363,14 +385,14 @@ class HomeProvider extends ChangeNotifier {
   /// Optimized to yield frames during parsing for smoother UI performance
   Future<void> refreshProductListSilently({String branchId = '1'}) async {
     try {
-// debugPrint('🔄 Refreshing product list silently...');
+      // debugPrint('🔄 Refreshing product list silently...');
       
       final apiService = ApiService();
       
       // Check if we have a valid access token before making the request
       final accessToken = await LocalStorage.getAccessToken();
       if (accessToken == null) {
-// debugPrint('⚠️ No access token available for silent refresh');
+        // debugPrint('⚠️ No access token available for silent refresh');
         return;
       }
       

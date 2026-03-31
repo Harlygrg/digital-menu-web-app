@@ -9,6 +9,24 @@ double _safeToDouble(dynamic value) {
   return 0.0;
 }
 
+String _safeToString(dynamic value) {
+  if (value == null) return '';
+  if (value is String) return value;
+  if (value is int || value is double || value is bool) return value.toString();
+  return value.toString();
+}
+
+bool _safeToBool(dynamic value) {
+  if (value == null) return false;
+  if (value is bool) return value;
+  if (value is int) return value != 0;
+  if (value is String) {
+    final v = value.toLowerCase();
+    return v == '1' || v == 'true' || v == 'yes';
+  }
+  return false;
+}
+
 /// Unit price list model for products (matches new API structure)
 class UnitPriceListModel {
   final int unitFkId;
@@ -30,9 +48,9 @@ class UnitPriceListModel {
     return UnitPriceListModel(
       unitFkId: json['unit_fk_id'] ?? 0,
       price: _safeToDouble(json['price']),
-      unitName: json['unit_name'] ?? '',
-      otherLang: json['other_lang'] ?? '',
-      isMainUnit: json['is_main_unit'] ?? false,
+      unitName: _safeToString(json['unit_name']),
+      otherLang: _safeToString(json['other_lang']),
+      isMainUnit: _safeToBool(json['is_main_unit']),
     );
   }
 
@@ -148,14 +166,14 @@ class ModifierModel {
   factory ModifierModel.fromJson(Map<String, dynamic> json) {
     return ModifierModel(
       id: json['ID'] ?? 0,
-      modifier: json['Modifier'] ?? '',
-      rate: json['Rate'] ?? '0',
-      date: json['Date'] ?? '',
+      modifier: _safeToString(json['Modifier']),
+      rate: _safeToString(json['Rate'] ?? '0'),
+      date: _safeToString(json['Date']),
       userID: json['UserID'] ?? 0,
-      descriptionOl: json['DescriptionOl'] ?? '',
+      descriptionOl: _safeToString(json['DescriptionOl']),
       isUploaded: json['isUploaded'] ?? 0,
       cid: json['CID'] ?? 0,
-      otherLang: json['other_lang'] ?? '',
+      otherLang: _safeToString(json['other_lang']),
     );
   }
 

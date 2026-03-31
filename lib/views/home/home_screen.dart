@@ -33,6 +33,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late HomeController _controller;
+  String? _lastShownErrorMessage;
 
   @override
   void initState() {
@@ -416,6 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Consumer<HomeProvider>(
       builder: (context, provider, child) {
+        _showErrorSnackBarIfNeeded(provider);
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
           appBar: const AppBarSilver(),
@@ -428,6 +430,29 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
+  }
+
+  /// Shows error snackbar once per unique provider message.
+  void _showErrorSnackBarIfNeeded(HomeProvider provider) {
+    final message = provider.errorMessage;
+    if (message == null || message.isEmpty) {
+      return;
+    }
+    if (_lastShownErrorMessage == message) {
+      return;
+    }
+
+    _lastShownErrorMessage = message;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    });
   }
 
   /// Build Floating Action Button for cart

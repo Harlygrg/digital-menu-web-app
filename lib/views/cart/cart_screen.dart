@@ -9,14 +9,42 @@ import '../../theme/theme.dart';
 import '../../routes/routes.dart';
 import '../../widgets/service_type_popup.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/order_type_provider.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/home_provider.dart';
 import '../../storage/local_storage.dart';
 import '../../widgets/order_success_popup.dart';
 
 /// Full cart screen with complete cart functionality
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
+
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  final TextEditingController _guestsController = TextEditingController(text: '1');
+  final FocusNode _guestsFocusNode = FocusNode();
+  late final bool _showQrGuestsField;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final queryParams = Uri.base.queryParameters;
+    final orderTypeId = int.tryParse(queryParams['order_type'] ?? '');
+    final tableId = int.tryParse(queryParams['table_id'] ?? '');
+    _showQrGuestsField =
+        orderTypeId != null && tableId != null && orderTypeId > 0 && tableId > 0;
+  }
+
+  @override
+  void dispose() {
+    _guestsController.dispose();
+    _guestsFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -693,6 +721,10 @@ class CartScreen extends StatelessWidget {
             ],
           ),
           SizedBox(height: Responsive.padding(context, 20)),
+          if (_showQrGuestsField) ...[
+            _buildNumberOfGuestsField(context),
+            SizedBox(height: Responsive.padding(context, 16)),
+          ],
           // Place order button
           SizedBox(
             width: double.infinity,
@@ -765,6 +797,58 @@ class CartScreen extends StatelessWidget {
       style: theme.textTheme.bodyMedium?.copyWith(
         fontSize: Responsive.fontSize(context, 14),
       ),
+    );
+  }
+
+  /// Build number of guests input field (QR dine-in bypass only).
+  Widget _buildNumberOfGuestsField(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return TextFormField(
+      controller: _guestsController,
+      focusNode: _guestsFocusNode,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: 'Number of Guests',
+        hintText: 'Enter number of guests',
+        prefixIcon: Icon(
+          Icons.people_outline,
+          color: theme.colorScheme.primary,
+          size: Responsive.fontSize(context, 20),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: theme.colorScheme.outline.withValues(alpha: 0.3),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: theme.colorScheme.primary,
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: theme.colorScheme.error,
+          ),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: Responsive.padding(context, 16),
+          vertical: Responsive.padding(context, 14),
+        ),
+      ),
+      style: theme.textTheme.bodyMedium?.copyWith(
+        fontSize: Responsive.fontSize(context, 14),
+      ),
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+      ],
     );
   }
 
@@ -969,7 +1053,55 @@ class CartScreen extends StatelessWidget {
 
   /// Show service type popup and place order
   Future<void> _showServiceTypeAndPlaceOrder(BuildContext context) async {
-    // Show service type selection popup
+    final queryParams = Uri.base.queryParameters;
+    final qrOrderTypeParam = queryParams['order_type'];
+    final qrTableIdParam = queryParams['table_id'];
+
+    final qrOrderTypeId = int.tryParse(qrOrderTypeParam ?? '');
+    final qrTableId = int.tryParse(qrTableIdParam ?? '');
+
+    // Both params must be present and look valid (IDs are expected to be positive).
+    final qrHasBothParams = qrOrderTypeId != null && qrTableId != null && qrOrderTypeId > 0 && qrTableId > 0;
+
+    // If QR contains BOTH order_type and table_id, skip the popup (only if we can match the order type).
+    if (qrHasBothParams) {
+      final orderTypeProvider = context.read<OrderTypeProvider>();
+      if (!orderTypeProvider.hasOrderTypes) {
+        await orderTypeProvider.fetchOrderTypes();
+      }
+
+      OrderTypeModel? matchedOrderType;
+      for (final orderType in orderTypeProvider.activeOrderTypes) {
+        if (orderType.id == qrOrderTypeId) {
+          matchedOrderType = orderType;
+          break;
+        }
+      }
+
+      if (matchedOrderType != null && context.mounted) {
+        if (matchedOrderType.orderType.toUpperCase() == 'DINE-IN') {
+          // When QR provides both `order_type` and `table_id`, we can place the dine-in order
+          // directly without showing the table selection screen.
+          await _placeOrderForDineInFromQr(
+            context,
+            matchedOrderType,
+            tableIdOverride: qrTableId,
+          );
+          return;
+        }
+
+        // For other order types (TAKE-AWAY, etc.), place order with QR table_id.
+        await _placeOrderForNonDineIn(
+          context,
+          matchedOrderType,
+          tableIdOverride: qrTableId,
+        );
+        return;
+      }
+    }
+
+    // Keep existing behavior when QR params are missing/invalid:
+    // Show service type selection popup.
     final selectedOrderType = await showDialog<OrderTypeModel>(
       context: context,
       barrierDismissible: false, // Prevent dismissing by tapping outside
@@ -993,7 +1125,12 @@ class CartScreen extends StatelessWidget {
   }
 
   /// Place order for non-dine-in service types (TAKE-AWAY, etc.)
-  Future<void> _placeOrderForNonDineIn(BuildContext context, OrderTypeModel orderType) async {
+  Future<void> _placeOrderForNonDineIn(
+    BuildContext context,
+    OrderTypeModel orderType, {
+    int? tableIdOverride,
+  }) async {
+    // debugPrint('_placeOrderForNonDineIn----');
     // Get cart controller
     final cartController = context.read<CartController>();
     
@@ -1007,6 +1144,37 @@ class CartScreen extends StatelessWidget {
         ),
       );
       return;
+    }
+
+    // If QR provides BOTH `table_id` and `order_type`, TableScreen is bypassed.
+    // In that case, we must collect and validate guests here as well.
+    int? numberOfGuests;
+    if (_showQrGuestsField) {
+      final guestsText = _guestsController.text.trim();
+      if (guestsText.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Please enter the number of guests'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        _guestsFocusNode.requestFocus();
+        return;
+      }
+
+      numberOfGuests = int.tryParse(guestsText);
+      if (numberOfGuests == null || numberOfGuests <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Please enter a valid number of guests (must be greater than 0)'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        _guestsFocusNode.requestFocus();
+        return;
+      }
     }
     
     // Get branch ID from local storage
@@ -1061,14 +1229,16 @@ class CartScreen extends StatelessWidget {
       );
     }
     
-    // Call create order API with table_id = 0 for non-dine-in orders
+    // Call create order API for non-dine-in orders.
+    // For QR bypass: use the QR-provided tableId. For manual flow: fallback to 0.
     final orderProvider = context.read<OrderProvider>();
     final response = await orderProvider.createOrder(
       cartItems: cartController.cartItems,
-      tableId: 0, // table_id = 0 for non-dine-in orders
+      tableId: tableIdOverride ?? 0, // table_id = 0 for non-dine-in orders
       orderTypeId: orderType.id.toString(),
       branchId: branchId,
       orderNotes: cartController.orderNotes.isNotEmpty ? cartController.orderNotes : null,
+      noOfGuest: numberOfGuests ?? 0,
     );
     
     // Close loading dialog
@@ -1091,6 +1261,148 @@ class CartScreen extends StatelessWidget {
       }
     } else {
       // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(orderProvider.errorMessage ?? 'Failed to place order'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Place dine-in order directly from QR parameters (no table selection UI).
+  ///
+  /// This is only used when QR contains BOTH `order_type` and `table_id` for dine-in.
+  Future<void> _placeOrderForDineInFromQr(
+    BuildContext context,
+    OrderTypeModel orderType, {
+    required int tableIdOverride,
+  }) async {
+    // Get cart controller
+    final cartController = context.read<CartController>();
+
+    // Check if cart is empty
+    if (cartController.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Cart is empty. Please add items first.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    // Validate number of guests (same logic/messages as TableScreen).
+    final guestsText = _guestsController.text.trim();
+    if (guestsText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please enter the number of guests'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      _guestsFocusNode.requestFocus();
+      return;
+    }
+
+    final numberOfGuests = int.tryParse(guestsText);
+    if (numberOfGuests == null || numberOfGuests <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please enter a valid number of guests (must be greater than 0)'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      _guestsFocusNode.requestFocus();
+      return;
+    }
+
+
+    // Get branch ID from local storage
+    final branchIdString = await LocalStorage.getBranchId();
+    if (branchIdString == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Branch not selected. Please restart the app.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
+    final branchId = int.tryParse(branchIdString) ?? 0;
+
+    // Show loading dialog
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => PopScope(
+          canPop: false,
+          child: Center(
+            child: Container(
+              padding: EdgeInsets.all(Responsive.padding(context, 24)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  SizedBox(height: Responsive.padding(context, 16)),
+                  Text(
+                    'Placing your order...',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: Responsive.fontSize(context, 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+
+    final orderProvider = context.read<OrderProvider>();
+    final response = await orderProvider.createOrder(
+      cartItems: cartController.cartItems,
+      tableId: tableIdOverride,
+      orderTypeId: orderType.id.toString(),
+      branchId: branchId,
+      orderNotes: cartController.orderNotes.isNotEmpty ? cartController.orderNotes : null,
+      noOfGuest: numberOfGuests,
+    );
+
+    // Close loading dialog
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
+
+    // Handle response
+    if (response != null && response.success) {
+      await cartController.clearCart();
+
+      if (context.mounted) {
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => OrderSuccessPopup(orderResponse: response),
+        );
+      }
+    } else {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

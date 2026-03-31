@@ -1,8 +1,5 @@
 
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import '../../constants/api_constants.dart';
 import '../../storage/local_storage.dart';
 import '../../models/table_model.dart';
@@ -28,7 +25,7 @@ class ApiService {
       return;
     }
     
-    // print('Initializing API service...');
+    // print('Initializing API service... base url:${ApiConstants.baseUrl}');
     _dio = Dio(BaseOptions(
       baseUrl: ApiConstants.baseUrl,
       connectTimeout: Duration(milliseconds: ApiConstants.connectionTimeout),
@@ -44,6 +41,21 @@ class ApiService {
     
     // Add retry interceptor for failed requests
     _dio!.interceptors.add(RetryInterceptor());
+
+    _dio!.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          // print('Request URL: ${options.uri}');
+          handler.next(options); // continue
+        },
+        onResponse: (response, handler) {
+          handler.next(response);
+        },
+        onError: (DioException e, handler) {
+          handler.next(e);
+        },
+      ),
+    );
     
     _isInitialized = true;
     // print('API service initialized successfully');
@@ -76,10 +88,27 @@ class ApiService {
   Future<Map<String, dynamic>> getProductRelatedData({required String branchId}) async {
     try {
       _ensureInitialized();
+
+      final orderTypeId = await LocalStorage.getOrderType();
+      Map<String,dynamic> queryParams={};
+      if(orderTypeId!=null){
+        queryParams = {
+          'branch_id':branchId,
+          'ordertypeid':orderTypeId
+        };
+      }else{
+        queryParams = {
+          'branch_id':branchId,
+        };
+      }
+
+      
       final response = await _dio!.get(
        ApiConstants.getProduct,
-        queryParameters: {'branch_id': branchId},
+        queryParameters: queryParams
       );
+
+
       // debugPrint('getProducts:${jsonEncode(response.data)}');
       if (response.statusCode == 200) {
         return response.data;
@@ -115,7 +144,7 @@ class ApiService {
         ApiConstants.guestUserRegister,
         data: data,
       );
-
+      // debugPrint('registerGuestUserApiCall data: ${response}');
       if (response.statusCode == 200) {
         return response.data;
       } else {
@@ -456,7 +485,7 @@ class ApiService {
   Future<Map<String, dynamic>> cancelOrder({required int orderId}) async {
     try {
       _ensureInitialized();
-      debugPrint('Cancelling order: $orderId');
+      // debugPrint('Cancelling order: $orderId');
       final response = await _dio!.post(
         ApiConstants.cancelOrder,
         data: {
@@ -464,8 +493,8 @@ class ApiService {
         },
       );
       
-      debugPrint('Cancel order API response status: ${response.statusCode}');
-      debugPrint('Cancel order API response data: ${response.data}');
+      // debugPrint('Cancel order API response status: ${response.statusCode}');
+      // debugPrint('Cancel order API response data: ${response.data}');
       
       if (response.statusCode == 200) {
         return response.data;
@@ -473,8 +502,8 @@ class ApiService {
         throw Exception('Failed to cancel order: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      debugPrint('DioException during order cancellation: ${e.message},stataus code:${e.response?.statusCode},');
-      debugPrint('DioException during order cancellation data: ${e.response?.data},');
+      // debugPrint('DioException during order cancellation: ${e.message},stataus code:${e.response?.statusCode},');
+      // debugPrint('DioException during order cancellation data: ${e.response?.data},');
 
 
       // Handle specific error cases for cancel order
@@ -492,7 +521,7 @@ class ApiService {
         rethrow;
       }
     } catch (e) {
-      debugPrint('Error cancelling order: $e');
+      // debugPrint('Error cancelling order: $e');
       rethrow;
     }
   }

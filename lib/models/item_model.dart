@@ -13,6 +13,26 @@ double _safeToDouble(dynamic value) {
   return 0.0;
 }
 
+String _safeToString(dynamic value) {
+  if (value == null) return '';
+  if (value is String) return value;
+  if (value is int || value is double || value is bool) return value.toString();
+  return value.toString();
+}
+
+String? _safeToStringOrNull(dynamic value) {
+  if (value == null) return null;
+  return _safeToString(value);
+}
+
+int _safeToInt(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? 0;
+  return 0;
+}
+
 /// Product details model (matches new API structure)
 class ProductDetailsModel {
   final int id;
@@ -45,10 +65,10 @@ class ProductDetailsModel {
       id: json['ID'] ?? 0,
       fkItemId: json['fkItemID'] ?? 0,
       fkUnitId: json['FkUnitID'] ?? 0,
-      convertToBase: json['ConvertToBase'] ?? '',
-      unitPrice: json['UnitPrice'] ?? '',
-      barcode: json['Barcode'] ?? '',
-      cost: json['Cost'] ?? '',
+      convertToBase: _safeToString(json['ConvertToBase']),
+      unitPrice: _safeToString(json['UnitPrice']),
+      barcode: _safeToString(json['Barcode']),
+      cost: _safeToString(json['Cost']),
       isUploaded: json['isUploaded'] ?? 0,
       cid: json['CID'] ?? 0,
       unitMaster: UnitMasterModel.fromJson(json['unit_master'] ?? {}),
@@ -96,12 +116,12 @@ class UnitMasterModel {
   factory UnitMasterModel.fromJson(Map<String, dynamic> json) {
     return UnitMasterModel(
       id: json['ID'] ?? 0,
-      unitName: json['UnitName'] ?? '',
-      date: json['Date'] ?? '',
+      unitName: _safeToString(json['UnitName']),
+      date: _safeToString(json['Date']),
       userid: json['Userid'] ?? 0,
       isUploaded: json['isUploaded'] ?? 0,
       cid: json['CID'],
-      otherLang: json['other_lang'] ?? '',
+      otherLang: _safeToString(json['other_lang']),
     );
   }
 
@@ -191,32 +211,32 @@ class ItemModel {
   factory ItemModel.fromJson(Map<String, dynamic> json) {
     return ItemModel(
       id: json['Id'] ?? 0,
-      iname: json['Iname'] ?? '',
-      icode: json['Icode'] ?? '',
+      iname: _safeToString(json['Iname']),
+      icode: _safeToString(json['Icode']),
       categoryId: json['CategoryId'] ?? 0,
       disabled: json['Disabled'] ?? 0,
-      nameinol: json['Nameinol'] ?? '',
+      nameinol: _safeToString(json['Nameinol']),
       fkUnit: json['fk_Unit'] ?? 0,
       multiUnit: json['MultiUnit'] ?? 0,
       price: _safeToDouble(json['Price']),
       cost: _safeToDouble(json['Cost']),
-      image: json['image'] ?? '',
-      imageUrl: json['img_url'],
+      image: _safeToString(json['image']),
+      imageUrl: _safeToStringOrNull(json['img_url']),
       invPrdct: json['InvPrdct'] ?? 0,
       opqty: json['Opqty'] ?? 0,
-      kot: json['KOT'] ?? '',
-      date: json['Date'] ?? '',
+      kot: _safeToString(json['KOT']),
+      date: _safeToString(json['Date']),
       userid: json['Userid'] ?? 0,
       modifiedBy: json['ModifiedBy'] ?? 0,
-      modifiedDate: json['ModifiedDate'] ?? '',
-      btnColor: json['btnColor'] ?? '',
-      shortName: json['ShortName'] ?? '',
+      modifiedDate: _safeToString(json['ModifiedDate']),
+      btnColor: _safeToString(json['btnColor']),
+      shortName: _safeToString(json['ShortName']),
       isUploaded: json['isUploaded'] ?? 0,
       cid: json['cid'] ?? 0,
       isVeg: json['is_veg'] ?? 0,
       isAvailableInOnline: json['is_available_in_online'] ?? 0,
-      descriptionEn: json['description_en'] ?? '',
-      descriptionOtherLang: json['description_other_lang'] ?? '',
+      descriptionEn: _safeToString(json['description_en']),
+      descriptionOtherLang: _safeToString(json['description_other_lang']),
       unitPriceList: (json['UnitPriceList'] as List<dynamic>?)
           ?.map((item) => UnitPriceListModel.fromJson(item))
           .toList() ?? [],
@@ -224,9 +244,9 @@ class ItemModel {
           ?.map((item) => ProductDetailsModel.fromJson(item))
           .toList() ?? [],
       relatedModifiers: (json['related_modifiers'] as List<dynamic>?)
-          ?.map((item) => item as int)
+          ?.map((item) => _safeToInt(item))
           .toList() ?? [],
-      preparationtime: json['preparationtime'] ?? ''
+      preparationtime: _safeToString(json['preparationtime'])
     );
   }
 

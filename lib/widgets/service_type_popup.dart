@@ -266,6 +266,9 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
                 if(orderType.id == 1 || orderType.id == 2) {
                   return _buildOrderTypeCard(context, orderType, isSelected);
                 }
+                // For safety: if an unexpected order type ID is present,
+                // render an empty cell instead of returning null.
+                return const SizedBox.shrink();
               },
             ),
           ),

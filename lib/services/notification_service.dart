@@ -197,7 +197,7 @@ class NotificationService {
         // debugPrint('🔍 Browser notification permission (live): $permission');
         return permission ?? 'default';
       } catch (e) {
-        debugPrint('⚠️ Error getting browser notification permission: $e');
+        // debugPrint('⚠️ Error getting browser notification permission: $e');
         return 'default';
       }
     }
@@ -218,7 +218,7 @@ class NotificationService {
   /// Returns true if permission granted, false otherwise
   Future<bool> requestPermission() async {
     try {
-      debugPrint('📱 Requesting notification permission from browser...');
+      // debugPrint('📱 Requesting notification permission from browser...');
 
       NotificationSettings settings = await _firebaseMessaging.requestPermission(
         alert: true,
@@ -230,18 +230,18 @@ class NotificationService {
         sound: true,
       );
 
-      debugPrint('🔔 Permission status: ${settings.authorizationStatus}');
+      // debugPrint('🔔 Permission status: ${settings.authorizationStatus}');
       // debugPrint('🔔 Permission details: alert=${settings.alert}, badge=${settings.badge}, sound=${settings.sound}');
 
       final granted = settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional;
       
-      debugPrint(granted ? '✅ Permission GRANTED' : '❌ Permission DENIED');
+      // debugPrint(granted ? '✅ Permission GRANTED' : '❌ Permission DENIED');
       
       return granted;
-    } catch (e, stackTrace) {
-      debugPrint('❌ Error requesting permission: $e');
-      debugPrint('📍 Stack trace: $stackTrace');
+    } catch (e) {
+      // debugPrint('❌ Error requesting permission: $e');
+      // debugPrint('📍 Stack trace: $stackTrace');
       return false;
     }
   }
@@ -573,27 +573,27 @@ class NotificationService {
   /// Returns a Future<String> with the FCM token or empty string if failed
   Future<String> getFcmToken() async {
     try {
-      debugPrint('🔍 getFcmToken: Starting...');
+      // debugPrint('🔍 getFcmToken: Starting...');
 
       if (_currentToken != null && _currentToken!.isNotEmpty) {
-        debugPrint('✅ getFcmToken: Using cached token (${_currentToken!.length} chars)');
+        // debugPrint('✅ getFcmToken: Using cached token (${_currentToken!.length} chars)');
         return _currentToken!;
       }
 
-      debugPrint('⏳ getFcmToken: No cached token, requesting permission...');
+      // debugPrint('⏳ getFcmToken: No cached token, requesting permission...');
 
       final permission = await requestPermission();
-      debugPrint('🔐 getFcmToken: Permission result: $permission');
+      // debugPrint('🔐 getFcmToken: Permission result: $permission');
       
       if (!permission) {
-        debugPrint('❌ getFcmToken: Notification permission denied by user');
+        // debugPrint('❌ getFcmToken: Notification permission denied by user');
         return '';
       }
 
-      debugPrint('📡 getFcmToken: Permission granted, requesting token from FCM...');
+      // debugPrint('📡 getFcmToken: Permission granted, requesting token from FCM...');
       
       if (kIsWeb) {
-        debugPrint('🌐 getFcmToken: Web platform - using VAPID key');
+        // debugPrint('🌐 getFcmToken: Web platform - using VAPID key');
         _currentToken = await _firebaseMessaging.getToken(
           vapidKey: DefaultFirebaseOptions.webVapidKey,
         );
@@ -601,10 +601,10 @@ class NotificationService {
         _currentToken = await _firebaseMessaging.getToken();
       }
 
-      debugPrint('📊 getFcmToken: Token result: ${_currentToken == null ? "NULL" : _currentToken!.isEmpty ? "EMPTY" : "Got token (${_currentToken!.length} chars)"}');
+      // debugPrint('📊 getFcmToken: Token result: ${_currentToken == null ? "NULL" : _currentToken!.isEmpty ? "EMPTY" : "Got token (${_currentToken!.length} chars)"}');
 
       if (_currentToken != null && _currentToken!.isNotEmpty) {
-        debugPrint('✅ getFcmToken: Token obtained successfully');
+        // debugPrint('✅ getFcmToken: Token obtained successfully');
         // debugPrint('🔑 Token preview: ${_currentToken!.substring(0, 20)}...');
         _tokenStreamController.add(_currentToken!);
         
@@ -615,7 +615,7 @@ class NotificationService {
         return _currentToken!;
       }
 
-      debugPrint('⚠️ getFcmToken: First attempt returned null/empty, retrying in 500ms...');
+      // debugPrint('⚠️ getFcmToken: First attempt returned null/empty, retrying in 500ms...');
 
       await Future.delayed(const Duration(milliseconds: 500));
 
@@ -628,7 +628,7 @@ class NotificationService {
       }
 
       if (_currentToken != null && _currentToken!.isNotEmpty) {
-        debugPrint('✅ getFcmToken: Token obtained on retry');
+        // debugPrint('✅ getFcmToken: Token obtained on retry');
         _tokenStreamController.add(_currentToken!);
         
         // Automatically send token to server
@@ -638,12 +638,12 @@ class NotificationService {
         return _currentToken!;
       }
 
-      debugPrint('❌ getFcmToken: Failed to obtain token after retry');
-      debugPrint('💡 Possible reasons: Service worker not active, browser blocked permission, or network issue');
+      // debugPrint('❌ getFcmToken: Failed to obtain token after retry');
+      // debugPrint('💡 Possible reasons: Service worker not active, browser blocked permission, or network issue');
       return '';
-    } catch (e, stackTrace) {
-      debugPrint('❌ getFcmToken: Error getting FCM token: $e');
-      debugPrint('📍 Stack trace: $stackTrace');
+    } catch (e) {
+      // debugPrint('❌ getFcmToken: Error getting FCM token: $e');
+      // debugPrint('📍 Stack trace: $stackTrace');
       return '';
     }
   }

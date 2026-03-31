@@ -165,7 +165,7 @@ class OrderQrWidget extends StatelessWidget {
       );
     } catch (e) {
       // Log error using existing project pattern
-      debugPrint('OrderQrWidget: Failed to generate QR code - $e');
+      // debugPrint('OrderQrWidget: Failed to generate QR code - $e');
       
       // Show error snackbar
       WidgetsBinding.instance.addPostFrameCallback((_) {

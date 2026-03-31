@@ -1,3 +1,10 @@
+String _safeToString(dynamic value) {
+  if (value == null) return '';
+  if (value is String) return value;
+  if (value is int || value is double || value is bool) return value.toString();
+  return value.toString();
+}
+
 /// Model representing a food category (updated for new API)
 class CategoryModel {
   final int id;
@@ -22,10 +29,10 @@ class CategoryModel {
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     return CategoryModel(
       id: json['Id'] ?? 0,
-      category: json['Category'] ?? '',
-      inOl: json['InOl'] ?? '',
+      category: _safeToString(json['Category']),
+      inOl: _safeToString(json['InOl']),
       kot: json['KOT'] ?? 0,
-      date: json['Date'] ?? '',
+      date: _safeToString(json['Date']),
       usrid: json['Usrid'] ?? 0,
       categoryindex: json['categoryindex'] ?? 0,
     );

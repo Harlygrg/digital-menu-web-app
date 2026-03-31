@@ -71,11 +71,11 @@ class ImageUtils {
         placeholder: placeholder != null ? (context, url) => placeholder : null,
         errorWidget: errorWidget != null
             ? (context, url, error) {
-          debugPrint('CachedNetworkImage error:${error.toString()}, url:$url');
+          // debugPrint('CachedNetworkImage error:${error.toString()}, url:$url');
           return errorWidget;
         }
             : (context, url, error) {
-          debugPrint('CachedNetworkImage error 2:${error.toString()}, url2:$url');
+          // debugPrint('CachedNetworkImage error 2:${error.toString()}, url2:$url');
 
           return  _buildDefaultErrorWidget(width, height);
         },

@@ -29,8 +29,8 @@ class ItemsGridWidget extends StatelessWidget {
         final columns = Responsive.gridColumns(context);
         final language = provider.language;
         
-        // Show shimmer when loading OR when data has never been loaded
-        if (provider.isLoading || !provider.hasEverLoadedData) {
+        // Show shimmer only while active loading is in progress.
+        if (provider.isLoading) {
           return const SliverToBoxAdapter(
             child: ItemsGridShimmerWidget(),
           );
