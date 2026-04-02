@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Local Storage Manager
@@ -19,6 +20,12 @@ class LocalStorage {
   // DEPRECATED: No longer used - always check browser permission dynamically instead
   // static const String _notificationPermissionGrantedKey = "notification_permission_granted";
 
+  // Cart pricing sync keys
+  static const String _needsPriceSyncKey = "needs_price_sync";
+  static const String _cartContextBranchIdKey = "cart_context_branch_id";
+  static const String _cartContextOrderTypeIdKey = "cart_context_order_type_id";
+  static const String _cartContextTableIdKey = "cart_context_table_id";
+
   /// Saves authentication tokens to local storage
   /// 
   /// Parameters:
@@ -31,6 +38,11 @@ class LocalStorage {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_accessTokenKey, accessToken);
       await prefs.setString(_refreshTokenKey, refreshToken);
+      if (kDebugMode) {
+        debugPrint(
+          '🔑 Tokens saved -> accessToken: $accessToken | refreshToken: $refreshToken',
+        );
+      }
       return true;
     } catch (e) {
       // print("Error saving tokens: $e");
@@ -261,6 +273,57 @@ class LocalStorage {
       // print("Error clearing table ID: $e");
       return false;
     }
+  }
+
+  /// Persist whether the cart must be price-synced before checkout.
+  static Future<bool> setNeedsPriceSync(bool value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_needsPriceSyncKey, value);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Returns whether the cart must be price-synced before checkout.
+  static Future<bool> getNeedsPriceSync() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_needsPriceSyncKey) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Persist the pricing context under which the cart was last synced.
+  static Future<void> saveCartPricingContext({
+    required String branchId,
+    required String orderTypeId,
+    required String tableId,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_cartContextBranchIdKey, branchId);
+    await prefs.setString(_cartContextOrderTypeIdKey, orderTypeId);
+    await prefs.setString(_cartContextTableIdKey, tableId);
+  }
+
+  /// Reads the last stored cart pricing context.
+  static Future<({String? branchId, String? orderTypeId, String? tableId})> getCartPricingContext() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (
+      branchId: prefs.getString(_cartContextBranchIdKey),
+      orderTypeId: prefs.getString(_cartContextOrderTypeIdKey),
+      tableId: prefs.getString(_cartContextTableIdKey),
+    );
+  }
+
+  /// Clears the stored cart pricing context.
+  static Future<void> clearCartPricingContext() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_cartContextBranchIdKey);
+    await prefs.remove(_cartContextOrderTypeIdKey);
+    await prefs.remove(_cartContextTableIdKey);
   }
 
   /// Saves the customer ID to local storage

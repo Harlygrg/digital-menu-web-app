@@ -47,6 +47,12 @@ class ApiConstants {
   
   /// Refresh token endpoint
   static const String refreshToken = "refreshToken";
+
+  /// Get cart prices endpoint (price sync)
+  ///
+  /// Note: API base already includes `/api/v1/` (see `web/config.json`), so this
+  /// should remain the path segment only.
+  static const String getCartPrices = "getCartPrices";
   
   /// Connection timeout duration in milliseconds
   static const int connectionTimeout = 30000;

@@ -12,6 +12,7 @@ import '../../storage/local_storage.dart';
 import '../../services/notification_service.dart';
 import '../../firebase_options.dart';
 import '../../routes/routes.dart';
+import '../../widgets/cart_price_sync_dialog.dart';
 import 'widgets/app_bar_silver.dart';
 import 'widgets/search_bar.dart';
 import 'widgets/branch_dropdown.dart';
@@ -34,6 +35,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late HomeController _controller;
   String? _lastShownErrorMessage;
+  bool _didPromptCartPriceSync = false;
 
   @override
   void initState() {
@@ -58,6 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
 // debugPrint('📱 Phase 1: Loading core content...');
       await _controller.initialize(context: context);
 // debugPrint('✅ Phase 1 complete: Main content loaded');
+
+      await _handleCartPricingContextIfNeeded();
       
       // PHASE 2: FCM initialization (happens in background, non-blocking)
       // This doesn't block UI rendering and can happen asynchronously
@@ -69,6 +73,53 @@ class _HomeScreenState extends State<HomeScreen> {
 // debugPrint('❌ Error during app initialization: $e');
       // Even if there's an error, we should still try to initialize FCM in background
       _initializeFirebaseMessagingInBackground();
+    }
+  }
+
+  Future<void> _handleCartPricingContextIfNeeded() async {
+    if (_didPromptCartPriceSync) return;
+    final homeProvider = context.read<HomeProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final errorColor = Theme.of(context).colorScheme.error;
+
+    final cartController = context.read<CartController>();
+    if (cartController.isEmpty) return;
+
+    final isStale = await cartController.isCartPricingContextStale();
+    if (!mounted) return;
+    if (!isStale) return;
+
+    _didPromptCartPriceSync = true;
+    await cartController.markNeedsPriceSync();
+    if (!mounted) return;
+    final proceed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => CartPriceSyncDialog(isEnglish: homeProvider.isEnglish),
+    );
+
+    if (proceed == true && mounted) {
+      try {
+        await cartController.syncCartPrices();
+        if (!mounted) return;
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(homeProvider.isEnglish ? 'Cart updated.' : 'تم تحديث السلة.'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              homeProvider.isEnglish ? 'Failed to update cart. Please try again.' : 'فشل تحديث السلة. حاول مرة أخرى.',
+            ),
+            backgroundColor: errorColor,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 

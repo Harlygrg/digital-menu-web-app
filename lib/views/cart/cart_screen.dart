@@ -363,6 +363,23 @@ class _CartScreenState extends State<CartScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (!cartItem.isAvailable) ...[
+                        SizedBox(height: Responsive.padding(context, 6)),
+                        Text(
+                          isEnglish
+                              ? (cartItem.unavailableReason?.isNotEmpty == true
+                                  ? cartItem.unavailableReason!
+                                  : 'Not available for this order type')
+                              : (cartItem.unavailableReason?.isNotEmpty == true
+                                  ? cartItem.unavailableReason!
+                                  : 'غير متوفر لهذا النوع من الطلب'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                            fontWeight: FontWeight.w600,
+                            fontSize: Responsive.fontSize(context, 12),
+                          ),
+                        ),
+                      ],
                       SizedBox(height: Responsive.padding(context, 4)),
                       Text(
                         cartItem.unitDisplayName,
@@ -411,6 +428,7 @@ class _CartScreenState extends State<CartScreen> {
                 cartController,
                 cartItem,
                 modifier,
+                isEnglish,
               )),
             ],
             
@@ -528,6 +546,7 @@ class _CartScreenState extends State<CartScreen> {
     CartController cartController,
     CartItemModel cartItem,
     CartModifier modifier,
+    bool isEnglish,
   ) {
     final theme = Theme.of(context);
     final isZeroQuantity = modifier.quantity == 0;
@@ -537,14 +556,32 @@ class _CartScreenState extends State<CartScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              '• ${modifier.name}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: Responsive.fontSize(context, 12),
-                color: isZeroQuantity 
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
-                    : theme.colorScheme.onSurface,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '• ${modifier.name}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: Responsive.fontSize(context, 12),
+                    color: isZeroQuantity
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
+                        : theme.colorScheme.onSurface,
+                  ),
+                ),
+                if (!modifier.isAvailable) ...[
+                  SizedBox(height: Responsive.padding(context, 2)),
+                  Text(
+                    modifier.unavailableReason?.isNotEmpty == true
+                        ? modifier.unavailableReason!
+                        : (isEnglish ? 'Not available' : 'غير متوفر'),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: Responsive.fontSize(context, 11),
+                      color: theme.colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           Text(
@@ -680,6 +717,9 @@ class _CartScreenState extends State<CartScreen> {
     final theme = Theme.of(context);
     final total = cartController.totalPrice;
     final itemCount = cartController.itemCount;
+    final needsSync = cartController.needsPriceSync;
+    final hasUnavailable = cartController.hasUnavailableItems;
+    final canCheckout = !needsSync && !hasUnavailable;
 
     return Container(
       padding: EdgeInsets.all(Responsive.padding(context, 20)),
@@ -694,6 +734,72 @@ class _CartScreenState extends State<CartScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (needsSync || hasUnavailable) ...[
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(Responsive.padding(context, 12)),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.error.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.error.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isEnglish ? 'Action required' : 'مطلوب إجراء',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                  SizedBox(height: Responsive.padding(context, 6)),
+                  Text(
+                    needsSync
+                        ? (isEnglish
+                            ? 'Your order type has changed. Prices and item availability may be different. Please update your cart before placing the order.'
+                            : 'تم تغيير نوع الطلب. قد تختلف الأسعار وتوفر الأصناف. يرجى تحديث السلة قبل إتمام الطلب.')
+                        : (isEnglish
+                            ? 'Some items or add-ons are not available for this order type. Please review your cart before placing the order.'
+                            : 'بعض الأصناف أو الإضافات غير متوفرة لهذا النوع من الطلب. يرجى مراجعة السلة قبل إتمام الطلب.'),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                      height: 1.3,
+                    ),
+                  ),
+                  if (needsSync) ...[
+                    SizedBox(height: Responsive.padding(context, 12)),
+                    SizedBox(
+                      width: double.infinity,
+                      height: Responsive.padding(context, 46),
+                      child: OutlinedButton(
+                        onPressed: () async {
+                          try {
+                            await cartController.syncCartPrices();
+                          } catch (_) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isEnglish ? 'Failed to update cart. Please try again.' : 'فشل تحديث السلة. حاول مرة أخرى.',
+                                ),
+                                backgroundColor: Theme.of(context).colorScheme.error,
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(isEnglish ? 'Update Cart' : 'تحديث السلة'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            SizedBox(height: Responsive.padding(context, 16)),
+          ],
           // Order notes text field
           _buildOrderNotesField(context, cartController, isEnglish),
           SizedBox(height: Responsive.padding(context, 16)),
@@ -730,7 +836,7 @@ class _CartScreenState extends State<CartScreen> {
             width: double.infinity,
             height: Responsive.padding(context, 52),
             child: ElevatedButton(
-              onPressed: () => _placeOrder(context),
+              onPressed: canCheckout ? () => _placeOrder(context) : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: theme.colorScheme.onPrimary,
@@ -1014,6 +1120,38 @@ class _CartScreenState extends State<CartScreen> {
 
   /// Handle place order action
   void _placeOrder(BuildContext context) async {
+    final cartController = context.read<CartController>();
+    final homeProvider = context.read<HomeProvider>();
+    if (cartController.needsPriceSync) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            homeProvider.isEnglish
+                ? 'Please update your cart before checkout.'
+                : 'يرجى تحديث السلة قبل إتمام الطلب.',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    if (cartController.hasUnavailableItems) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            homeProvider.isEnglish
+                ? 'Some items are unavailable for this order type. Please review your cart.'
+                : 'بعض الأصناف غير متوفرة لهذا النوع من الطلب. يرجى مراجعة السلة.',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     final customerProvider = context.read<CustomerProvider>();
     
     // Check if customer is already registered

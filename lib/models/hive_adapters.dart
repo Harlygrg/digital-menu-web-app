@@ -11,11 +11,28 @@ class CartModifierAdapter extends TypeAdapter<CartModifier> {
 
   @override
   CartModifier read(BinaryReader reader) {
+    final id = reader.readInt();
+    final name = reader.readString();
+    final price = reader.readDouble();
+    final quantity = reader.readInt();
+
+    // Backward compatibility: older persisted data won't have these fields.
+    bool isAvailable = true;
+    String? unavailableReason;
+    try {
+      isAvailable = reader.readBool();
+      unavailableReason = reader.read() as String?;
+    } catch (_) {
+      // Defaults already set.
+    }
+
     return CartModifier(
-      id: reader.readInt(),
-      name: reader.readString(),
-      price: reader.readDouble(),
-      quantity: reader.readInt(),
+      id: id,
+      name: name,
+      price: price,
+      quantity: quantity,
+      isAvailable: isAvailable,
+      unavailableReason: unavailableReason,
     );
   }
 
@@ -25,6 +42,8 @@ class CartModifierAdapter extends TypeAdapter<CartModifier> {
     writer.writeString(obj.name);
     writer.writeDouble(obj.price);
     writer.writeInt(obj.quantity);
+    writer.writeBool(obj.isAvailable);
+    writer.write(obj.unavailableReason);
   }
 }
 
@@ -210,15 +229,36 @@ class CartItemModelAdapter extends TypeAdapter<CartItemModel> {
 
   @override
   CartItemModel read(BinaryReader reader) {
+    final id = reader.readString();
+    final item = reader.read() as ItemModel;
+    final selectedUnit = reader.read() as UnitPriceListModel?;
+    final modifiers = (reader.read() as List).cast<CartModifier>();
+    final quantity = reader.readInt();
+    final specialInstructions = reader.read() as String?;
+    final unitPrice = reader.readDouble();
+    final itemTotal = reader.readDouble();
+
+    // Backward compatibility: older persisted data won't have these fields.
+    bool isAvailable = true;
+    String? unavailableReason;
+    try {
+      isAvailable = reader.readBool();
+      unavailableReason = reader.read() as String?;
+    } catch (_) {
+      // Defaults already set.
+    }
+
     return CartItemModel(
-      id: reader.readString(),
-      item: reader.read() as ItemModel,
-      selectedUnit: reader.read() as UnitPriceListModel?,
-      modifiers: (reader.read() as List).cast<CartModifier>(),
-      quantity: reader.readInt(),
-      specialInstructions: reader.read() as String?,
-      unitPrice: reader.readDouble(),
-      itemTotal: reader.readDouble(),
+      id: id,
+      item: item,
+      selectedUnit: selectedUnit,
+      modifiers: modifiers,
+      quantity: quantity,
+      specialInstructions: specialInstructions,
+      unitPrice: unitPrice,
+      itemTotal: itemTotal,
+      isAvailable: isAvailable,
+      unavailableReason: unavailableReason,
     );
   }
 
@@ -232,6 +272,8 @@ class CartItemModelAdapter extends TypeAdapter<CartItemModel> {
     writer.write(obj.specialInstructions);
     writer.writeDouble(obj.unitPrice);
     writer.writeDouble(obj.itemTotal);
+    writer.writeBool(obj.isAvailable);
+    writer.write(obj.unavailableReason);
   }
 }
 

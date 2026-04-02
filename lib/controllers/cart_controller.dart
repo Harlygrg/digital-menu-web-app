@@ -4,10 +4,15 @@ import '../models/item_model.dart';
 import '../models/option_models.dart';
 import '../models/cart_item_model.dart';
 import '../services/api/api_service.dart';
+import '../storage/local_storage.dart';
+import '../models/cart_pricing/cart_price_sync_dtos.dart';
 
 /// Controller for managing cart state and operations
 class CartController extends ChangeNotifier {
   final List<CartItemModel> _cartItems = [];
+
+  bool _needsPriceSync = false;
+  Future<void>? _inFlightPriceSync;
   
   /// Hive box for cart persistence
   Box<CartItemModel>? _cartBox;
@@ -28,9 +33,15 @@ class CartController extends ChangeNotifier {
     try {
       await _loadCartFromHive();
       await _loadOrderNotesFromHive();
+      await _loadNeedsPriceSyncFromStorage();
     } catch (e) {
 // debugPrint('Error initializing cart from Hive: $e');
     }
+  }
+
+  Future<void> _loadNeedsPriceSyncFromStorage() async {
+    _needsPriceSync = await LocalStorage.getNeedsPriceSync();
+    notifyListeners();
   }
 
   /// Get all cart items
@@ -47,6 +58,20 @@ class CartController extends ChangeNotifier {
 
   /// Check if cart is not empty
   bool get isNotEmpty => _cartItems.isNotEmpty;
+
+  /// Whether the cart must be synced before checkout.
+  bool get needsPriceSync => _needsPriceSync;
+
+  /// True if any cart item/modifier is unavailable.
+  bool get hasUnavailableItems {
+    for (final item in _cartItems) {
+      if (!item.isAvailable) return true;
+      for (final mod in item.modifiers) {
+        if (!mod.isAvailable) return true;
+      }
+    }
+    return false;
+  }
   
   /// Get order notes
   String get orderNotes => _orderNotes;
@@ -64,6 +89,7 @@ class CartController extends ChangeNotifier {
     required Map<String, dynamic> payload,
   }) async {
     try {
+      final wasEmpty = _cartItems.isEmpty;
       // First check product availability
       final apiService = ApiService();
       final isAvailable = await apiService.checkProductAvailability(productId: item.id);
@@ -81,8 +107,21 @@ class CartController extends ChangeNotifier {
 
       // Find the selected unit (if any)
       UnitPriceListModel? selectedUnit;
-      // Note: In a real implementation, you'd need to pass the available units
-      // and find the matching one based on the selectedSize
+      if (selectedSize != null && selectedSize.trim().isNotEmpty) {
+        selectedUnit = item.unitPriceList.firstWhere(
+          (u) => u.unitName == selectedSize,
+          orElse: () => item.unitPriceList.isNotEmpty ? item.unitPriceList.first : const UnitPriceListModel(unitFkId: 0, price: 0, unitName: '', otherLang: '', isMainUnit: false),
+        );
+        if (selectedUnit.unitFkId == 0) {
+          selectedUnit = null;
+        }
+      } else if (item.unitPriceList.isNotEmpty) {
+        // Default to the main unit when no explicit size was selected.
+        selectedUnit = item.unitPriceList.firstWhere(
+          (u) => u.isMainUnit,
+          orElse: () => item.unitPriceList.first,
+        );
+      }
 
       // Convert addons to CartModifier objects
       final modifiers = addons.map<CartModifier>((addon) {
@@ -121,6 +160,10 @@ class CartController extends ChangeNotifier {
       // Persist cart to Hive after adding item
       await _saveCartToHive();
 
+      if (wasEmpty && _cartItems.isNotEmpty) {
+        await _setCartPricingContextToCurrentAndClearStale();
+      }
+
       notifyListeners();
     } catch (e) {
 // debugPrint('Error adding item to cart: $e');
@@ -137,6 +180,7 @@ class CartController extends ChangeNotifier {
     String? specialInstructions,
   }) async {
     try {
+      final wasEmpty = _cartItems.isEmpty;
       // Convert ModifierModel to CartModifier
       final cartModifiers = modifiers
           .where((modifier) => modifier.price > 0)
@@ -178,6 +222,10 @@ class CartController extends ChangeNotifier {
 
       // Persist cart to Hive after adding item
       await _saveCartToHive();
+
+      if (wasEmpty && _cartItems.isNotEmpty) {
+        await _setCartPricingContextToCurrentAndClearStale();
+      }
 
       notifyListeners();
     } catch (e) {
@@ -314,7 +362,158 @@ class CartController extends ChangeNotifier {
     // Clear cart from Hive storage (persist cleared state)
     await _clearCartFromHive();
     await _clearOrderNotesFromHive();
+    await _setNeedsPriceSync(false);
+    await LocalStorage.clearCartPricingContext();
     notifyListeners();
+  }
+
+  Future<void> _setNeedsPriceSync(bool value) async {
+    _needsPriceSync = value;
+    await LocalStorage.setNeedsPriceSync(value);
+    notifyListeners();
+  }
+
+  /// Returns the *current* order context normalized for comparisons and API payloads.
+  ///
+  /// - Missing `table_id` defaults to `"0"` (takeaway / non-table context).
+  Future<({String branchId, String orderTypeId, String tableId})> getCurrentOrderContext() async {
+    final branchId = (await LocalStorage.getBranchId())?.trim() ?? '';
+    final orderTypeId = (await LocalStorage.getOrderType())?.trim() ?? '';
+    final tableIdRaw = (await LocalStorage.getTableId())?.trim();
+    final tableId = (tableIdRaw == null || tableIdRaw.isEmpty) ? '0' : tableIdRaw;
+    return (branchId: branchId, orderTypeId: orderTypeId, tableId: tableId);
+  }
+
+  /// Returns true if the cart context differs from the last successful pricing context.
+  Future<bool> isCartPricingContextStale() async {
+    if (_cartItems.isEmpty) return false;
+    final current = await getCurrentOrderContext();
+    final saved = await LocalStorage.getCartPricingContext();
+
+    final savedTable = (saved.tableId == null || saved.tableId!.trim().isEmpty) ? '0' : saved.tableId!.trim();
+    final savedBranch = saved.branchId?.trim() ?? '';
+    final savedOrderType = saved.orderTypeId?.trim() ?? '';
+
+    return savedBranch != current.branchId ||
+        savedOrderType != current.orderTypeId ||
+        savedTable != current.tableId;
+  }
+
+  /// Mark the cart as needing a price sync (persisted).
+  Future<void> markNeedsPriceSync() async {
+    await _setNeedsPriceSync(true);
+  }
+
+  Future<void> _setCartPricingContextToCurrentAndClearStale() async {
+    final current = await getCurrentOrderContext();
+    await LocalStorage.saveCartPricingContext(
+      branchId: current.branchId,
+      orderTypeId: current.orderTypeId,
+      tableId: current.tableId,
+    );
+    await _setNeedsPriceSync(false);
+  }
+
+  /// Sync cart prices + availability via backend `getCartPrices`.
+  ///
+  /// Single-flight: rapid calls will await the in-flight sync.
+  Future<void> syncCartPrices() async {
+    if (_inFlightPriceSync != null) return _inFlightPriceSync!;
+
+    _inFlightPriceSync = _syncCartPricesInternal().whenComplete(() {
+      _inFlightPriceSync = null;
+    });
+
+    return _inFlightPriceSync!;
+  }
+
+  Future<void> _syncCartPricesInternal() async {
+    if (_cartItems.isEmpty) {
+      await _setNeedsPriceSync(false);
+      return;
+    }
+
+    final context = await getCurrentOrderContext();
+    final branchId = int.tryParse(context.branchId) ?? 0;
+    final orderTypeId = int.tryParse(context.orderTypeId) ?? 0;
+    final tableId = int.tryParse(context.tableId) ?? 0;
+
+    final request = CartPriceSyncRequestDto(
+      branchId: branchId,
+      orderTypeId: orderTypeId,
+      tableId: tableId,
+      items: _cartItems.map((line) {
+        final unitId = _resolveUnitIdForLine(line);
+        final modifierIds = line.modifiers.where((m) => m.quantity > 0).map((m) => m.id).toList();
+        return CartPriceSyncRequestItemDto(
+          productId: line.item.id,
+          unitId: unitId,
+          qty: line.quantity,
+          modifierIds: modifierIds,
+        );
+      }).toList(),
+    );
+
+    final response = await ApiService().getCartPrices(request: request);
+    if (!response.success || response.data == null) {
+      await _setNeedsPriceSync(true);
+      throw Exception(response.message.isNotEmpty ? response.message : 'Failed to fetch cart prices');
+    }
+
+    final data = response.data!;
+
+    final itemPriceMap = <String, CartPriceSyncItemPriceDto>{};
+    for (final p in data.itemPrices) {
+      itemPriceMap['${p.productId}:${p.unitId}'] = p;
+    }
+
+    final modifierPriceMap = <String, CartPriceSyncModifierPriceDto>{};
+    for (final m in data.modifierPrices) {
+      modifierPriceMap['${m.productId}:${m.unitId}:${m.modifierId}'] = m;
+    }
+
+    for (var i = 0; i < _cartItems.length; i++) {
+      final line = _cartItems[i];
+      final unitId = _resolveUnitIdForLine(line);
+      final itemKey = '${line.item.id}:$unitId';
+      final itemPrice = itemPriceMap[itemKey];
+
+      final itemIsAvailable = itemPrice?.isAvailable ?? false;
+      final itemReason = itemPrice?.reason ?? (itemPrice == null ? 'Pricing not returned' : null);
+      final updatedUnitPrice = itemPrice?.unitPrice ?? 0.0;
+
+      final updatedModifiers = line.modifiers.map((mod) {
+        final key = '${line.item.id}:$unitId:${mod.id}';
+        final mp = modifierPriceMap[key];
+        final modIsAvailable = mp?.isAvailable ?? false;
+        final modReason = mp?.reason ?? (mp == null ? 'Pricing not returned' : null);
+        final modPrice = mp?.unitPrice ?? 0.0;
+        return mod.copyWith(
+          price: modPrice,
+          isAvailable: modIsAvailable,
+          unavailableReason: modReason,
+        );
+      }).toList();
+
+      _cartItems[i] = line.copyWith(
+        unitPrice: updatedUnitPrice,
+        modifiers: updatedModifiers,
+        isAvailable: itemIsAvailable,
+        unavailableReason: itemReason,
+      );
+    }
+
+    await _setCartPricingContextToCurrentAndClearStale();
+    await _saveCartToHive();
+  }
+
+  int _resolveUnitIdForLine(CartItemModel line) {
+    final selected = line.selectedUnit?.unitFkId;
+    if (selected != null && selected > 0) return selected;
+    final itemUnit = line.item.fkUnit;
+    if (itemUnit > 0) return itemUnit;
+    // Last-resort fallback to avoid invalid 0; keeps previous behavior but only when necessary.
+    return 1;
   }
 
   /// Find index of existing similar item

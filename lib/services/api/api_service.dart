@@ -8,6 +8,7 @@ import '../../models/branch_model.dart';
 import '../../models/create_order_response_model.dart';
 import '../../models/customer_model.dart';
 import '../../models/user_order_model.dart';
+import '../../models/cart_pricing/cart_price_sync_dtos.dart';
 
 /// API Service for handling HTTP requests
 class ApiService {
@@ -446,6 +447,41 @@ class ApiService {
     } catch (e) {
       // debugPrint('Error checking product availability: $e');
       throw Exception('Unable to check item availability. Please try again.');
+    }
+  }
+
+  /// Fetch latest prices & availability for the current cart.
+  ///
+  /// This integrates the new backend endpoint `getCartPrices`.
+  /// The JSON mapping is centralized in `CartPriceSync*Dto` so backend key changes
+  /// can be adjusted in one place without touching business logic.
+  Future<CartPriceSyncResponseDto> getCartPrices({
+    required CartPriceSyncRequestDto request,
+  }) async {
+    try {
+      _ensureInitialized();
+
+      final response = await _dio!.post(
+        ApiConstants.getCartPrices,
+        data: request.toJson(),
+      );
+
+      if (response.statusCode == 200) {
+        if (response.data is Map<String, dynamic>) {
+          return CartPriceSyncResponseDto.fromJson(response.data as Map<String, dynamic>);
+        }
+        if (response.data is Map) {
+          return CartPriceSyncResponseDto.fromJson((response.data as Map).cast<String, dynamic>());
+        }
+        throw Exception('Invalid getCartPrices response shape');
+      }
+
+      throw Exception('Failed to fetch cart prices: ${response.statusCode}');
+    } on DioException catch (e) {
+      _handleDioError(e);
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
   }
 

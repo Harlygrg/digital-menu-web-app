@@ -7,12 +7,16 @@ class CartModifier {
   final String name;
   final double price;
   final int quantity;
+  final bool isAvailable;
+  final String? unavailableReason;
 
   const CartModifier({
     required this.id,
     required this.name,
     required this.price,
     required this.quantity,
+    this.isAvailable = true,
+    this.unavailableReason,
   });
 
   /// Calculate total price for this modifier
@@ -24,12 +28,16 @@ class CartModifier {
     String? name,
     double? price,
     int? quantity,
+    bool? isAvailable,
+    String? unavailableReason,
   }) {
     return CartModifier(
       id: id ?? this.id,
       name: name ?? this.name,
       price: price ?? this.price,
       quantity: quantity ?? this.quantity,
+      isAvailable: isAvailable ?? this.isAvailable,
+      unavailableReason: unavailableReason ?? this.unavailableReason,
     );
   }
 
@@ -44,7 +52,7 @@ class CartModifier {
 
   @override
   String toString() {
-    return 'CartModifier(id: $id, name: $name, price: $price, quantity: $quantity)';
+    return 'CartModifier(id: $id, name: $name, price: $price, quantity: $quantity, isAvailable: $isAvailable)';
   }
 }
 
@@ -57,6 +65,8 @@ class CartItemModel {
   final int quantity;
   final String? specialInstructions;
   final double unitPrice;
+  final bool isAvailable;
+  final String? unavailableReason;
   double itemTotal ;
 
    CartItemModel({
@@ -67,6 +77,8 @@ class CartItemModel {
     required this.quantity,
     this.specialInstructions,
     required this.unitPrice,
+    this.isAvailable = true,
+    this.unavailableReason,
     this.itemTotal= 0,
   });
 
@@ -102,6 +114,8 @@ class CartItemModel {
     int? quantity,
     String? specialInstructions,
     double? unitPrice,
+    bool? isAvailable,
+    String? unavailableReason,
   }) {
     return CartItemModel(
       id: id ?? this.id,
@@ -111,6 +125,8 @@ class CartItemModel {
       quantity: quantity ?? this.quantity,
       specialInstructions: specialInstructions ?? this.specialInstructions,
       unitPrice: unitPrice ?? this.unitPrice,
+      isAvailable: isAvailable ?? this.isAvailable,
+      unavailableReason: unavailableReason ?? this.unavailableReason,
     );
   }
 

@@ -51,7 +51,7 @@ class OrderProvider extends ChangeNotifier {
 
       for (final cartItem in cartItems) {
         // Add main item entry
-        final itemTotal = cartItem.itemTotal;
+        final itemTotal = cartItem.unitPrice * cartItem.quantity;
         grossTotal += itemTotal;
 
         orderDetails.add(
