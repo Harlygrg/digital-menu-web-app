@@ -83,6 +83,124 @@ class CartController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Builds a [CartItemModel] from the add-to-cart popup payload (same rules as [addToCartFromPopup]).
+  CartItemModel _buildCartItemModelFromPopupPayload({
+    required ItemModel item,
+    required Map<String, dynamic> payload,
+    required int quantity,
+    String? lineId,
+  }) {
+    final selectedSize = payload['size'] as String?;
+    final addons = payload['addons'] as List<dynamic>? ?? [];
+    final note = payload['note'] as String?;
+    final unitPrice = payload['unitPrice'] as double? ?? item.price;
+
+    UnitPriceListModel? selectedUnit;
+    if (selectedSize != null && selectedSize.trim().isNotEmpty) {
+      selectedUnit = item.unitPriceList.firstWhere(
+        (u) => u.unitName == selectedSize,
+        orElse: () => item.unitPriceList.isNotEmpty ? item.unitPriceList.first : const UnitPriceListModel(unitFkId: 0, price: 0, unitName: '', otherLang: '', isMainUnit: false),
+      );
+      if (selectedUnit.unitFkId == 0) {
+        selectedUnit = null;
+      }
+    } else if (item.unitPriceList.isNotEmpty) {
+      selectedUnit = item.unitPriceList.firstWhere(
+        (u) => u.isMainUnit,
+        orElse: () => item.unitPriceList.first,
+      );
+    }
+
+    final modifiers = addons.map<CartModifier>((addon) {
+      return CartModifier(
+        id: addon['id'] as int? ?? 0,
+        name: addon['title'] as String? ?? '',
+        price: (addon['price'] as num?)?.toDouble() ?? 0.0,
+        quantity: addon['qty'] as int? ?? 1,
+      );
+    }).toList();
+
+    return CartItemModel(
+      id: lineId ?? '${item.id}_${selectedSize ?? 'default'}_${DateTime.now().millisecondsSinceEpoch}',
+      item: item,
+      selectedUnit: selectedUnit,
+      modifiers: modifiers,
+      quantity: quantity,
+      specialInstructions: note,
+      unitPrice: unitPrice,
+    );
+  }
+
+  /// True when edit would not change unit, notes (trimmed), or positive-qty modifiers (order-insensitive).
+  bool _isEditNoop(CartItemModel existing, CartItemModel candidate) {
+    if (existing.selectedUnit?.unitFkId != candidate.selectedUnit?.unitFkId) {
+      return false;
+    }
+    final n1 = existing.specialInstructions?.trim() ?? '';
+    final n2 = candidate.specialInstructions?.trim() ?? '';
+    if (n1 != n2) return false;
+
+    final ea = existing.modifiers.where((m) => m.quantity > 0).toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
+    final ca = List<CartModifier>.from(candidate.modifiers)
+      ..sort((a, b) => a.id.compareTo(b.id));
+    if (ea.length != ca.length) return false;
+    for (var i = 0; i < ea.length; i++) {
+      if (ea[i].id != ca[i].id || ea[i].quantity != ca[i].quantity) return false;
+    }
+    return true;
+  }
+
+  /// Update an existing cart line from the same popup payload used by [addToCartFromPopup].
+  /// Preserves [existing.quantity], replaces or merges using [_findExistingItemIndex], and reuses [existing.id] when inserting in place.
+  /// Returns `false` when nothing changed (no-op), `true` when the cart was updated.
+  Future<bool> updateCartItemFromPopup({
+    required CartItemModel existing,
+    required ItemModel item,
+    required Map<String, dynamic> payload,
+  }) async {
+    try {
+      final oldIndex = _cartItems.indexWhere((e) => e.id == existing.id);
+      if (oldIndex == -1) {
+        throw Exception('Cart line not found');
+      }
+
+      final apiService = ApiService();
+      final isAvailable = await apiService.checkProductAvailability(productId: item.id);
+      if (!isAvailable) {
+        throw Exception('⚠️ This item is no longer available. Refreshing menu...');
+      }
+
+      final candidate = _buildCartItemModelFromPopupPayload(
+        item: item,
+        payload: payload,
+        quantity: existing.quantity,
+      );
+
+      if (_isEditNoop(_cartItems[oldIndex], candidate)) {
+        return false;
+      }
+
+      _cartItems.removeAt(oldIndex);
+
+      final mergeIndex = _findExistingItemIndex(candidate);
+      if (mergeIndex != -1) {
+        _cartItems[mergeIndex] = _cartItems[mergeIndex].copyWith(
+          quantity: _cartItems[mergeIndex].quantity + candidate.quantity,
+        );
+      } else {
+        final inserted = candidate.copyWith(id: existing.id);
+        _cartItems.insert(oldIndex, inserted);
+      }
+
+      await _saveCartToHive();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Add item to cart from popup payload with availability check
   Future<void> addToCartFromPopup({
     required ItemModel item,
@@ -98,50 +216,11 @@ class CartController extends ChangeNotifier {
         throw Exception('⚠️ This item is no longer available. Refreshing menu...');
       }
 
-      // Extract data from payload
-      final selectedSize = payload['size'] as String?;
       final quantity = payload['quantity'] as int? ?? 1;
-      final addons = payload['addons'] as List<dynamic>? ?? [];
-      final note = payload['note'] as String?;
-      final unitPrice = payload['unitPrice'] as double? ?? item.price;
-
-      // Find the selected unit (if any)
-      UnitPriceListModel? selectedUnit;
-      if (selectedSize != null && selectedSize.trim().isNotEmpty) {
-        selectedUnit = item.unitPriceList.firstWhere(
-          (u) => u.unitName == selectedSize,
-          orElse: () => item.unitPriceList.isNotEmpty ? item.unitPriceList.first : const UnitPriceListModel(unitFkId: 0, price: 0, unitName: '', otherLang: '', isMainUnit: false),
-        );
-        if (selectedUnit.unitFkId == 0) {
-          selectedUnit = null;
-        }
-      } else if (item.unitPriceList.isNotEmpty) {
-        // Default to the main unit when no explicit size was selected.
-        selectedUnit = item.unitPriceList.firstWhere(
-          (u) => u.isMainUnit,
-          orElse: () => item.unitPriceList.first,
-        );
-      }
-
-      // Convert addons to CartModifier objects
-      final modifiers = addons.map<CartModifier>((addon) {
-        return CartModifier(
-          id: addon['id'] as int? ?? 0,
-          name: addon['title'] as String? ?? '',
-          price: (addon['price'] as num?)?.toDouble() ?? 0.0,
-          quantity: addon['qty'] as int? ?? 1,
-        );
-      }).toList();
-
-      // Create cart item
-      final cartItem = CartItemModel(
-        id: '${item.id}_${selectedSize ?? 'default'}_${DateTime.now().millisecondsSinceEpoch}',
+      final cartItem = _buildCartItemModelFromPopupPayload(
         item: item,
-        selectedUnit: selectedUnit,
-        modifiers: modifiers,
+        payload: payload,
         quantity: quantity,
-        specialInstructions: note,
-        unitPrice: unitPrice,
       );
 
       // Check if similar item already exists

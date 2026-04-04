@@ -14,6 +14,7 @@ import '../../providers/customer_provider.dart';
 import '../../providers/home_provider.dart';
 import '../../storage/local_storage.dart';
 import '../../widgets/order_success_popup.dart';
+import '../home/widgets/add_to_cart_popup.dart';
 
 /// Full cart screen with complete cart functionality
 class CartScreen extends StatefulWidget {
@@ -202,7 +203,7 @@ class _CartScreenState extends State<CartScreen> {
                 itemCount: cartController.cartItems.length,
                 itemBuilder: (context, index) {
                   final cartItem = cartController.cartItems[index];
-                  return _buildCartItemCard(context, cartController, cartItem, provider.isEnglish);
+                  return _buildCartItemCard(context, cartController, cartItem, provider);
                 },
               ),
             ),
@@ -236,7 +237,7 @@ class _CartScreenState extends State<CartScreen> {
                     itemCount: cartController.cartItems.length,
                     itemBuilder: (context, index) {
                       final cartItem = cartController.cartItems[index];
-                      return _buildCartItemCard(context, cartController, cartItem, provider.isEnglish);
+                      return _buildCartItemCard(context, cartController, cartItem, provider);
                     },
                   ),
                 ),
@@ -308,9 +309,10 @@ class _CartScreenState extends State<CartScreen> {
     BuildContext context,
     CartController cartController,
     CartItemModel cartItem,
-    bool isEnglish,
+    HomeProvider homeProvider,
   ) {
     final theme = Theme.of(context);
+    final isEnglish = homeProvider.isEnglish;
     
     return Card(
       margin: EdgeInsets.only(bottom: Responsive.padding(context, 12)),
@@ -400,8 +402,17 @@ class _CartScreenState extends State<CartScreen> {
                     ],
                   ),
                 ),
-                // Delete button
                 IconButton(
+                  tooltip: isEnglish ? 'Edit item' : 'تعديل العنصر',
+                  onPressed: () => _openEditCartItemPopup(context, cartItem, homeProvider),
+                  icon: Icon(
+                    Icons.edit_outlined,
+                    color: theme.colorScheme.primary,
+                    size: Responsive.fontSize(context, 20),
+                  ),
+                ),
+                IconButton(
+                  tooltip: isEnglish ? 'Remove item' : 'إزالة العنصر',
                   onPressed: () async => await cartController.removeItem(cartItem),
                   icon: Icon(
                     Icons.delete_outline,
@@ -538,6 +549,37 @@ class _CartScreenState extends State<CartScreen> {
         ),
       ),
     );
+  }
+
+  void _openEditCartItemPopup(
+    BuildContext context,
+    CartItemModel cartItem,
+    HomeProvider homeProvider,
+  ) {
+    final isEnglish = homeProvider.isEnglish;
+    try {
+      final addons = homeProvider.getModifiersForProduct(cartItem.item.id);
+      showAddToCartPopup(
+        context: context,
+        item: cartItem.item,
+        sizes: cartItem.item.unitPriceList,
+        addons: addons,
+        editingCartItem: cartItem,
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isEnglish
+                ? 'This item is no longer on the menu.'
+                : 'هذا العنصر لم يعد في القائمة.',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   /// Build modifier row with quantity controls
@@ -1189,6 +1231,15 @@ class _CartScreenState extends State<CartScreen> {
     return result ?? false;
   }
 
+  /// Returns a positive table id from [LocalStorage], or null if missing/invalid.
+  Future<int?> _parsePositiveStoredTableId() async {
+    final raw = (await LocalStorage.getTableId())?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    final id = int.tryParse(raw);
+    if (id == null || id <= 0) return null;
+    return id;
+  }
+
   /// Show service type popup and place order
   Future<void> _showServiceTypeAndPlaceOrder(BuildContext context) async {
     final queryParams = Uri.base.queryParameters;
@@ -1238,8 +1289,57 @@ class _CartScreenState extends State<CartScreen> {
       }
     }
 
-    // Keep existing behavior when QR params are missing/invalid:
-    // Show service type selection popup.
+    // Launch context from LocalStorage (synced in main.dart from URL on startup).
+    // When URL has order_type but not table_id, skip ServiceTypePopup and route by type.
+    final storedOrderTypeRaw = (await LocalStorage.getOrderType())?.trim();
+    if (!context.mounted) return;
+    if (storedOrderTypeRaw != null && storedOrderTypeRaw.isNotEmpty) {
+      final storedOrderTypeId = int.tryParse(storedOrderTypeRaw);
+      if (storedOrderTypeId != null && storedOrderTypeId > 0) {
+        final orderTypeProvider = context.read<OrderTypeProvider>();
+        if (!orderTypeProvider.hasOrderTypes) {
+          await orderTypeProvider.fetchOrderTypes();
+        }
+        if (!context.mounted) return;
+
+        OrderTypeModel? matchedFromStorage;
+        for (final orderType in orderTypeProvider.activeOrderTypes) {
+          if (orderType.id == storedOrderTypeId) {
+            matchedFromStorage = orderType;
+            break;
+          }
+        }
+
+        if (matchedFromStorage != null && context.mounted) {
+          final isDineIn =
+              matchedFromStorage.orderType.toUpperCase() == 'DINE-IN';
+          final storedTableId = await _parsePositiveStoredTableId();
+          if (!context.mounted) return;
+
+          if (isDineIn) {
+            if (storedTableId == null) {
+              Navigator.of(context).pushNamed(
+                AppRoutes.table,
+                arguments: {'selectedOrderType': matchedFromStorage},
+              );
+              return;
+            }
+            await _placeOrderForDineInFromQr(
+              context,
+              matchedFromStorage,
+              tableIdOverride: storedTableId,
+            );
+            return;
+          }
+
+          await _placeOrderForNonDineIn(context, matchedFromStorage);
+          return;
+        }
+      }
+    }
+
+    // No persisted order type (or no match): prompt for service type.
+    if (!context.mounted) return;
     final selectedOrderType = await showDialog<OrderTypeModel>(
       context: context,
       barrierDismissible: false, // Prevent dismissing by tapping outside

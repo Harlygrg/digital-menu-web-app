@@ -3,6 +3,7 @@ import 'package:digital_menu_order/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../models/cart_item_model.dart';
 import '../../../models/item_model.dart';
 import '../../../models/option_models.dart';
 import '../../../controllers/cart_controller.dart';
@@ -17,6 +18,7 @@ Future<T?> showAddToCartPopup<T>({
   required ItemModel item,
   required List<UnitPriceListModel> sizes,
   required List<ModifierModel> addons,
+  CartItemModel? editingCartItem,
   ValueChanged<T?>? onSubmit,
 }) {
   return showDialog<T>(
@@ -32,6 +34,7 @@ Future<T?> showAddToCartPopup<T>({
         item: item,
         sizes: sizes,
         addons: addons,
+        editingCartItem: editingCartItem,
         onSubmit: (value) {
           onSubmit?.call(value);
           Navigator.of(ctx).pop<T>(value);
@@ -47,6 +50,8 @@ class AddToCartPopup<T> extends StatefulWidget {
   final ItemModel item;
   final List<UnitPriceListModel> sizes;
   final List<ModifierModel> addons;
+  /// When set, quantity is fixed, primary action updates the existing line.
+  final CartItemModel? editingCartItem;
   final ValueChanged<T?>? onSubmit;
 
   const AddToCartPopup({
@@ -54,6 +59,7 @@ class AddToCartPopup<T> extends StatefulWidget {
     required this.item,
     required this.sizes,
     required this.addons,
+    this.editingCartItem,
     this.onSubmit,
   });
 
@@ -71,10 +77,42 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
   @override
   void initState() {
     super.initState();
-    _quantity = 1;
-    _selectedSizeIndex = 0;
-    _addonQuantities = List<int>.filled(widget.addons.length, 0);
+    final editing = widget.editingCartItem;
+    if (editing != null) {
+      _quantity = editing.quantity;
+      if (widget.sizes.isEmpty) {
+        _selectedSizeIndex = 0;
+      } else {
+        final su = editing.selectedUnit;
+        if (su != null && su.unitFkId > 0) {
+          final byFk = widget.sizes.indexWhere((u) => u.unitFkId == su.unitFkId);
+          if (byFk >= 0) {
+            _selectedSizeIndex = byFk;
+          } else {
+            final byName = widget.sizes.indexWhere((u) => u.unitName == su.unitName);
+            _selectedSizeIndex = byName >= 0 ? byName : 0;
+          }
+        } else {
+          final mainIdx = widget.sizes.indexWhere((u) => u.isMainUnit);
+          _selectedSizeIndex = mainIdx >= 0 ? mainIdx : 0;
+        }
+      }
+      _addonQuantities = List<int>.generate(widget.addons.length, (i) {
+        final id = widget.addons[i].id;
+        for (final m in editing.modifiers) {
+          if (m.id == id) return m.quantity;
+        }
+        return 0;
+      });
+      _noteController.text = editing.specialInstructions ?? '';
+    } else {
+      _quantity = 1;
+      _selectedSizeIndex = 0;
+      _addonQuantities = List<int>.filled(widget.addons.length, 0);
+    }
   }
+
+  bool get _isEditing => widget.editingCartItem != null;
 
   @override
   void dispose() {
@@ -144,22 +182,40 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
         'total': _computeTotal(),
       };
 
-      // Add to cart using the cart controller (with availability check)
-      await cartController.addToCartFromPopup(
-        item: widget.item,
-        payload: payload,
-      );
+      if (_isEditing) {
+        final changed = await cartController.updateCartItemFromPopup(
+          existing: widget.editingCartItem!,
+          item: widget.item,
+          payload: payload,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              changed
+                  ? (isEnglish ? 'Cart updated' : 'تم تحديث السلة')
+                  : (isEnglish ? 'No changes' : 'لا توجد تغييرات'),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        await cartController.addToCartFromPopup(
+          item: widget.item,
+          payload: payload,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isEnglish ? 'Item added to cart!' : 'تم إضافة العنصر للسلة!'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isEnglish ? 'Item added to cart!' : 'تم إضافة العنصر للسلة!'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          duration: Duration(seconds: 2),
-        ),
-      );
-
-      // Close the popup
+      if (!mounted) return;
       Navigator.of(context).pop();
     } catch (e) {
       // Handle different error cases
@@ -350,14 +406,33 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
 
                             SizedBox(height: Responsive.padding(context, 16)),
 
-                            // Quantity
+                            // Quantity (fixed when editing an existing cart line)
                             _SectionLabel(text: isEnglish ? 'Quantity' : 'الكمية'),
                             SizedBox(height: Responsive.padding(context, 8)),
-                            _Counter(
-                              value: _quantity,
-                              onDecrement: () => _updateQuantity(-1),
-                              onIncrement: () => _updateQuantity(1),
-                            ),
+                            if (_isEditing)
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: Responsive.padding(context, 12),
+                                  vertical: Responsive.padding(context, 8),
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.06),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '$_quantity',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: Responsive.fontSize(context, 14),
+                                  ),
+                                ),
+                              )
+                            else
+                              _Counter(
+                                value: _quantity,
+                                onDecrement: () => _updateQuantity(-1),
+                                onIncrement: () => _updateQuantity(1),
+                              ),
 
                             SizedBox(height: Responsive.padding(context, 18)),
 
@@ -438,7 +513,7 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                         ),
                         onPressed: _submit,
                         child: Text(
-                          '${isEnglish ? 'Add to Cart' : 'أضف للسلة'} – QR${_computeTotal().toStringAsFixed(2)}',
+                          '${_isEditing ? (isEnglish ? 'Update' : 'تحديث') : (isEnglish ? 'Add to Cart' : 'أضف للسلة')} – QR${_computeTotal().toStringAsFixed(2)}',
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: theme.colorScheme.onPrimary,
                             fontSize: Responsive.fontSize(context, 14),
