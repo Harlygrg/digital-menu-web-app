@@ -9,10 +9,7 @@ import '../theme/theme.dart';
 class CartPriceSyncDialog extends StatelessWidget {
   final bool isEnglish;
 
-  const CartPriceSyncDialog({
-    super.key,
-    required this.isEnglish,
-  });
+  const CartPriceSyncDialog({super.key, required this.isEnglish});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +26,9 @@ class CartPriceSyncDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 8,
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: Responsive.maxContentWidth(context)),
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
         child: Padding(
           padding: EdgeInsets.all(Responsive.padding(context, 20)),
           child: Column(
@@ -38,7 +37,9 @@ class CartPriceSyncDialog extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               SizedBox(height: Responsive.padding(context, 12)),
               Text(
@@ -77,4 +78,3 @@ class CartPriceSyncDialog extends StatelessWidget {
     );
   }
 }
-

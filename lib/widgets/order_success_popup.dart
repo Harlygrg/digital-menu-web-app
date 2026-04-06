@@ -4,7 +4,7 @@ import '../theme/theme.dart';
 import '../routes/routes.dart';
 
 /// Order Success Popup
-/// 
+///
 /// This popup is displayed after successfully placing an order.
 /// It shows:
 /// - Success icon and message
@@ -12,20 +12,15 @@ import '../routes/routes.dart';
 /// - Button to view order details
 class OrderSuccessPopup extends StatelessWidget {
   final CreateOrderResponseModel orderResponse;
-  
-  const OrderSuccessPopup({
-    super.key,
-    required this.orderResponse,
-  });
+
+  const OrderSuccessPopup({super.key, required this.orderResponse});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 8,
       child: Container(
         constraints: BoxConstraints(
@@ -107,7 +102,7 @@ class OrderSuccessPopup extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         SizedBox(height: Responsive.padding(context, 24)),
-        
+
         // Order details
         // _buildOrderDetailRow(
         //   context,
@@ -225,17 +220,13 @@ class OrderSuccessPopup extends StatelessWidget {
               onPressed: () {
                 // Close popup and navigate to home
                 Navigator.of(context).pop();
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  AppRoutes.home,
-                  (route) => false,
-                );
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
               },
               style: OutlinedButton.styleFrom(
                 foregroundColor: theme.colorScheme.primary,
-                side: BorderSide(
-                  color: theme.colorScheme.primary,
-                  width: 1.5,
-                ),
+                side: BorderSide(color: theme.colorScheme.primary, width: 1.5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -254,4 +245,3 @@ class OrderSuccessPopup extends StatelessWidget {
     );
   }
 }
-

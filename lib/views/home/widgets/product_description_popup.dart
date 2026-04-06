@@ -9,16 +9,10 @@ import '../../../utils/image_utils.dart';
 class ProductDescriptionPopup extends StatelessWidget {
   final ItemModel item;
 
-  const ProductDescriptionPopup({
-    super.key,
-    required this.item,
-  });
+  const ProductDescriptionPopup({super.key, required this.item});
 
   /// Show the popup
-  static void show({
-    required BuildContext context,
-    required ItemModel item,
-  }) {
+  static void show({required BuildContext context, required ItemModel item}) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -32,7 +26,7 @@ class ProductDescriptionPopup extends StatelessWidget {
       builder: (context, provider, child) {
         final description = item.getDescription(provider.language);
         final productName = item.getProductName(provider.language);
-        
+
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -71,7 +65,9 @@ class ProductDescriptionPopup extends StatelessWidget {
                           errorWidget: Container(
                             width: double.infinity,
                             height: double.infinity,
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.1),
                             child: Icon(
                               Icons.fastfood,
                               size: Responsive.fontSize(context, 48),
@@ -87,7 +83,9 @@ class ProductDescriptionPopup extends StatelessWidget {
                         child: GestureDetector(
                           onTap: () => Navigator.of(context).pop(),
                           child: Container(
-                            padding: EdgeInsets.all(Responsive.padding(context, 8)),
+                            padding: EdgeInsets.all(
+                              Responsive.padding(context, 8),
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.5),
                               shape: BoxShape.circle,
@@ -111,13 +109,17 @@ class ProductDescriptionPopup extends StatelessWidget {
                               vertical: Responsive.padding(context, 4),
                             ),
                             decoration: BoxDecoration(
-                              color: item.isVegetarian ? AppColors.veg : AppColors.nonVeg,
+                              color: item.isVegetarian
+                                  ? AppColors.veg
+                                  : AppColors.nonVeg,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               item.isVegetarian
                                   ? (provider.isEnglish ? 'VEG' : 'نباتي')
-                                  : (provider.isEnglish ? 'NON-VEG' : 'غير نباتي'),
+                                  : (provider.isEnglish
+                                        ? 'NON-VEG'
+                                        : 'غير نباتي'),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: Responsive.fontSize(context, 12),
@@ -140,10 +142,11 @@ class ProductDescriptionPopup extends StatelessWidget {
                         // Product name
                         Text(
                           productName,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                         ),
                         SizedBox(height: Responsive.padding(context, 8)),
                         // Price and Preparation Time
@@ -152,10 +155,13 @@ class ProductDescriptionPopup extends StatelessWidget {
                           children: [
                             Text(
                               item.priceRange,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
                             ),
                             if (item.preparationtime.isNotEmpty)
                               Row(
@@ -163,15 +169,26 @@ class ProductDescriptionPopup extends StatelessWidget {
                                   Icon(
                                     Icons.access_time,
                                     size: Responsive.fontSize(context, 18),
-                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.7),
                                   ),
-                                  SizedBox(width: Responsive.padding(context, 4)),
+                                  SizedBox(
+                                    width: Responsive.padding(context, 4),
+                                  ),
                                   Text(
                                     item.preparationtime,
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w500,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: 0.7),
+                                        ),
                                   ),
                                 ],
                               ),
@@ -182,20 +199,27 @@ class ProductDescriptionPopup extends StatelessWidget {
                         if (description.isNotEmpty) ...[
                           Text(
                             provider.isEnglish ? 'Description' : 'الوصف',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                ),
                           ),
                           SizedBox(height: Responsive.padding(context, 8)),
                           Flexible(
                             child: SingleChildScrollView(
                               child: Text(
                                 description,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-                                  height: 1.5,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.8),
+                                      height: 1.5,
+                                    ),
                               ),
                             ),
                           ),
@@ -203,9 +227,13 @@ class ProductDescriptionPopup extends StatelessWidget {
                           // No description available
                           Container(
                             width: double.infinity,
-                            padding: EdgeInsets.all(Responsive.padding(context, 20)),
+                            padding: EdgeInsets.all(
+                              Responsive.padding(context, 20),
+                            ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surface.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Column(
@@ -213,16 +241,23 @@ class ProductDescriptionPopup extends StatelessWidget {
                                 Icon(
                                   Icons.description_outlined,
                                   size: Responsive.fontSize(context, 32),
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.5),
                                 ),
-                                SizedBox(height: Responsive.padding(context, 8)),
+                                SizedBox(
+                                  height: Responsive.padding(context, 8),
+                                ),
                                 Text(
-                                  provider.isEnglish 
+                                  provider.isEnglish
                                       ? 'No description available'
                                       : 'لا يوجد وصف متاح',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                                  ),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.6),
+                                      ),
                                 ),
                               ],
                             ),
@@ -235,8 +270,12 @@ class ProductDescriptionPopup extends StatelessWidget {
                           child: ElevatedButton(
                             onPressed: () => Navigator.of(context).pop(),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
-                              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onPrimary,
                               padding: EdgeInsets.symmetric(
                                 vertical: Responsive.padding(context, 12),
                               ),
@@ -265,7 +304,3 @@ class ProductDescriptionPopup extends StatelessWidget {
     );
   }
 }
-
-
-
-

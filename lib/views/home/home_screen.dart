@@ -24,6 +24,7 @@ import 'widgets/items_list.dart';
 
 // Conditional import for web
 import 'dart:html' as html show window;
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -43,34 +44,36 @@ class _HomeScreenState extends State<HomeScreen> {
     final provider = context.read<HomeProvider>();
     final branchProvider = context.read<BranchProvider>();
     _controller = HomeController(provider, branchProvider: branchProvider);
-    
+
     _startAppInitialization();
   }
 
   /// Optimized app initialization flow
-  /// 
+  ///
   /// Phase 1: Core initialization (blocking) - Load main content ASAP
   /// Phase 2: FCM initialization (non-blocking) - Happens in background after UI is visible
   Future<void> _startAppInitialization() async {
     try {
-// debugPrint('🚀 Starting optimized app initialization...');
-      
+      appDebugLog('🚀 Starting optimized app initialization...');
+
       // PHASE 1: Core initialization (MUST complete before UI renders)
       // This loads the main content as fast as possible
-// debugPrint('📱 Phase 1: Loading core content...');
+      appDebugLog('📱 Phase 1: Loading core content...');
       await _controller.initialize(context: context);
-// debugPrint('✅ Phase 1 complete: Main content loaded');
+      appDebugLog('✅ Phase 1 complete: Main content loaded');
 
       await _handleCartPricingContextIfNeeded();
-      
+
       // PHASE 2: FCM initialization (happens in background, non-blocking)
       // This doesn't block UI rendering and can happen asynchronously
-// debugPrint('🔔 Phase 2: Initializing Firebase Messaging in background...');
+      appDebugLog(
+        '🔔 Phase 2: Initializing Firebase Messaging in background...',
+      );
       _initializeFirebaseMessagingInBackground();
-      
-// debugPrint('✅ App initialization complete');
+
+      appDebugLog('✅ App initialization complete');
     } catch (e) {
-// debugPrint('❌ Error during app initialization: $e');
+      appDebugLog('❌ Error during app initialization: $e');
       // Even if there's an error, we should still try to initialize FCM in background
       _initializeFirebaseMessagingInBackground();
     }
@@ -95,7 +98,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final proceed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => CartPriceSyncDialog(isEnglish: homeProvider.isEnglish),
+      builder: (context) =>
+          CartPriceSyncDialog(isEnglish: homeProvider.isEnglish),
     );
 
     if (proceed == true && mounted) {
@@ -104,7 +108,9 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!mounted) return;
         messenger.showSnackBar(
           SnackBar(
-            content: Text(homeProvider.isEnglish ? 'Cart updated.' : 'تم تحديث السلة.'),
+            content: Text(
+              homeProvider.isEnglish ? 'Cart updated.' : 'تم تحديث السلة.',
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -113,7 +119,9 @@ class _HomeScreenState extends State<HomeScreen> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              homeProvider.isEnglish ? 'Failed to update cart. Please try again.' : 'فشل تحديث السلة. حاول مرة أخرى.',
+              homeProvider.isEnglish
+                  ? 'Failed to update cart. Please try again.'
+                  : 'فشل تحديث السلة. حاول مرة أخرى.',
             ),
             backgroundColor: errorColor,
             duration: const Duration(seconds: 2),
@@ -129,70 +137,84 @@ class _HomeScreenState extends State<HomeScreen> {
     // Run in background without blocking
     Future.microtask(() async {
       try {
-// debugPrint('🔔 Starting FCM initialization...');
-        
+        appDebugLog('🔔 Starting FCM initialization...');
+
         // Setup background message handler
-        FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-        
+        FirebaseMessaging.onBackgroundMessage(
+          firebaseMessagingBackgroundHandler,
+        );
+
         // Wait for service worker on web
         if (kIsWeb) {
-// debugPrint('⏳ Waiting for service worker...');
+          appDebugLog('⏳ Waiting for service worker...');
           await _waitForServiceWorkerReady();
-// debugPrint('✅ Service worker ready');
-          
+          appDebugLog('✅ Service worker ready');
+
           // Small delay to ensure service worker is fully active
           await Future.delayed(const Duration(milliseconds: 500));
         }
-        
+
         // Initialize notification service
         final notificationService = NotificationService();
-        
+
         // ✅ NEW APPROACH: Check LIVE browser permission dynamically
         // This fetches the real-time permission status from the browser,
         // not from any locally stored value. This ensures we always have
         // the current permission state, even if user changed it in browser settings.
-        final browserPermission = notificationService.getBrowserNotificationPermission();
-// debugPrint('📱 Browser notification permission (live): $browserPermission');
-        
+        final browserPermission = notificationService
+            .getBrowserNotificationPermission();
+        appDebugLog(
+          '📱 Browser notification permission (live): $browserPermission',
+        );
+
         // DEPRECATED: Old approach that relied on locally stored permission state
         // This caused mismatches when users changed browser settings
         // final wasGranted = await LocalStorage.wasNotificationPermissionGranted();
-        // debugPrint('📱 Notification permission previously granted: $wasGranted');
-        
+        // appDebugLog('📱 Notification permission previously granted: $wasGranted');
+
         if (kIsWeb) {
           if (browserPermission == 'granted') {
             // Permission already granted - skip dialog and get token directly
-// debugPrint('✅ Browser permission already granted, getting FCM token...');
+            appDebugLog(
+              '✅ Browser permission already granted, getting FCM token...',
+            );
             await notificationService.initialize(
               vapidKey: DefaultFirebaseOptions.webVapidKey,
               context: context,
             );
           } else if (browserPermission == 'denied') {
             // Permission explicitly denied by user in browser
-// debugPrint('❌ Browser permission explicitly denied by user');
-// debugPrint('ℹ️ User must enable notifications in browser settings to receive updates');
+            appDebugLog('❌ Browser permission explicitly denied by user');
+            appDebugLog(
+              'ℹ️ User must enable notifications in browser settings to receive updates',
+            );
             return; // Exit early - can't request permission if denied
           } else {
             // Permission not yet requested (default state)
-// debugPrint('📱 Permission not yet requested, showing dialog...');
-            
+            appDebugLog('📱 Permission not yet requested, showing dialog...');
+
             // DEPRECATED: Old approach saved permission to local storage
             // await LocalStorage.setNotificationPermissionAsked(true);
-            
+
             // Show permission dialog (non-blocking for UI, happens after content is visible)
-            final shouldRequestPermission = await _showNotificationPermissionDialog();
-            
+            final shouldRequestPermission =
+                await _showNotificationPermissionDialog();
+
             if (!shouldRequestPermission) {
-// debugPrint('ℹ️ User declined notification permission from app dialog');
-              
+              appDebugLog(
+                'ℹ️ User declined notification permission from app dialog',
+              );
+
               // DEPRECATED: Old approach saved declined state to local storage
               // await LocalStorage.setNotificationPermissionGranted(false);
-              
+
               return; // Exit early without FCM token
             }
-            
+
             // User accepted app dialog, now request browser permission
-// debugPrint('✅ User accepted app dialog, initializing FCM (will trigger browser prompt)...');
+            appDebugLog(
+              '✅ User accepted app dialog, initializing FCM (will trigger browser prompt)...',
+            );
             await notificationService.initialize(
               vapidKey: DefaultFirebaseOptions.webVapidKey,
               context: context,
@@ -205,45 +227,49 @@ class _HomeScreenState extends State<HomeScreen> {
             context: context,
           );
         }
-        
+
         // Get FCM token
         // Note: The token is fetched from Firebase but NOT stored locally
         // It will be automatically registered with the server via NotificationService
-// debugPrint('🔍 Getting FCM token...');
+        appDebugLog('🔍 Getting FCM token...');
         final String fcmToken = await notificationService.getFcmToken();
-        
+
         if (fcmToken.isNotEmpty) {
-// debugPrint('✅ FCM Token obtained: ${fcmToken.substring(0, 20)}...');
-          
+          appDebugLog('✅ FCM Token obtained: ${fcmToken.substring(0, 20)}...');
+
           // DEPRECATED: Old approach saved permission state to local storage
           // This caused mismatches when users changed browser settings later
           // await LocalStorage.setNotificationPermissionGranted(true);
-          
-// debugPrint('✅ FCM token automatically registered with server via NotificationService');
+
+          appDebugLog(
+            '✅ FCM token automatically registered with server via NotificationService',
+          );
         } else {
-// debugPrint('⚠️ FCM token is empty');
-          
+          appDebugLog('⚠️ FCM token is empty');
+
           // DEPRECATED: Old approach saved permission state to local storage
           // await LocalStorage.setNotificationPermissionGranted(false);
         }
-        
+
         // Setup token refresh listener
         // Note: Token is NOT saved to local storage - it's automatically sent to server
         notificationService.tokenStream.listen((newToken) async {
-// debugPrint('🔄 Token refreshed: $newToken');
-// debugPrint('ℹ️ Token will be automatically sent to server via NotificationService');
+          appDebugLog('🔄 Token refreshed: $newToken');
+          appDebugLog(
+            'ℹ️ Token will be automatically sent to server via NotificationService',
+          );
         });
-        
+
         // Setup message listener
         notificationService.messageStream.listen((message) {
-// debugPrint('📨 Message received:');
-// debugPrint('  Title: ${message.notification?.title}');
-// debugPrint('  Body: ${message.notification?.body}');
+          appDebugLog('📨 Message received:');
+          appDebugLog('  Title: ${message.notification?.title}');
+          appDebugLog('  Body: ${message.notification?.body}');
         });
-        
-// debugPrint('✅ FCM initialization complete');
+
+        appDebugLog('✅ FCM initialization complete');
       } catch (e) {
-// debugPrint('⚠️ Error during FCM initialization (non-critical): $e');
+        appDebugLog('⚠️ Error during FCM initialization (non-critical): $e');
         // FCM errors are non-critical - app should still work without notifications
       }
     });
@@ -252,9 +278,9 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Show a dialog asking user for notification permission
   Future<bool> _showNotificationPermissionDialog() async {
     if (!mounted) return false;
-    
+
     final provider = context.read<HomeProvider>();
-    
+
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -273,9 +299,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  provider.isEnglish 
-                    ? 'Enable Notifications'
-                    : 'تفعيل الإشعارات',
+                  provider.isEnglish
+                      ? 'Enable Notifications'
+                      : 'تفعيل الإشعارات',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -290,8 +316,8 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Text(
                 provider.isEnglish
-                  ? 'Get real-time updates about your orders!'
-                  : 'احصل على تحديثات فورية حول طلباتك!',
+                    ? 'Get real-time updates about your orders!'
+                    : 'احصل على تحديثات فورية حول طلباتك!',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -301,33 +327,30 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildPermissionFeature(
                 dialogContext,
                 Icons.shopping_bag,
-                provider.isEnglish 
-                  ? 'Order status updates'
-                  : 'تحديثات حالة الطلب',
+                provider.isEnglish
+                    ? 'Order status updates'
+                    : 'تحديثات حالة الطلب',
               ),
               _buildPermissionFeature(
                 dialogContext,
                 Icons.check_circle,
-                provider.isEnglish 
-                  ? 'Order ready notifications'
-                  : 'إشعارات جاهزية الطلب',
+                provider.isEnglish
+                    ? 'Order ready notifications'
+                    : 'إشعارات جاهزية الطلب',
               ),
               _buildPermissionFeature(
                 dialogContext,
                 Icons.local_offer,
-                provider.isEnglish 
-                  ? 'Special offers & promotions'
-                  : 'عروض خاصة وترويجات',
+                provider.isEnglish
+                    ? 'Special offers & promotions'
+                    : 'عروض خاصة وترويجات',
               ),
               const SizedBox(height: 16),
               Text(
                 provider.isEnglish
-                  ? 'You can change this in your browser settings anytime.'
-                  : 'يمكنك تغيير هذا في إعدادات المتصفح في أي وقت.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                    ? 'You can change this in your browser settings anytime.'
+                    : 'يمكنك تغيير هذا في إعدادات المتصفح في أي وقت.',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
           ),
@@ -352,13 +375,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
               child: Text(
                 provider.isEnglish ? 'Enable' : 'تفعيل',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -370,23 +394,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// Build a feature row for the permission dialog
-  Widget _buildPermissionFeature(BuildContext context, IconData icon, String text) {
+  Widget _buildPermissionFeature(
+    BuildContext context,
+    IconData icon,
+    String text,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: Theme.of(context).primaryColor,
-          ),
+          Icon(icon, size: 20, color: Theme.of(context).primaryColor),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
         ],
       ),
     );
@@ -395,54 +414,58 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Wait for service worker to be ready before initializing FCM
   Future<void> _waitForServiceWorkerReady() async {
     if (!kIsWeb) return;
-    
+
     try {
       final serviceWorker = html.window.navigator.serviceWorker;
       if (serviceWorker == null) {
-// debugPrint('⚠️ Service Worker API not available');
+        appDebugLog('⚠️ Service Worker API not available');
         return;
       }
-      
-// debugPrint('🔍 Checking for service worker registration...');
-      
+
+      appDebugLog('🔍 Checking for service worker registration...');
+
       // Wait for service worker to be ready (up to 10 seconds)
       final completer = Completer<void>();
       var attempts = 0;
       const maxAttempts = 20; // 10 seconds (20 * 500ms)
-      
+
       Timer.periodic(const Duration(milliseconds: 500), (timer) async {
         attempts++;
-        
+
         try {
           final registration = await serviceWorker.getRegistration();
-          
+
           timer.cancel();
           final isActive = registration.active != null;
-          
+
           if (isActive) {
-// debugPrint('✅ Service worker found and registered');
-// debugPrint('   Scope: ${registration.scope}');
+            appDebugLog('✅ Service worker found and registered');
+            appDebugLog('   Scope: ${registration.scope}');
           } else {
-// debugPrint('⚠️ Service worker registered but not active yet');
+            appDebugLog('⚠️ Service worker registered but not active yet');
             if (attempts >= maxAttempts) {
-// debugPrint('⚠️ Service worker not active after ${maxAttempts * 500}ms, proceeding anyway');
+              appDebugLog(
+                '⚠️ Service worker not active after ${maxAttempts * 500}ms, proceeding anyway',
+              );
             }
           }
-          
+
           if (!completer.isCompleted) completer.complete();
         } catch (e) {
-// debugPrint('⚠️ Error checking service worker (attempt $attempts/$maxAttempts): $e');
+          appDebugLog(
+            '⚠️ Error checking service worker (attempt $attempts/$maxAttempts): $e',
+          );
           if (attempts >= maxAttempts) {
             timer.cancel();
-// debugPrint('⚠️ Proceeding without service worker confirmation');
+            appDebugLog('⚠️ Proceeding without service worker confirmation');
             if (!completer.isCompleted) completer.complete();
           }
         }
       });
-      
+
       await completer.future;
     } catch (e) {
-// debugPrint('❌ Error waiting for service worker: $e');
+      appDebugLog('❌ Error waiting for service worker: $e');
     }
   }
 
@@ -450,7 +473,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _handleRefresh() async {
     final provider = context.read<HomeProvider>();
     final branchId = await LocalStorage.getBranchId() ?? '1';
-    
+
     // Use silentRefresh to prevent loading state flashing
     await provider.fetchProductRelatedData(
       branchId: branchId,
@@ -513,7 +536,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, cartController, child) {
         final total = cartController.totalPrice;
         final itemCount = cartController.itemCount;
-        
+
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -673,7 +696,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: Text(
                       provider.getCurrentTitle(provider.isEnglish),
-                      style: Theme.of(context).textTheme.titleMedium  ?.copyWith(
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
@@ -818,11 +841,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: Text(
                           provider.getCurrentTitle(provider.isEnglish),
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontSize: Responsive.fontSize(context, 18),
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontSize: Responsive.fontSize(context, 18),
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                         ),
                       ),
                       Text(
@@ -862,4 +886,3 @@ extension SizedBoxExtension on SizedBox {
     return SliverToBoxAdapter(child: this);
   }
 }
-

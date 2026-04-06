@@ -15,10 +15,7 @@ import '../../widgets/order_qr.dart';
 class OrderDetailsScreen extends StatefulWidget {
   final UserOrder order;
 
-  const OrderDetailsScreen({
-    super.key,
-    required this.order,
-  });
+  const OrderDetailsScreen({super.key, required this.order});
 
   @override
   State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
@@ -29,42 +26,37 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(),
-      body: _buildBody(context),
-    );
+    return Scaffold(appBar: _buildAppBar(), body: _buildBody(context));
   }
-  /// Build app bar
-  PreferredSizeWidget _buildAppBar(){
-    return AppBar(
 
+  /// Build app bar
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
       title: Responsive.isDesktop(context)
           ? null // Hide default title for desktop
           : Consumer<HomeProvider>(
-          builder: (context,provider,child) {
-            return Text(
-              provider.isEnglish ? 'Order details' : 'تفاصيل الطلب',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            );
-          }
-      ),
+              builder: (context, provider, child) {
+                return Text(
+                  provider.isEnglish ? 'Order details' : 'تفاصيل الطلب',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                );
+              },
+            ),
       backgroundColor: Theme.of(context).colorScheme.surface,
       elevation: 0.0,
       leading: Responsive.isDesktop(context)
           ? null // Hide default leading for desktop
           : IconButton(
-        icon: Icon(
-          Icons.arrow_back_ios,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
+              icon: Icon(
+                Icons.arrow_back_ios,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
     );
   }
-
-
 
   /// Build main body content
   Widget _buildBody(BuildContext context) {
@@ -75,30 +67,31 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         children: [
           // Order header card
           _buildOrderHeaderCard(),
-          
+
           SizedBox(height: Responsive.padding(context, 16)),
-          
+
           // Order details card
           _buildOrderDetailsCard(),
-          
+
           SizedBox(height: Responsive.padding(context, 16)),
-          
+
           // Order items card
           _buildOrderItemsCard(),
-          
+
           SizedBox(height: Responsive.padding(context, 16)),
-          
+
           // Order notes card
-          if (widget.order.orderNotes.isNotEmpty && widget.order.orderNotes != 'No notes')
+          if (widget.order.orderNotes.isNotEmpty &&
+              widget.order.orderNotes != 'No notes')
             _buildOrderNotesCard(),
-          
-          if (widget.order.orderNotes.isNotEmpty && widget.order.orderNotes != 'No notes')
+
+          if (widget.order.orderNotes.isNotEmpty &&
+              widget.order.orderNotes != 'No notes')
             SizedBox(height: Responsive.padding(context, 16)),
-          
+
           // Action buttons
-          if(widget.order.orderStatus == 0)
-          _buildActionButtons(),
-          
+          if (widget.order.orderStatus == 0) _buildActionButtons(),
+
           SizedBox(height: Responsive.padding(context, 24)),
         ],
       ),
@@ -121,17 +114,17 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   child: Text(
                     widget.order.onlineOrderId,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontSize: Responsive.fontSize(context, 20),
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontSize: Responsive.fontSize(context, 20),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 _buildStatusChip(widget.order.orderStatus),
               ],
             ),
-            
+
             SizedBox(height: Responsive.padding(context, 12)),
-            
+
             // Order total
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -141,19 +134,19 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     return Text(
                       provider.isEnglish ? 'Total Amount' : 'المبلغ الإجمالي',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: Responsive.fontSize(context, 16),
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontSize: Responsive.fontSize(context, 16),
+                        fontWeight: FontWeight.w600,
+                      ),
                     );
                   },
                 ),
                 Text(
                   widget.order.formattedTotal,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontSize: Responsive.fontSize(context, 20),
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                    fontSize: Responsive.fontSize(context, 20),
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ],
             ),
@@ -176,15 +169,15 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 return Text(
                   provider.isEnglish ? 'Order Information' : 'معلومات الطلب',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: Responsive.fontSize(context, 18),
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontSize: Responsive.fontSize(context, 18),
+                    fontWeight: FontWeight.bold,
+                  ),
                 );
               },
             ),
-            
+
             SizedBox(height: Responsive.padding(context, 16)),
-            
+
             Consumer<HomeProvider>(
               builder: (context, provider, child) {
                 return Column(
@@ -193,24 +186,26 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                       provider.isEnglish ? 'Order Type' : 'نوع الطلب',
                       widget.order.orderType == '1'
                           ? (provider.isEnglish ? "Dine in" : "تناول الطعام")
-                          : (provider.isEnglish ? "Take away" : "الوجبات الجاهزة")
+                          : (provider.isEnglish
+                                ? "Take away"
+                                : "الوجبات الجاهزة"),
                     ),
-                    if( widget.order.orderType == '1')
-                    _buildDetailRow(
-                      provider.isEnglish ? 'Table' : 'الطاولة',
-                      widget.order.tableName.toString()
-                    ),
+                    if (widget.order.orderType == '1')
+                      _buildDetailRow(
+                        provider.isEnglish ? 'Table' : 'الطاولة',
+                        widget.order.tableName.toString(),
+                      ),
                     _buildDetailRow(
                       provider.isEnglish ? 'Placed' : 'تم الطلب',
-                      _formatDateTime(widget.order.createdAt)
+                      _formatDateTime(widget.order.createdAt),
                     ),
                   ],
                 );
               },
             ),
-            
+
             SizedBox(height: Responsive.padding(context, 16)),
-            
+
             // QR Code Section
             Consumer<HomeProvider>(
               builder: (context, provider, child) {
@@ -223,57 +218,57 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 );
               },
             ),
-            
+
             SizedBox(height: Responsive.padding(context, 16)),
-            
+
             // Price breakdown
             Consumer<HomeProvider>(
               builder: (context, provider, child) {
                 return Text(
                   provider.isEnglish ? 'Price Breakdown' : 'تفاصيل السعر',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: Responsive.fontSize(context, 16),
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontSize: Responsive.fontSize(context, 16),
+                    fontWeight: FontWeight.w600,
+                  ),
                 );
               },
             ),
-            
+
             SizedBox(height: Responsive.padding(context, 8)),
-            
+
             Consumer<HomeProvider>(
               builder: (context, provider, child) {
                 return Column(
                   children: [
                     _buildPriceRow(
                       provider.isEnglish ? 'Gross Total' : 'الإجمالي الكلي',
-                      widget.order.grosstotal
+                      widget.order.grosstotal,
                     ),
                     if (widget.order.discount > 0)
                       _buildPriceRow(
                         provider.isEnglish ? 'Discount' : 'الخصم',
-                        -widget.order.discount
+                        -widget.order.discount,
                       ),
                     if (widget.order.servicecharge > 0)
                       _buildPriceRow(
                         provider.isEnglish ? 'Service Charge' : 'رسوم الخدمة',
-                        widget.order.servicecharge
+                        widget.order.servicecharge,
                       ),
                     if (widget.order.taxamnt > 0)
                       _buildPriceRow(
                         provider.isEnglish ? 'Tax Amount' : 'مبلغ الضريبة',
-                        widget.order.taxamnt
+                        widget.order.taxamnt,
                       ),
                     if (widget.order.roundoff != 0)
                       _buildPriceRow(
                         provider.isEnglish ? 'Round Off' : 'التقريب',
-                        widget.order.roundoff
+                        widget.order.roundoff,
                       ),
                     Divider(height: Responsive.padding(context, 16)),
                     _buildPriceRow(
                       provider.isEnglish ? 'Net Total' : 'الإجمالي الصافي',
                       widget.order.nettotal,
-                      isTotal: true
+                      isTotal: true,
                     ),
                   ],
                 );
@@ -289,14 +284,14 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   Widget _buildOrderItemsCard() {
     // Group items with their modifiers using slno
     Map<int, List<OrderDetail>> itemsWithModifiers = {};
-    
+
     // First pass: add all normal items using slno as key
     for (var detail in widget.order.orderDetails) {
       if (detail.isNormalItem) {
         itemsWithModifiers[detail.slno] = [];
       }
     }
-    
+
     // Second pass: add modifiers to their parent items using main_item_slno
     for (var detail in widget.order.orderDetails) {
       if (detail.isModifier && detail.mainItemSlno != null) {
@@ -305,7 +300,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         }
       }
     }
-    
+
     return Card(
       child: Padding(
         padding: EdgeInsets.all(Responsive.padding(context, 16)),
@@ -317,24 +312,25 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 return Text(
                   provider.isEnglish ? 'Order Items' : 'عناصر الطلب',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: Responsive.fontSize(context, 18),
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontSize: Responsive.fontSize(context, 18),
+                    fontWeight: FontWeight.bold,
+                  ),
                 );
               },
             ),
-            
+
             SizedBox(height: Responsive.padding(context, 16)),
-            
+
             // Display items
             ...widget.order.orderDetails
                 .where((detail) => detail.isNormalItem)
                 .map((item) {
-              // Get modifiers for this item using slno
-              List<OrderDetail> modifiers = itemsWithModifiers[item.slno] ?? [];
-              
-              return _buildOrderItemTile(item, modifiers);
-            }),
+                  // Get modifiers for this item using slno
+                  List<OrderDetail> modifiers =
+                      itemsWithModifiers[item.slno] ?? [];
+
+                  return _buildOrderItemTile(item, modifiers);
+                }),
           ],
         ),
       ),
@@ -374,15 +370,15 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 child: Text(
                   '${item.qty}x',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: Responsive.fontSize(context, 14),
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
+                    fontSize: Responsive.fontSize(context, 14),
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
                 ),
               ),
-              
+
               SizedBox(width: Responsive.padding(context, 12)),
-              
+
               // Item details
               Expanded(
                 child: Column(
@@ -392,13 +388,13 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     Text(
                       item.itemname,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: Responsive.fontSize(context, 16),
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontSize: Responsive.fontSize(context, 16),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    
+
                     SizedBox(height: Responsive.padding(context, 4)),
-                    
+
                     // Unit name
                     if (item.unitname.isNotEmpty && item.unitname != 'Addon')
                       Container(
@@ -412,20 +408,24 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         ),
                         child: Text(
                           item.unitname,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 fontSize: Responsive.fontSize(context, 12),
                                 color: AppColors.textSecondary,
                               ),
                         ),
                       ),
-                    
+
                     // Item remarks
                     if (item.itmremarks != null && item.itmremarks!.isNotEmpty)
                       Padding(
-                        padding: EdgeInsets.only(top: Responsive.padding(context, 4)),
+                        padding: EdgeInsets.only(
+                          top: Responsive.padding(context, 4),
+                        ),
                         child: Text(
                           item.itmremarks!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 fontSize: Responsive.fontSize(context, 12),
                                 fontStyle: FontStyle.italic,
                                 color: AppColors.textSecondary,
@@ -435,7 +435,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   ],
                 ),
               ),
-              
+
               // Item price
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -443,24 +443,24 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   Text(
                     item.formattedTotal,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: Responsive.fontSize(context, 16),
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                      fontSize: Responsive.fontSize(context, 16),
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                   if (item.rate > 0)
                     Text(
                       '${item.formattedPrice} each',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: Responsive.fontSize(context, 11),
-                            color: AppColors.textSecondary,
-                          ),
+                        fontSize: Responsive.fontSize(context, 11),
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                 ],
               ),
             ],
           ),
-          
+
           // Modifiers/Addons - Full width section
           if (modifiers.isNotEmpty)
             Padding(
@@ -469,7 +469,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: modifiers.map((modifier) {
                   return Padding(
-                    padding: EdgeInsets.only(bottom: Responsive.padding(context, 6)),
+                    padding: EdgeInsets.only(
+                      bottom: Responsive.padding(context, 6),
+                    ),
                     child: Container(
                       padding: EdgeInsets.all(Responsive.padding(context, 8)),
                       decoration: BoxDecoration(
@@ -489,7 +491,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                             color: AppColors.accent,
                           ),
                           SizedBox(width: Responsive.padding(context, 8)),
-                          
+
                           // Quantity badge
                           Container(
                             padding: EdgeInsets.symmetric(
@@ -502,16 +504,17 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                             ),
                             child: Text(
                               '${modifier.qty}x',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
                                     fontSize: Responsive.fontSize(context, 11),
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.white,
                                   ),
                             ),
                           ),
-                          
+
                           SizedBox(width: Responsive.padding(context, 8)),
-                          
+
                           // Modifier name
                           Expanded(
                             child: Column(
@@ -519,8 +522,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                               children: [
                                 Text(
                                   modifier.itemname,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        fontSize: Responsive.fontSize(context, 13),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        fontSize: Responsive.fontSize(
+                                          context,
+                                          13,
+                                        ),
                                         fontWeight: FontWeight.w500,
                                         color: AppColors.textPrimary,
                                       ),
@@ -528,20 +535,25 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                 if (modifier.rate > 0)
                                   Text(
                                     '${modifier.formattedPrice} each',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                          fontSize: Responsive.fontSize(context, 11),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          fontSize: Responsive.fontSize(
+                                            context,
+                                            11,
+                                          ),
                                           color: AppColors.textSecondary,
                                         ),
                                   ),
                               ],
                             ),
                           ),
-                          
+
                           // Total price
                           if (modifier.total > 0)
                             Text(
                               modifier.formattedTotal,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
                                     fontSize: Responsive.fontSize(context, 13),
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.accent,
@@ -572,20 +584,20 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 return Text(
                   provider.isEnglish ? 'Order Notes' : 'ملاحظات الطلب',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: Responsive.fontSize(context, 16),
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontSize: Responsive.fontSize(context, 16),
+                    fontWeight: FontWeight.w600,
+                  ),
                 );
               },
             ),
-            
+
             SizedBox(height: Responsive.padding(context, 8)),
-            
+
             Text(
               widget.order.orderNotes,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontSize: Responsive.fontSize(context, 14),
-                  ),
+                fontSize: Responsive.fontSize(context, 14),
+              ),
             ),
           ],
         ),
@@ -634,7 +646,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
             // ),
             //
             // SizedBox(height: Responsive.padding(context, 12)),
-            
+
             // Cancel Order button
             Consumer<HomeProvider>(
               builder: (context, provider, child) {
@@ -642,7 +654,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   width: double.infinity,
                   height: Responsive.padding(context, 48),
                   child: ElevatedButton.icon(
-                    onPressed: _isCancelling || widget.order.isCancelled || widget.order.isOrderCompleted ? null : _cancelOrder,
+                    onPressed:
+                        _isCancelling ||
+                            widget.order.isCancelled ||
+                            widget.order.isOrderCompleted
+                        ? null
+                        : _cancelOrder,
                     icon: _isCancelling
                         ? SizedBox(
                             width: Responsive.fontSize(context, 20),
@@ -656,14 +673,18 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                           )
                         : Icon(Icons.cancel),
                     label: Text(
-                      _isCancelling 
-                          ? (provider.isEnglish ? 'Cancelling...' : 'جاري الإلغاء...')
-                          : (provider.isEnglish ? 'Cancel Order' : 'إلغاء الطلب'),
+                      _isCancelling
+                          ? (provider.isEnglish
+                                ? 'Cancelling...'
+                                : 'جاري الإلغاء...')
+                          : (provider.isEnglish
+                                ? 'Cancel Order'
+                                : 'إلغاء الطلب'),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: Responsive.fontSize(context, 16),
-                            fontWeight: FontWeight.w600,
+                        fontSize: Responsive.fontSize(context, 16),
+                        fontWeight: FontWeight.w600,
                         color: AppColors.white,
-                          ),
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.error,
@@ -713,7 +734,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     return Consumer<HomeProvider>(
       builder: (context, provider, child) {
         String statusText;
-        
+
         switch (orderStatus) {
           case 0: // Pending
             statusText = provider.isEnglish ? 'Pending' : 'قيد الانتظار';
@@ -743,10 +764,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           child: Text(
             statusText,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: Responsive.fontSize(context, 14),
-                  color: textColor,
-                  fontWeight: FontWeight.w600,
-                ),
+              fontSize: Responsive.fontSize(context, 14),
+              color: textColor,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         );
       },
@@ -763,17 +784,19 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: Responsive.fontSize(context, 14),
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
+              fontSize: Responsive.fontSize(context, 14),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
           ),
           Expanded(
             child: Text(
               value,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontSize: Responsive.fontSize(context, 14),
-                    fontWeight: FontWeight.w600,
-                  ),
+                fontSize: Responsive.fontSize(context, 14),
+                fontWeight: FontWeight.w600,
+              ),
               textAlign: TextAlign.end,
             ),
           ),
@@ -792,18 +815,24 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: Responsive.fontSize(context, 14),
-                  fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
-                  color: isTotal ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
+              fontSize: Responsive.fontSize(context, 14),
+              fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
+              color: isTotal
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
           ),
           Text(
             'QR ${amount.toStringAsFixed(2)}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: Responsive.fontSize(context, 14),
-                  fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
-                  color: isTotal ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface,
-                ),
+              fontSize: Responsive.fontSize(context, 14),
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+              color: isTotal
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurface,
+            ),
           ),
         ],
       ),
@@ -815,16 +844,16 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   /// Handle cancel order action
   Future<void> _cancelOrder() async {
     final provider = context.read<HomeProvider>();
-    
+
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(provider.isEnglish ? 'Cancel Order' : 'إلغاء الطلب'),
         content: Text(
-          provider.isEnglish 
+          provider.isEnglish
               ? 'Are you sure you want to cancel this order? This action cannot be undone.'
-              : 'هل أنت متأكد من أنك تريد إلغاء هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.'
+              : 'هل أنت متأكد من أنك تريد إلغاء هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.',
         ),
         actions: [
           TextButton(
@@ -858,9 +887,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                provider.isEnglish 
+                provider.isEnglish
                     ? 'Order cancelled successfully'
-                    : 'تم إلغاء الطلب بنجاح'
+                    : 'تم إلغاء الطلب بنجاح',
               ),
               backgroundColor: Theme.of(context).colorScheme.primary,
             ),
@@ -871,9 +900,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                provider.isEnglish 
+                provider.isEnglish
                     ? 'Failed to cancel order'
-                    : 'فشل إلغاء الطلب'
+                    : 'فشل إلغاء الطلب',
               ),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
@@ -884,21 +913,21 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       if (mounted) {
         final provider = context.read<HomeProvider>();
         // Extract error message from the exception
-        String errorMessage = provider.isEnglish 
+        String errorMessage = provider.isEnglish
             ? 'Failed to cancel order. Please try again.'
             : 'فشل إلغاء الطلب. يرجى المحاولة مرة أخرى.';
-        
+
         final exceptionString = e.toString();
         if (exceptionString.contains('Order ID is required')) {
-          errorMessage = provider.isEnglish 
+          errorMessage = provider.isEnglish
               ? 'Order ID is required'
               : 'معرف الطلب مطلوب';
-        } else if (exceptionString.contains('Session expired') || 
-                   exceptionString.contains('Please login again')) {
-          errorMessage = provider.isEnglish 
+        } else if (exceptionString.contains('Session expired') ||
+            exceptionString.contains('Please login again')) {
+          errorMessage = provider.isEnglish
               ? 'Session expired. Please login again.'
               : 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.';
-          
+
           // Optional: Navigate to login screen after showing error
           // Future.delayed(Duration(seconds: 2), () {
           //   if (mounted) {
@@ -906,14 +935,14 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           //   }
           // });
         } else if (exceptionString.contains('Order not found')) {
-          errorMessage = provider.isEnglish 
+          errorMessage = provider.isEnglish
               ? 'Order not found.'
               : 'الطلب غير موجود.';
         } else if (exceptionString.contains('Exception:')) {
           // Extract the actual error message from the Exception
           errorMessage = exceptionString.replaceFirst('Exception:', '').trim();
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),

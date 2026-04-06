@@ -1,5 +1,5 @@
 /// Model for Create Order Response
-/// 
+///
 /// This model represents the response data received from the Create Order API endpoint.
 /// It includes the order ID, online order ID, order number, and response message.
 class CreateOrderResponseModel {
@@ -20,7 +20,7 @@ class CreateOrderResponseModel {
   /// Create from JSON response
   factory CreateOrderResponseModel.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>?;
-    
+
     return CreateOrderResponseModel(
       success: json['success'] ?? false,
       message: data?['message'] ?? '',
@@ -135,7 +135,7 @@ class CreateOrderRequestModel {
     required this.roundoff,
     required this.orderDtls,
     required this.defaultsInfo,
-    required this.noOfGuest
+    required this.noOfGuest,
   });
 
   /// Convert to JSON
@@ -152,7 +152,7 @@ class CreateOrderRequestModel {
       'roundoff': roundoff,
       'orderDtls': orderDtls.map((item) => item.toJson()).toList(),
       'defaults_info': defaultsInfo,
-      'no_of_guest': noOfGuest
+      'no_of_guest': noOfGuest,
     };
   }
 
@@ -161,4 +161,3 @@ class CreateOrderRequestModel {
     return 'CreateOrderRequestModel(grosstotal: $grosstotal, nettotal: $nettotal, tableID: $tableID, orderType: $orderType, cid: $cid, orderDtls: ${orderDtls.length} items)';
   }
 }
-

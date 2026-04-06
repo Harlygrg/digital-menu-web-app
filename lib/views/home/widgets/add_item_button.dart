@@ -5,8 +5,8 @@ import '../../../providers/home_provider.dart';
 
 class AddItemButton extends StatelessWidget {
   final Function()? onTap;
-  final bool isListItem ;
-   const AddItemButton({super.key, this.onTap, this.isListItem = false});
+  final bool isListItem;
+  const AddItemButton({super.key, this.onTap, this.isListItem = false});
 
   @override
   Widget build(BuildContext context) {

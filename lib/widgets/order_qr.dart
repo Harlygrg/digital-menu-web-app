@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../theme/theme.dart';
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Encoding mode for the QR payload
 /// Set to `true` for Base64 encoding, `false` for raw JSON
 const bool kEncodeAsBase64 = true;
 
 /// Widget that displays an Order QR code for scanning
-/// 
+///
 /// This widget generates a QR code containing order information that can be
 /// scanned by the OrderTaking app. It includes:
 /// - A scannable QR code
@@ -18,10 +19,10 @@ const bool kEncodeAsBase64 = true;
 class OrderQrWidget extends StatelessWidget {
   /// The unique order identifier
   final String orderId;
-  
+
   /// The PIN number for the order
   final String pin;
-  
+
   /// Optional label for localization (defaults to English)
   final bool isEnglish;
 
@@ -42,7 +43,7 @@ class OrderQrWidget extends StatelessWidget {
     };
 
     final jsonString = jsonEncode(payload);
-    
+
     if (kEncodeAsBase64) {
       return base64Encode(utf8.encode(jsonString));
     }
@@ -52,22 +53,27 @@ class OrderQrWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return LayoutBuilder(
       builder: (context, constraints) {
         // Responsive QR size: constrain to available width with max size
         final maxQrSize = 200.0;
         final availableWidth = constraints.maxWidth;
-        final qrSize = availableWidth < maxQrSize + 48 
-            ? availableWidth - 48 // Account for padding
+        final qrSize = availableWidth < maxQrSize + 48
+            ? availableWidth -
+                  48 // Account for padding
             : maxQrSize;
-        
+
         return _buildQrContainer(context, theme, qrSize);
       },
     );
   }
 
-  Widget _buildQrContainer(BuildContext context, ThemeData theme, double qrSize) {
+  Widget _buildQrContainer(
+    BuildContext context,
+    ThemeData theme,
+    double qrSize,
+  ) {
     return Container(
       padding: EdgeInsets.all(Responsive.padding(context, 16)),
       decoration: BoxDecoration(
@@ -96,7 +102,7 @@ class OrderQrWidget extends StatelessWidget {
             ),
           ),
           SizedBox(height: Responsive.padding(context, 4)),
-          
+
           // Order ID value
           SelectableText(
             orderId,
@@ -106,14 +112,14 @@ class OrderQrWidget extends StatelessWidget {
               color: theme.colorScheme.primary,
             ),
           ),
-          
+
           SizedBox(height: Responsive.padding(context, 16)),
-          
+
           // QR Code with Semantics
           _buildQrCode(context, theme, qrSize),
-          
+
           SizedBox(height: Responsive.padding(context, 16)),
-          
+
           // Fallback PIN with copy button
           _buildFallbackPin(context, theme),
         ],
@@ -124,14 +130,14 @@ class OrderQrWidget extends StatelessWidget {
   Widget _buildQrCode(BuildContext context, ThemeData theme, double qrSize) {
     try {
       final qrData = _generateQrPayload();
-      
+
       return Semantics(
-        label: isEnglish 
-            ? 'Order QR code for order $orderId' 
+        label: isEnglish
+            ? 'Order QR code for order $orderId'
             : 'رمز QR للطلب $orderId',
         child: Tooltip(
-          message: isEnglish 
-              ? 'Scan this QR code to confirm order' 
+          message: isEnglish
+              ? 'Scan this QR code to confirm order'
               : 'امسح رمز QR لتأكيد الطلب',
           child: Container(
             padding: EdgeInsets.all(Responsive.padding(context, 12)),
@@ -165,15 +171,15 @@ class OrderQrWidget extends StatelessWidget {
       );
     } catch (e) {
       // Log error using existing project pattern
-      // debugPrint('OrderQrWidget: Failed to generate QR code - $e');
-      
+      appDebugLog('OrderQrWidget: Failed to generate QR code - $e');
+
       // Show error snackbar
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                isEnglish 
+                isEnglish
                     ? 'QR unavailable — use PIN to confirm'
                     : 'رمز QR غير متاح — استخدم رقم التعريف للتأكيد',
               ),
@@ -182,7 +188,7 @@ class OrderQrWidget extends StatelessWidget {
           );
         }
       });
-      
+
       return _buildQrError(context, theme, qrSize);
     }
   }
@@ -245,7 +251,7 @@ class OrderQrWidget extends StatelessWidget {
               ),
             ),
             SizedBox(width: Responsive.padding(context, 8)),
-            
+
             // Copy button
             Tooltip(
               message: isEnglish ? 'Copy PIN' : 'نسخ رقم التعريف',
@@ -284,4 +290,3 @@ class OrderQrWidget extends StatelessWidget {
     );
   }
 }
-

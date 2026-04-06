@@ -8,10 +8,7 @@ import '../../../theme/theme.dart';
 class VegToggleWidget extends StatelessWidget {
   final HomeController controller;
 
-  const VegToggleWidget({
-    super.key,
-    required this.controller,
-  });
+  const VegToggleWidget({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -63,19 +60,20 @@ class VegToggleWidget extends StatelessWidget {
           horizontal: Responsive.padding(context, 16),
         ),
         decoration: ShapeDecoration(
-          shadows:isSelected
+          shadows: isSelected
               ? [
-            BoxShadow(
-              color: AppColors.primary,
-              blurRadius: 3,
-              spreadRadius: -1,
-              offset: const Offset(0, 2),
-            ),
-          ]
-              : null ,
-          shape: StadiumBorder(
-          ),
-          color:  isSelected ?  AppColors.primaryLight :  Color(0xffF5F5F9), // Light blue for selected,
+                  BoxShadow(
+                    color: AppColors.primary,
+                    blurRadius: 3,
+                    spreadRadius: -1,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+          shape: StadiumBorder(),
+          color: isSelected
+              ? AppColors.primaryLight
+              : Color(0xffF5F5F9), // Light blue for selected,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

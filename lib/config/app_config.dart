@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// AppConfig - External Runtime Configuration
 ///
@@ -33,7 +33,7 @@ class AppConfig {
 
   /// Default/Fallback API base URL
   /// This is used if config.json is missing or fails to load
-  static const String _defaultApiBase = 
+  static const String _defaultApiBase =
       "https://msibusinesssolutions.com/waraq_api_qrmenu/api/v1/";
 
   /// Loads configuration from /config.json
@@ -50,61 +50,68 @@ class AppConfig {
   /// Returns: Future<void> (completes when config is loaded)
   static Future<void> load() async {
     try {
-      // debugPrint('🔧 AppConfig: Loading external configuration from /config.json...');
-      
+      appDebugLog(
+        '🔧 AppConfig: Loading external configuration from /config.json...',
+      );
+
       // Fetch config.json from the web root
       // Note: This uses an absolute path from the deployed web root
-      final response = await http.get(
-        Uri.parse('/config.json'),
-      ).timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          // debugPrint('⚠️ AppConfig: Timeout loading config.json, using default URL');
-          throw Exception('Config load timeout');
-        },
-      );
+      final response = await http
+          .get(Uri.parse('/config.json'))
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              appDebugLog(
+                '⚠️ AppConfig: Timeout loading config.json, using default URL',
+              );
+              throw Exception('Config load timeout');
+            },
+          );
 
       if (response.statusCode == 200) {
         // Parse JSON
         final configData = json.decode(response.body) as Map<String, dynamic>;
-        
+
         // Extract apiBase field
-        if (configData.containsKey('apiBase') && configData['apiBase'] is String) {
+        if (configData.containsKey('apiBase') &&
+            configData['apiBase'] is String) {
           final loadedApiBase = configData['apiBase'] as String;
-          
+
           if (loadedApiBase.isNotEmpty) {
             apiBase = loadedApiBase;
-            // debugPrint('✅ AppConfig: Successfully loaded API base URL from config.json');
-            // // debugPrint('   📡 API Base: $apiBase');
+            appDebugLog(
+              '✅ AppConfig: Successfully loaded API base URL from config.json',
+            );
+            appDebugLog('   📡 API Base: $apiBase');
           } else {
-            // debugPrint('⚠️ AppConfig: apiBase is empty in config.json, using default');
+            appDebugLog(
+              '⚠️ AppConfig: apiBase is empty in config.json, using default',
+            );
           }
         } else {
-          // debugPrint('⚠️ AppConfig: apiBase field not found in config.json, using default');
+          appDebugLog(
+            '⚠️ AppConfig: apiBase field not found in config.json, using default',
+          );
         }
       } else {
-        // debugPrint('⚠️ AppConfig: Failed to load config.json (HTTP ${response.statusCode}), using default URL');
+        appDebugLog(
+          '⚠️ AppConfig: Failed to load config.json (HTTP ${response.statusCode}), using default URL',
+        );
       }
     } catch (e) {
       // Gracefully handle any errors - never crash the app
-      // debugPrint('⚠️ AppConfig: Error loading config.json: $e');
-      // debugPrint('ℹ️ AppConfig: Using default API base URL: $_defaultApiBase');
+      appDebugLog('⚠️ AppConfig: Error loading config.json: $e');
+      appDebugLog('ℹ️ AppConfig: Using default API base URL: $_defaultApiBase');
     }
-    
+
     // Always log the final URL being used
-    // debugPrint('🌐 AppConfig: Final API Base URL: $apiBase');
+    appDebugLog('🌐 AppConfig: Final API Base URL: $apiBase');
   }
 
   /// Resets the configuration to default values
   /// Useful for testing purposes
   static void reset() {
     apiBase = _defaultApiBase;
-    // debugPrint('🔄 AppConfig: Reset to default configuration');
+    appDebugLog('🔄 AppConfig: Reset to default configuration');
   }
 }
-
-
-
-
-
-

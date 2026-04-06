@@ -8,10 +8,7 @@ import '../../../theme/theme.dart';
 class SearchBarWidget extends StatefulWidget {
   final HomeController controller;
 
-  const SearchBarWidget({
-    super.key,
-    required this.controller,
-  });
+  const SearchBarWidget({super.key, required this.controller});
 
   @override
   State<SearchBarWidget> createState() => _SearchBarWidgetState();
@@ -74,7 +71,9 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                       },
                       icon: Icon(
                         Icons.clear,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.5),
                         size: Responsive.fontSize(context, 18),
                       ),
                     )

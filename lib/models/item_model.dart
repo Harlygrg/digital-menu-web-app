@@ -204,7 +204,7 @@ class ItemModel {
     required this.unitPriceList,
     required this.productdetails,
     required this.relatedModifiers,
-    required this.preparationtime
+    required this.preparationtime,
   });
 
   /// Create from JSON
@@ -237,16 +237,22 @@ class ItemModel {
       isAvailableInOnline: json['is_available_in_online'] ?? 0,
       descriptionEn: _safeToString(json['description_en']),
       descriptionOtherLang: _safeToString(json['description_other_lang']),
-      unitPriceList: (json['UnitPriceList'] as List<dynamic>?)
-          ?.map((item) => UnitPriceListModel.fromJson(item))
-          .toList() ?? [],
-      productdetails: (json['productdetails'] as List<dynamic>?)
-          ?.map((item) => ProductDetailsModel.fromJson(item))
-          .toList() ?? [],
-      relatedModifiers: (json['related_modifiers'] as List<dynamic>?)
-          ?.map((item) => _safeToInt(item))
-          .toList() ?? [],
-      preparationtime: _safeToString(json['preparationtime'])
+      unitPriceList:
+          (json['UnitPriceList'] as List<dynamic>?)
+              ?.map((item) => UnitPriceListModel.fromJson(item))
+              .toList() ??
+          [],
+      productdetails:
+          (json['productdetails'] as List<dynamic>?)
+              ?.map((item) => ProductDetailsModel.fromJson(item))
+              .toList() ??
+          [],
+      relatedModifiers:
+          (json['related_modifiers'] as List<dynamic>?)
+              ?.map((item) => _safeToInt(item))
+              .toList() ??
+          [],
+      preparationtime: _safeToString(json['preparationtime']),
     );
   }
 
@@ -283,20 +289,24 @@ class ItemModel {
       'UnitPriceList': unitPriceList.map((item) => item.toJson()).toList(),
       'productdetails': productdetails.map((item) => item.toJson()).toList(),
       'related_modifiers': relatedModifiers,
-      'preparationtime':preparationtime
+      'preparationtime': preparationtime,
     };
   }
 
   /// Get the lowest price from unit price list
   double get lowestPrice {
     if (unitPriceList.isEmpty) return price;
-    return unitPriceList.map((unit) => unit.price).reduce((a, b) => a < b ? a : b);
+    return unitPriceList
+        .map((unit) => unit.price)
+        .reduce((a, b) => a < b ? a : b);
   }
 
   /// Get the highest price from unit price list
   double get highestPrice {
     if (unitPriceList.isEmpty) return price;
-    return unitPriceList.map((unit) => unit.price).reduce((a, b) => a > b ? a : b);
+    return unitPriceList
+        .map((unit) => unit.price)
+        .reduce((a, b) => a > b ? a : b);
   }
 
   /// Get price range string
@@ -394,7 +404,7 @@ class ItemModel {
       unitPriceList: unitPriceList ?? this.unitPriceList,
       productdetails: productdetails ?? this.productdetails,
       relatedModifiers: relatedModifiers ?? this.relatedModifiers,
-      preparationtime: preparationtime
+      preparationtime: preparationtime,
     );
   }
 

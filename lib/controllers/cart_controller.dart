@@ -6,6 +6,7 @@ import '../models/cart_item_model.dart';
 import '../services/api/api_service.dart';
 import '../storage/local_storage.dart';
 import '../models/cart_pricing/cart_price_sync_dtos.dart';
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Controller for managing cart state and operations
 class CartController extends ChangeNotifier {
@@ -13,21 +14,21 @@ class CartController extends ChangeNotifier {
 
   bool _needsPriceSync = false;
   Future<void>? _inFlightPriceSync;
-  
+
   /// Hive box for cart persistence
   Box<CartItemModel>? _cartBox;
-  
+
   /// Hive box for order notes persistence
   Box? _orderNotesBox;
-  
+
   /// Order notes for the current order
   String _orderNotes = '';
-  
+
   /// Constructor - loads cart from Hive on initialization
   CartController() {
     _initializeCart();
   }
-  
+
   /// Initialize cart and load persisted data from Hive
   Future<void> _initializeCart() async {
     try {
@@ -35,7 +36,7 @@ class CartController extends ChangeNotifier {
       await _loadOrderNotesFromHive();
       await _loadNeedsPriceSyncFromStorage();
     } catch (e) {
-// debugPrint('Error initializing cart from Hive: $e');
+      appDebugLog('Error initializing cart from Hive: $e');
     }
   }
 
@@ -51,7 +52,8 @@ class CartController extends ChangeNotifier {
   int get itemCount => _cartItems.fold(0, (sum, item) => sum + item.quantity);
 
   /// Get total price of all items in cart
-  double get totalPrice => _cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
+  double get totalPrice =>
+      _cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
 
   /// Check if cart is empty
   bool get isEmpty => _cartItems.isEmpty;
@@ -72,10 +74,10 @@ class CartController extends ChangeNotifier {
     }
     return false;
   }
-  
+
   /// Get order notes
   String get orderNotes => _orderNotes;
-  
+
   /// Set order notes
   Future<void> setOrderNotes(String notes) async {
     _orderNotes = notes;
@@ -99,7 +101,15 @@ class CartController extends ChangeNotifier {
     if (selectedSize != null && selectedSize.trim().isNotEmpty) {
       selectedUnit = item.unitPriceList.firstWhere(
         (u) => u.unitName == selectedSize,
-        orElse: () => item.unitPriceList.isNotEmpty ? item.unitPriceList.first : const UnitPriceListModel(unitFkId: 0, price: 0, unitName: '', otherLang: '', isMainUnit: false),
+        orElse: () => item.unitPriceList.isNotEmpty
+            ? item.unitPriceList.first
+            : const UnitPriceListModel(
+                unitFkId: 0,
+                price: 0,
+                unitName: '',
+                otherLang: '',
+                isMainUnit: false,
+              ),
       );
       if (selectedUnit.unitFkId == 0) {
         selectedUnit = null;
@@ -121,7 +131,9 @@ class CartController extends ChangeNotifier {
     }).toList();
 
     return CartItemModel(
-      id: lineId ?? '${item.id}_${selectedSize ?? 'default'}_${DateTime.now().millisecondsSinceEpoch}',
+      id:
+          lineId ??
+          '${item.id}_${selectedSize ?? 'default'}_${DateTime.now().millisecondsSinceEpoch}',
       item: item,
       selectedUnit: selectedUnit,
       modifiers: modifiers,
@@ -146,7 +158,8 @@ class CartController extends ChangeNotifier {
       ..sort((a, b) => a.id.compareTo(b.id));
     if (ea.length != ca.length) return false;
     for (var i = 0; i < ea.length; i++) {
-      if (ea[i].id != ca[i].id || ea[i].quantity != ca[i].quantity) return false;
+      if (ea[i].id != ca[i].id || ea[i].quantity != ca[i].quantity)
+        return false;
     }
     return true;
   }
@@ -166,9 +179,13 @@ class CartController extends ChangeNotifier {
       }
 
       final apiService = ApiService();
-      final isAvailable = await apiService.checkProductAvailability(productId: item.id);
+      final isAvailable = await apiService.checkProductAvailability(
+        productId: item.id,
+      );
       if (!isAvailable) {
-        throw Exception('⚠️ This item is no longer available. Refreshing menu...');
+        throw Exception(
+          '⚠️ This item is no longer available. Refreshing menu...',
+        );
       }
 
       final candidate = _buildCartItemModelFromPopupPayload(
@@ -210,10 +227,14 @@ class CartController extends ChangeNotifier {
       final wasEmpty = _cartItems.isEmpty;
       // First check product availability
       final apiService = ApiService();
-      final isAvailable = await apiService.checkProductAvailability(productId: item.id);
-      
+      final isAvailable = await apiService.checkProductAvailability(
+        productId: item.id,
+      );
+
       if (!isAvailable) {
-        throw Exception('⚠️ This item is no longer available. Refreshing menu...');
+        throw Exception(
+          '⚠️ This item is no longer available. Refreshing menu...',
+        );
       }
 
       final quantity = payload['quantity'] as int? ?? 1;
@@ -225,7 +246,7 @@ class CartController extends ChangeNotifier {
 
       // Check if similar item already exists
       final existingIndex = _findExistingItemIndex(cartItem);
-      
+
       if (existingIndex != -1) {
         // Update existing item quantity
         _cartItems[existingIndex] = _cartItems[existingIndex].copyWith(
@@ -245,7 +266,7 @@ class CartController extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-// debugPrint('Error adding item to cart: $e');
+      appDebugLog('Error adding item to cart: $e');
       rethrow;
     }
   }
@@ -264,13 +285,14 @@ class CartController extends ChangeNotifier {
       final cartModifiers = modifiers
           .where((modifier) => modifier.price > 0)
           .map<CartModifier>((modifier) {
-        return CartModifier(
-          id: modifier.id,
-          name: modifier.modifier,
-          price: modifier.price,
-          quantity: 1, // Default quantity for modifiers
-        );
-      }).toList();
+            return CartModifier(
+              id: modifier.id,
+              name: modifier.modifier,
+              price: modifier.price,
+              quantity: 1, // Default quantity for modifiers
+            );
+          })
+          .toList();
 
       // Calculate unit price
       final unitPrice = unit?.price ?? product.price;
@@ -288,7 +310,7 @@ class CartController extends ChangeNotifier {
 
       // Check if similar item already exists
       final existingIndex = _findExistingItemIndex(cartItem);
-      
+
       if (existingIndex != -1) {
         // Update existing item quantity
         _cartItems[existingIndex] = _cartItems[existingIndex].copyWith(
@@ -308,7 +330,7 @@ class CartController extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-// debugPrint('Error adding item to cart: $e');
+      appDebugLog('Error adding item to cart: $e');
       rethrow;
     }
   }
@@ -334,9 +356,7 @@ class CartController extends ChangeNotifier {
       if (newQuantity <= 0) {
         await removeItem(item);
       } else {
-        _cartItems[index] = _cartItems[index].copyWith(
-          quantity: newQuantity,
-        );
+        _cartItems[index] = _cartItems[index].copyWith(quantity: newQuantity);
         // Persist cart to Hive after quantity change
         await _saveCartToHive();
         notifyListeners();
@@ -353,9 +373,7 @@ class CartController extends ChangeNotifier {
 
     final index = _cartItems.indexWhere((cartItem) => cartItem.id == item.id);
     if (index != -1) {
-      _cartItems[index] = _cartItems[index].copyWith(
-        quantity: newQuantity,
-      );
+      _cartItems[index] = _cartItems[index].copyWith(quantity: newQuantity);
       // Persist cart to Hive after quantity change
       await _saveCartToHive();
       notifyListeners();
@@ -363,7 +381,10 @@ class CartController extends ChangeNotifier {
   }
 
   /// Increase quantity of a modifier
-  Future<void> increaseModifierQuantity(CartItemModel item, int modifierId) async {
+  Future<void> increaseModifierQuantity(
+    CartItemModel item,
+    int modifierId,
+  ) async {
     final index = _cartItems.indexWhere((cartItem) => cartItem.id == item.id);
     if (index != -1) {
       final updatedModifiers = _cartItems[index].modifiers.map((modifier) {
@@ -383,7 +404,10 @@ class CartController extends ChangeNotifier {
   }
 
   /// Decrease quantity of a modifier
-  Future<void> decreaseModifierQuantity(CartItemModel item, int modifierId) async {
+  Future<void> decreaseModifierQuantity(
+    CartItemModel item,
+    int modifierId,
+  ) async {
     final index = _cartItems.indexWhere((cartItem) => cartItem.id == item.id);
     if (index != -1) {
       final updatedModifiers = _cartItems[index].modifiers.map((modifier) {
@@ -405,7 +429,10 @@ class CartController extends ChangeNotifier {
   }
 
   /// Update special instructions for a cart item
-  Future<void> updateSpecialInstructions(CartItemModel item, String newInstructions) async {
+  Future<void> updateSpecialInstructions(
+    CartItemModel item,
+    String newInstructions,
+  ) async {
     final index = _cartItems.indexWhere((cartItem) => cartItem.id == item.id);
     if (index != -1) {
       // Create a new cart item with updated special instructions
@@ -418,7 +445,7 @@ class CartController extends ChangeNotifier {
         specialInstructions: newInstructions.isEmpty ? null : newInstructions,
         unitPrice: _cartItems[index].unitPrice,
       );
-      
+
       _cartItems[index] = updatedItem;
       // Persist cart to Hive after updating instructions
       await _saveCartToHive();
@@ -455,11 +482,14 @@ class CartController extends ChangeNotifier {
   /// Returns the *current* order context normalized for comparisons and API payloads.
   ///
   /// - Missing `table_id` defaults to `"0"` (takeaway / non-table context).
-  Future<({String branchId, String orderTypeId, String tableId})> getCurrentOrderContext() async {
+  Future<({String branchId, String orderTypeId, String tableId})>
+  getCurrentOrderContext() async {
     final branchId = (await LocalStorage.getBranchId())?.trim() ?? '';
     final orderTypeId = (await LocalStorage.getOrderType())?.trim() ?? '';
     final tableIdRaw = (await LocalStorage.getTableId())?.trim();
-    final tableId = (tableIdRaw == null || tableIdRaw.isEmpty) ? '0' : tableIdRaw;
+    final tableId = (tableIdRaw == null || tableIdRaw.isEmpty)
+        ? '0'
+        : tableIdRaw;
     return (branchId: branchId, orderTypeId: orderTypeId, tableId: tableId);
   }
 
@@ -469,7 +499,9 @@ class CartController extends ChangeNotifier {
     final current = await getCurrentOrderContext();
     final saved = await LocalStorage.getCartPricingContext();
 
-    final savedTable = (saved.tableId == null || saved.tableId!.trim().isEmpty) ? '0' : saved.tableId!.trim();
+    final savedTable = (saved.tableId == null || saved.tableId!.trim().isEmpty)
+        ? '0'
+        : saved.tableId!.trim();
     final savedBranch = saved.branchId?.trim() ?? '';
     final savedOrderType = saved.orderTypeId?.trim() ?? '';
 
@@ -523,7 +555,10 @@ class CartController extends ChangeNotifier {
       tableId: tableId,
       items: _cartItems.map((line) {
         final unitId = _resolveUnitIdForLine(line);
-        final modifierIds = line.modifiers.where((m) => m.quantity > 0).map((m) => m.id).toList();
+        final modifierIds = line.modifiers
+            .where((m) => m.quantity > 0)
+            .map((m) => m.id)
+            .toList();
         return CartPriceSyncRequestItemDto(
           productId: line.item.id,
           unitId: unitId,
@@ -536,7 +571,11 @@ class CartController extends ChangeNotifier {
     final response = await ApiService().getCartPrices(request: request);
     if (!response.success || response.data == null) {
       await _setNeedsPriceSync(true);
-      throw Exception(response.message.isNotEmpty ? response.message : 'Failed to fetch cart prices');
+      throw Exception(
+        response.message.isNotEmpty
+            ? response.message
+            : 'Failed to fetch cart prices',
+      );
     }
 
     final data = response.data!;
@@ -558,14 +597,17 @@ class CartController extends ChangeNotifier {
       final itemPrice = itemPriceMap[itemKey];
 
       final itemIsAvailable = itemPrice?.isAvailable ?? false;
-      final itemReason = itemPrice?.reason ?? (itemPrice == null ? 'Pricing not returned' : null);
+      final itemReason =
+          itemPrice?.reason ??
+          (itemPrice == null ? 'Pricing not returned' : null);
       final updatedUnitPrice = itemPrice?.unitPrice ?? 0.0;
 
       final updatedModifiers = line.modifiers.map((mod) {
         final key = '${line.item.id}:$unitId:${mod.id}';
         final mp = modifierPriceMap[key];
         final modIsAvailable = mp?.isAvailable ?? false;
-        final modReason = mp?.reason ?? (mp == null ? 'Pricing not returned' : null);
+        final modReason =
+            mp?.reason ?? (mp == null ? 'Pricing not returned' : null);
         final modPrice = mp?.unitPrice ?? 0.0;
         return mod.copyWith(
           price: modPrice,
@@ -600,17 +642,19 @@ class CartController extends ChangeNotifier {
     return _cartItems.indexWhere((existingItem) {
       // Check if same product and unit
       if (existingItem.item.id != newItem.item.id) return false;
-      if (existingItem.selectedUnit?.unitFkId != newItem.selectedUnit?.unitFkId) {
+      if (existingItem.selectedUnit?.unitFkId !=
+          newItem.selectedUnit?.unitFkId) {
         return false;
       }
 
       // Check if modifiers are the same
-      if (existingItem.modifiers.length != newItem.modifiers.length) return false;
-      
+      if (existingItem.modifiers.length != newItem.modifiers.length)
+        return false;
+
       for (int i = 0; i < existingItem.modifiers.length; i++) {
         final existingModifier = existingItem.modifiers[i];
         final newModifier = newItem.modifiers[i];
-        if (existingModifier.id != newModifier.id || 
+        if (existingModifier.id != newModifier.id ||
             existingModifier.quantity != newModifier.quantity) {
           return false;
         }
@@ -626,19 +670,27 @@ class CartController extends ChangeNotifier {
       'itemCount': itemCount,
       'totalPrice': totalPrice,
       'isEmpty': isEmpty,
-      'items': _cartItems.map((item) => {
-        'id': item.id,
-        'name': item.item.iname,
-        'unit': item.unitDisplayName,
-        'quantity': item.quantity,
-        'unitPrice': item.unitPrice,
-        'totalPrice': item.totalPrice,
-        'modifiers': item.modifiers.map((mod) => {
-          'name': mod.name,
-          'price': mod.price,
-          'quantity': mod.quantity,
-        }).toList(),
-      }).toList(),
+      'items': _cartItems
+          .map(
+            (item) => {
+              'id': item.id,
+              'name': item.item.iname,
+              'unit': item.unitDisplayName,
+              'quantity': item.quantity,
+              'unitPrice': item.unitPrice,
+              'totalPrice': item.totalPrice,
+              'modifiers': item.modifiers
+                  .map(
+                    (mod) => {
+                      'name': mod.name,
+                      'price': mod.price,
+                      'quantity': mod.quantity,
+                    },
+                  )
+                  .toList(),
+            },
+          )
+          .toList(),
     };
   }
 
@@ -647,18 +699,18 @@ class CartController extends ChangeNotifier {
     try {
       // Get or open the cart box
       _cartBox ??= await Hive.openBox<CartItemModel>('cartBox');
-      
+
       // Clear existing data
       await _cartBox!.clear();
-      
+
       // Save all cart items
       for (var i = 0; i < _cartItems.length; i++) {
         await _cartBox!.put('cart_item_$i', _cartItems[i]);
       }
-      
-// debugPrint('Cart saved to Hive: ${_cartItems.length} items');
+
+      appDebugLog('Cart saved to Hive: ${_cartItems.length} items');
     } catch (e) {
-// debugPrint('Error saving cart to Hive: $e');
+      appDebugLog('Error saving cart to Hive: $e');
     }
   }
 
@@ -667,10 +719,10 @@ class CartController extends ChangeNotifier {
     try {
       // Get or open the cart box
       _cartBox ??= await Hive.openBox<CartItemModel>('cartBox');
-      
+
       // Clear current in-memory cart
       _cartItems.clear();
-      
+
       // Load all saved cart items
       for (var key in _cartBox!.keys) {
         final cartItem = _cartBox!.get(key);
@@ -678,19 +730,19 @@ class CartController extends ChangeNotifier {
           _cartItems.add(cartItem);
         }
       }
-      
-// debugPrint('Cart loaded from Hive: ${_cartItems.length} items');
-      
+
+      appDebugLog('Cart loaded from Hive: ${_cartItems.length} items');
+
       // Notify listeners to update UI
       notifyListeners();
     } catch (e) {
-// debugPrint('Error loading cart from Hive: $e');
+      appDebugLog('Error loading cart from Hive: $e');
       // On error (likely corrupted data from schema changes), clear and start fresh
       _cartItems.clear();
       await _clearCorruptedCartData();
     }
   }
-  
+
   /// Clear corrupted cart data from Hive storage
   /// This is called when deserialization fails due to schema changes
   Future<void> _clearCorruptedCartData() async {
@@ -700,14 +752,14 @@ class CartController extends ChangeNotifier {
         await _cartBox!.close();
       }
       _cartBox = null;
-      
+
       // Delete the corrupted box and recreate it
       await Hive.deleteBoxFromDisk('cartBox');
       _cartBox = await Hive.openBox<CartItemModel>('cartBox');
-      
-// debugPrint('Corrupted cart data cleared, starting fresh');
+
+      appDebugLog('Corrupted cart data cleared, starting fresh');
     } catch (e) {
-// debugPrint('Error clearing corrupted cart data: $e');
+      appDebugLog('Error clearing corrupted cart data: $e');
     }
   }
 
@@ -716,9 +768,9 @@ class CartController extends ChangeNotifier {
     try {
       _cartBox ??= await Hive.openBox<CartItemModel>('cartBox');
       await _cartBox!.clear();
-// debugPrint('Cart cleared from Hive');
+      appDebugLog('Cart cleared from Hive');
     } catch (e) {
-// debugPrint('Error clearing cart from Hive: $e');
+      appDebugLog('Error clearing cart from Hive: $e');
     }
   }
 
@@ -727,9 +779,9 @@ class CartController extends ChangeNotifier {
     try {
       _orderNotesBox ??= await Hive.openBox('orderNotesBox');
       await _orderNotesBox!.put('order_notes', _orderNotes);
-// debugPrint('Order notes saved to Hive: $_orderNotes');
+      appDebugLog('Order notes saved to Hive: $_orderNotes');
     } catch (e) {
-// debugPrint('Error saving order notes to Hive: $e');
+      appDebugLog('Error saving order notes to Hive: $e');
     }
   }
 
@@ -737,11 +789,12 @@ class CartController extends ChangeNotifier {
   Future<void> _loadOrderNotesFromHive() async {
     try {
       _orderNotesBox ??= await Hive.openBox('orderNotesBox');
-      _orderNotes = _orderNotesBox!.get('order_notes', defaultValue: '') as String;
-// debugPrint('Order notes loaded from Hive: $_orderNotes');
+      _orderNotes =
+          _orderNotesBox!.get('order_notes', defaultValue: '') as String;
+      appDebugLog('Order notes loaded from Hive: $_orderNotes');
       notifyListeners();
     } catch (e) {
-// debugPrint('Error loading order notes from Hive: $e');
+      appDebugLog('Error loading order notes from Hive: $e');
       _orderNotes = '';
     }
   }
@@ -751,9 +804,9 @@ class CartController extends ChangeNotifier {
     try {
       _orderNotesBox ??= await Hive.openBox('orderNotesBox');
       await _orderNotesBox!.delete('order_notes');
-// debugPrint('Order notes cleared from Hive');
+      appDebugLog('Order notes cleared from Hive');
     } catch (e) {
-// debugPrint('Error clearing order notes from Hive: $e');
+      appDebugLog('Error clearing order notes from Hive: $e');
     }
   }
 }

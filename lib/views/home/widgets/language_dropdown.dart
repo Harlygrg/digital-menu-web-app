@@ -12,10 +12,7 @@ import '../../../theme/theme.dart';
 class LanguageDropdownWidget extends StatelessWidget {
   final HomeController controller;
 
-  const LanguageDropdownWidget({
-    super.key,
-    required this.controller,
-  });
+  const LanguageDropdownWidget({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -24,14 +21,19 @@ class LanguageDropdownWidget extends StatelessWidget {
         return Container(
           height: MediaQuery.of(context).size.width > 1200 ? 35 : 30,
           alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: ShapeDecoration(
             shape: StadiumBorder(
-              side: BorderSide(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3), width: 1.5),
+              side: BorderSide(
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
             ),
-            color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.2),
+            color: Theme.of(
+              context,
+            ).colorScheme.onPrimary.withValues(alpha: 0.2),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -52,7 +54,9 @@ class LanguageDropdownWidget extends StatelessWidget {
                   controller.setLanguage(newValue);
                 }
               },
-              items: <String>['en', 'ar'].map<DropdownMenuItem<String>>((String value) {
+              items: <String>['en', 'ar'].map<DropdownMenuItem<String>>((
+                String value,
+              ) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Row(

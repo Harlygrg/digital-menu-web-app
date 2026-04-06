@@ -7,7 +7,7 @@ import '../../routes/routes.dart';
 import '../../widgets/order_qr.dart';
 
 /// Order Screen
-/// 
+///
 /// This screen displays the order details after a successful order placement.
 /// It shows:
 /// - Order confirmation message
@@ -27,7 +27,7 @@ class _OrderScreenState extends State<OrderScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // Get order response from route arguments
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is CreateOrderResponseModel) {
@@ -50,9 +50,9 @@ class _OrderScreenState extends State<OrderScreen> {
     return AppBar(
       title: Text(
         'Order Confirmation',
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
       backgroundColor: Theme.of(context).colorScheme.surface,
       elevation: 0,
@@ -62,10 +62,9 @@ class _OrderScreenState extends State<OrderScreen> {
           color: Theme.of(context).colorScheme.onSurface,
         ),
         onPressed: () {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            AppRoutes.home,
-            (route) => false,
-          );
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
         },
       ),
     );
@@ -75,7 +74,7 @@ class _OrderScreenState extends State<OrderScreen> {
   Widget _buildOrderContent(BuildContext context) {
     final theme = Theme.of(context);
     final cartController = context.watch<CartController>();
-    
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(Responsive.padding(context, 20)),
       child: Column(
@@ -84,17 +83,17 @@ class _OrderScreenState extends State<OrderScreen> {
           // Success header
           _buildSuccessHeader(context, theme),
           SizedBox(height: Responsive.padding(context, 24)),
-          
+
           // Order details card
           _buildOrderDetailsCard(context, theme),
           SizedBox(height: Responsive.padding(context, 20)),
-          
+
           // Order items (if cart still has items)
           if (cartController.isNotEmpty) ...[
             _buildOrderItemsSection(context, theme, cartController),
             SizedBox(height: Responsive.padding(context, 20)),
           ],
-          
+
           // Action buttons
           _buildActionButtons(context, theme, cartController),
         ],
@@ -116,9 +115,7 @@ class _OrderScreenState extends State<OrderScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.success.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -168,8 +165,9 @@ class _OrderScreenState extends State<OrderScreen> {
   Widget _buildOrderDetailsCard(BuildContext context, ThemeData theme) {
     final orderId = _orderResponse?.onlineOrderId?.toString() ?? 'N/A';
     final pin = _orderResponse?.orderNo?.toString() ?? 'N/A';
-    final hasValidOrderData = _orderResponse?.onlineOrderId != null && 
-                               _orderResponse?.orderNo != null;
+    final hasValidOrderData =
+        _orderResponse?.onlineOrderId != null &&
+        _orderResponse?.orderNo != null;
 
     return Container(
       padding: EdgeInsets.all(Responsive.padding(context, 20)),
@@ -198,7 +196,7 @@ class _OrderScreenState extends State<OrderScreen> {
             ),
           ),
           SizedBox(height: Responsive.padding(context, 16)),
-          
+
           // _buildDetailRow(
           //   context,
           //   theme,
@@ -207,15 +205,11 @@ class _OrderScreenState extends State<OrderScreen> {
           //   Icons.receipt_long,
           // ),
           // SizedBox(height: Responsive.padding(context, 20)),
-          
+
           // QR Code Section
           if (hasValidOrderData)
             Center(
-              child: OrderQrWidget(
-                orderId: orderId,
-                pin: pin,
-                isEnglish: true,
-              ),
+              child: OrderQrWidget(orderId: orderId, pin: pin, isEnglish: true),
             )
           else
             _buildDetailRow(
@@ -319,19 +313,21 @@ class _OrderScreenState extends State<OrderScreen> {
             ],
           ),
           SizedBox(height: Responsive.padding(context, 16)),
-          
+
           // Items list
-          ...cartController.cartItems.map((item) => _buildOrderItem(
-            context,
-            theme,
-            item.item.iname,
-            item.quantity,
-            item.totalPrice,
-            item.modifiers.isNotEmpty
-                ? item.modifiers.map((m) => m.name).join(', ')
-                : null,
-          )),
-          
+          ...cartController.cartItems.map(
+            (item) => _buildOrderItem(
+              context,
+              theme,
+              item.item.iname,
+              item.quantity,
+              item.totalPrice,
+              item.modifiers.isNotEmpty
+                  ? item.modifiers.map((m) => m.name).join(', ')
+                  : null,
+            ),
+          ),
+
           // Divider
           Padding(
             padding: EdgeInsets.symmetric(
@@ -341,7 +337,7 @@ class _OrderScreenState extends State<OrderScreen> {
               color: theme.colorScheme.outline.withValues(alpha: 0.2),
             ),
           ),
-          
+
           // Total
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -402,7 +398,7 @@ class _OrderScreenState extends State<OrderScreen> {
             ),
           ),
           SizedBox(width: Responsive.padding(context, 12)),
-          
+
           // Item details
           Expanded(
             child: Column(
@@ -428,7 +424,7 @@ class _OrderScreenState extends State<OrderScreen> {
               ],
             ),
           ),
-          
+
           // Price
           Text(
             'QR${price.toStringAsFixed(2)}',
@@ -458,10 +454,9 @@ class _OrderScreenState extends State<OrderScreen> {
             onPressed: () async {
               // Clear cart and go to home
               await cartController.clearCart();
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                AppRoutes.home,
-                (route) => false,
-              );
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
@@ -487,7 +482,7 @@ class _OrderScreenState extends State<OrderScreen> {
   /// Build error state
   Widget _buildErrorState(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Center(
       child: Padding(
         padding: EdgeInsets.all(Responsive.padding(context, 32)),
@@ -517,10 +512,9 @@ class _OrderScreenState extends State<OrderScreen> {
             SizedBox(height: Responsive.padding(context, 32)),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  AppRoutes.home,
-                  (route) => false,
-                );
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
@@ -538,4 +532,3 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 }
-

@@ -57,7 +57,7 @@ DateTime _safeParseDateTime(dynamic value) {
 }
 
 /// Order Detail Model
-/// 
+///
 /// This model represents an individual item in the order_details array.
 /// Each item can be a normal item (itmtype=0) or a modifier/addon (itmtype=1).
 class OrderDetail {
@@ -71,8 +71,9 @@ class OrderDetail {
   final String? itmremarks;
   final int unitID;
   final String unitname;
-  final int? mainItemSlno; // Reference to parent item's slno if this is a modifier
-  
+  final int?
+  mainItemSlno; // Reference to parent item's slno if this is a modifier
+
   const OrderDetail({
     required this.slno,
     required this.itemId,
@@ -86,7 +87,7 @@ class OrderDetail {
     required this.unitname,
     this.mainItemSlno,
   });
-  
+
   /// Create OrderDetail from JSON
   factory OrderDetail.fromJson(Map<String, dynamic> json) {
     return OrderDetail(
@@ -97,13 +98,17 @@ class OrderDetail {
       qty: _safeToInt(json['qty']),
       rate: _safeToDouble(json['rate']),
       total: _safeToDouble(json['total']),
-      itmremarks: json['itmremarks'] != null ? _safeToString(json['itmremarks']) : null,
+      itmremarks: json['itmremarks'] != null
+          ? _safeToString(json['itmremarks'])
+          : null,
       unitID: _safeToInt(json['unitID']),
       unitname: _safeToString(json['unitname']),
-      mainItemSlno: json['main_item_slno'] != null ? _safeToInt(json['main_item_slno']) : null,
+      mainItemSlno: json['main_item_slno'] != null
+          ? _safeToInt(json['main_item_slno'])
+          : null,
     );
   }
-  
+
   /// Convert OrderDetail to JSON
   Map<String, dynamic> toJson() {
     return {
@@ -120,43 +125,43 @@ class OrderDetail {
       'main_item_slno': mainItemSlno,
     };
   }
-  
+
   /// Check if this is a normal item
   bool get isNormalItem => itmtype == 0;
-  
+
   /// Check if this is a modifier/addon
   bool get isModifier => itmtype == 1;
-  
+
   /// Get formatted price
   String get formattedPrice {
     return 'QR ${rate.toStringAsFixed(2)}';
   }
-  
+
   /// Get formatted total
   String get formattedTotal {
     return 'QR ${total.toStringAsFixed(2)}';
   }
-  
+
   @override
   String toString() {
     return 'OrderDetail(slno: $slno, itemId: $itemId, itemname: $itemname, itmtype: $itmtype, qty: $qty)';
   }
-  
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is OrderDetail && other.slno == slno && other.itemId == itemId;
   }
-  
+
   @override
   int get hashCode => slno.hashCode ^ itemId.hashCode;
 }
 
 /// User Order Model
-/// 
+///
 /// This model represents a user order from the getUserOrders API response.
 /// It contains all the fields returned by the API endpoint.
-/// 
+///
 /// Order Status Values:
 /// - 0 = Pending (order is pending acceptance)
 /// - 1 = Accepted (order has been accepted)
@@ -184,7 +189,7 @@ class UserOrder {
   final DateTime updatedAt;
   final int noOfGuest;
   final List<OrderDetail> orderDetails;
-  
+
   /// Order status: 0 = Pending, 1 = Accepted, 2 = Cancelled, 3 = Completed
   final int orderStatus;
 
@@ -237,9 +242,14 @@ class UserOrder {
       orderStatus: _safeToInt(json['order_status']),
       tableName: _safeToString(json['tableName']),
       noOfGuest: _safeToInt(json['no_of_guest']),
-      orderDetails: (json['order_details'] as List<dynamic>?)
-          ?.map((detailJson) => OrderDetail.fromJson(detailJson as Map<String, dynamic>))
-          .toList() ?? [],
+      orderDetails:
+          (json['order_details'] as List<dynamic>?)
+              ?.map(
+                (detailJson) =>
+                    OrderDetail.fromJson(detailJson as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
     );
   }
 
@@ -287,16 +297,16 @@ class UserOrder {
         return 'Unknown';
     }
   }
-  
+
   /// Check if order is completed
   bool get isOrderCompleted => orderStatus == 3;
-  
+
   /// Check if order is pending
   bool get isPending => orderStatus == 0;
-  
+
   /// Check if order is accepted
   bool get isAccepted => orderStatus == 1;
-  
+
   /// Check if order is cancelled
   bool get isCancelled => orderStatus == 2;
 
@@ -331,7 +341,7 @@ class UserOrder {
 }
 
 /// User Orders Response Model
-/// 
+///
 /// This model represents the complete response from the getUserOrders API.
 class UserOrdersResponse {
   final bool success;
@@ -352,9 +362,14 @@ class UserOrdersResponse {
       success: _safeToBool(json['success']),
       orderType: _safeToString(json['order_type']),
       totalOrders: _safeToInt(json['total_orders']),
-      orders: (json['orders'] as List<dynamic>?)
-          ?.map((orderJson) => UserOrder.fromJson(orderJson as Map<String, dynamic>))
-          .toList() ?? [],
+      orders:
+          (json['orders'] as List<dynamic>?)
+              ?.map(
+                (orderJson) =>
+                    UserOrder.fromJson(orderJson as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
     );
   }
 

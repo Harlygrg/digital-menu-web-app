@@ -1,5 +1,5 @@
 /// Branch models for API response parsing
-/// 
+///
 /// This file contains models for handling branch list API responses.
 
 /// Helper function to safely convert dynamic values to int
@@ -36,22 +36,14 @@ class BranchModel {
 
   /// Convert to JSON
   Map<String, dynamic> toJson() {
-    return {
-      'ID': id,
-      'Cname': cname,
-      'Active': active,
-    };
+    return {'ID': id, 'Cname': cname, 'Active': active};
   }
 
   /// Check if branch is active
   bool get isActive => active == 1;
 
   /// Create a copy with updated properties
-  BranchModel copyWith({
-    int? id,
-    String? cname,
-    int? active,
-  }) {
+  BranchModel copyWith({int? id, String? cname, int? active}) {
     return BranchModel(
       id: id ?? this.id,
       cname: cname ?? this.cname,
@@ -89,13 +81,15 @@ class BranchListResponse {
   /// Create from JSON
   factory BranchListResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>? ?? {};
-    
+
     return BranchListResponse(
       success: json['success'] ?? false,
       message: data['message'] ?? '',
-      branches: (data['branches'] as List<dynamic>?)
-          ?.map((item) => BranchModel.fromJson(item))
-          .toList() ?? [],
+      branches:
+          (data['branches'] as List<dynamic>?)
+              ?.map((item) => BranchModel.fromJson(item))
+              .toList() ??
+          [],
     );
   }
 
@@ -115,4 +109,3 @@ class BranchListResponse {
     return 'BranchListResponse(success: $success, branches: ${branches.length})';
   }
 }
-

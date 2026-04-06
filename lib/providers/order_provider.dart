@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/cart_item_model.dart';
 import '../models/create_order_response_model.dart';
 import '../services/api/api_service.dart';
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Provider for managing order placement state
 class OrderProvider extends ChangeNotifier {
@@ -21,7 +22,7 @@ class OrderProvider extends ChangeNotifier {
   CreateOrderResponseModel? get orderResponse => _orderResponse;
 
   /// Create order from cart items
-  /// 
+  ///
   /// Parameters:
   /// - [cartItems]: List of cart items to include in the order
   /// - [tableId]: Selected table ID
@@ -29,7 +30,7 @@ class OrderProvider extends ChangeNotifier {
   /// - [branchId]: Branch ID from SharedPreferences
   /// - [orderNotes]: Optional order notes/instructions
   /// - [noOfGuest]: Number of guests (for dine-in orders)
-  /// 
+  ///
   /// Returns: [CreateOrderResponseModel] on success, null on failure
   Future<CreateOrderResponseModel?> createOrder({
     required List<CartItemModel> cartItems,
@@ -102,7 +103,7 @@ class OrderProvider extends ChangeNotifier {
         roundoff: 0.0,
         orderDtls: orderDetails,
         defaultsInfo: '',
-        noOfGuest: noOfGuest
+        noOfGuest: noOfGuest,
       );
 
       // Call API
@@ -110,24 +111,24 @@ class OrderProvider extends ChangeNotifier {
 
       if (response.success) {
         _orderResponse = response;
-        
+
         // Save order details to local storage
         await _saveOrderToLocalStorage(response);
-        
+
         _isLoading = false;
         notifyListeners();
-        
+
         return response;
       } else {
-        _errorMessage = response.message.isNotEmpty 
-            ? response.message 
+        _errorMessage = response.message.isNotEmpty
+            ? response.message
             : 'Failed to create order';
         _isLoading = false;
         notifyListeners();
         return null;
       }
     } catch (e) {
-// debugPrint('Error in createOrder: $e');
+      appDebugLog('Error in createOrder: $e');
       _errorMessage = _parseErrorMessage(e.toString());
       _isLoading = false;
       notifyListeners();
@@ -136,14 +137,18 @@ class OrderProvider extends ChangeNotifier {
   }
 
   /// Save order details to local storage
-  Future<void> _saveOrderToLocalStorage(CreateOrderResponseModel response) async {
+  Future<void> _saveOrderToLocalStorage(
+    CreateOrderResponseModel response,
+  ) async {
     try {
       // Save order details using a simple approach
       // For a production app, consider using a more robust storage solution
-// debugPrint('Order saved: ID=${response.orderId}, Online ID=${response.onlineOrderId}, Order No=${response.orderNo}');
-// debugPrint('Order details saved to local storage');
+      appDebugLog(
+        'Order saved: ID=${response.orderId}, Online ID=${response.onlineOrderId}, Order No=${response.orderNo}',
+      );
+      appDebugLog('Order details saved to local storage');
     } catch (e) {
-// debugPrint('Error saving order to local storage: $e');
+      appDebugLog('Error saving order to local storage: $e');
     }
   }
 
@@ -188,11 +193,6 @@ class OrderProvider extends ChangeNotifier {
         'orderNo': _orderResponse!.orderNo,
       };
     }
-    return {
-      'orderId': null,
-      'onlineOrderId': null,
-      'orderNo': null,
-    };
+    return {'orderId': null, 'onlineOrderId': null, 'orderNo': null};
   }
 }
-

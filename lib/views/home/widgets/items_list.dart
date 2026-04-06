@@ -16,10 +16,7 @@ import '../../../widgets/home_shimmer_widget.dart';
 class ItemsListWidget extends StatelessWidget {
   final HomeController controller;
 
-  const ItemsListWidget({
-    super.key,
-    required this.controller,
-  });
+  const ItemsListWidget({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -27,14 +24,12 @@ class ItemsListWidget extends StatelessWidget {
       builder: (context, provider, child) {
         final items = provider.filteredItems;
         final language = provider.language;
-        
+
         // Show shimmer only while active loading is in progress.
         if (provider.isLoading) {
-          return const SliverToBoxAdapter(
-            child: ItemsListShimmerWidget(),
-          );
+          return const SliverToBoxAdapter(child: ItemsListShimmerWidget());
         }
-        
+
         // Show empty state only when not loading, data has been loaded, and no items
         if (items.isEmpty) {
           return SliverToBoxAdapter(
@@ -46,7 +41,9 @@ class ItemsListWidget extends StatelessWidget {
                     Icon(
                       Icons.search_off,
                       size: Responsive.fontSize(context, 48),
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.3),
                     ),
                     SizedBox(height: Responsive.padding(context, 16)),
                     Text(
@@ -55,7 +52,9 @@ class ItemsListWidget extends StatelessWidget {
                           : 'لم يتم العثور على أطباق',
                       style: TextStyle(
                         fontSize: Responsive.fontSize(context, 16),
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                   ],
@@ -93,7 +92,9 @@ class ItemsListWidget extends StatelessWidget {
               // Optimizations for better scroll performance
               findChildIndexCallback: (Key key) {
                 if (key is ValueKey<int>) {
-                  final index = items.indexWhere((item) => item.id == key.value);
+                  final index = items.indexWhere(
+                    (item) => item.id == key.value,
+                  );
                   return index >= 0 ? index : null;
                 }
                 return null;
@@ -125,13 +126,12 @@ class _ListItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // Calculate optimal cache dimensions for list item images
     final imageSize = Responsive.padding(context, 80);
-    final cacheSize = (imageSize * MediaQuery.of(context).devicePixelRatio).toInt();
-    
+    final cacheSize = (imageSize * MediaQuery.of(context).devicePixelRatio)
+        .toInt();
+
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: EdgeInsets.all(Responsive.padding(context, 12)),
         child: Row(
@@ -150,12 +150,16 @@ class _ListItemCard extends StatelessWidget {
                 placeholder: Container(
                   width: Responsive.padding(context, 80),
                   height: Responsive.padding(context, 80),
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withOpacity(0.05),
                   child: Center(
                     child: Icon(
                       Icons.fastfood,
                       size: Responsive.fontSize(context, 24),
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.3),
                     ),
                   ),
                 ),
@@ -201,7 +205,7 @@ class _ListItemCard extends StatelessWidget {
                             item: item,
                           );
                         },
-                      )
+                      ),
                     ],
                   ),
                   SizedBox(height: Responsive.padding(context, 4)),
@@ -228,7 +232,7 @@ class _ListItemCard extends StatelessWidget {
                             addons: getModifiers(item.id),
                           );
                         },
-                      )
+                      ),
                     ],
                   ),
                 ],

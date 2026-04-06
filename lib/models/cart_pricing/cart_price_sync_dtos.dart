@@ -111,7 +111,8 @@ class CartPriceSyncModifierPriceDto {
     required this.reason,
   });
 
-  static double? _toDoubleOrNull(dynamic v) => CartPriceSyncItemPriceDto._toDoubleOrNull(v);
+  static double? _toDoubleOrNull(dynamic v) =>
+      CartPriceSyncItemPriceDto._toDoubleOrNull(v);
   static bool _toBool(dynamic v) => CartPriceSyncItemPriceDto._toBool(v);
 
   factory CartPriceSyncModifierPriceDto.fromJson(Map<String, dynamic> json) {
@@ -154,15 +155,23 @@ class CartPriceSyncDataDto {
       pricingVersion: json['pricing_version']?.toString(),
       itemPrices: itemPricesRaw is List
           ? itemPricesRaw
-              .whereType<Map>()
-              .map((e) => CartPriceSyncItemPriceDto.fromJson(e.cast<String, dynamic>()))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (e) => CartPriceSyncItemPriceDto.fromJson(
+                    e.cast<String, dynamic>(),
+                  ),
+                )
+                .toList()
           : const [],
       modifierPrices: modifierPricesRaw is List
           ? modifierPricesRaw
-              .whereType<Map>()
-              .map((e) => CartPriceSyncModifierPriceDto.fromJson(e.cast<String, dynamic>()))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (e) => CartPriceSyncModifierPriceDto.fromJson(
+                    e.cast<String, dynamic>(),
+                  ),
+                )
+                .toList()
           : const [],
     );
   }
@@ -186,8 +195,9 @@ class CartPriceSyncResponseDto {
     return CartPriceSyncResponseDto(
       success: _toBool(json['success']),
       message: json['message']?.toString() ?? '',
-      data: dataRaw is Map ? CartPriceSyncDataDto.fromJson(dataRaw.cast<String, dynamic>()) : null,
+      data: dataRaw is Map
+          ? CartPriceSyncDataDto.fromJson(dataRaw.cast<String, dynamic>())
+          : null,
     );
   }
 }
-

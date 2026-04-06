@@ -12,6 +12,7 @@ class ScrollBehaviorUtils {
       // Note: This is a placeholder for future CSS-based implementation
     }
   }
+
   /// Creates a scroll behavior that works consistently across platforms
   /// Handles both mouse and touch interactions for web and mobile
   static ScrollBehavior createCrossPlatformScrollBehavior() {
@@ -23,7 +24,7 @@ class ScrollBehaviorUtils {
     return ScrollController();
   }
 
-  /// Creates a vertical scroll controller with enhanced web support 
+  /// Creates a vertical scroll controller with enhanced web support
   static ScrollController createVerticalScrollController() {
     return ScrollController();
   }
@@ -32,18 +33,12 @@ class ScrollBehaviorUtils {
   static ScrollPhysics getScrollPhysics({bool isHorizontal = false}) {
     if (kIsWeb) {
       // Enhanced physics for web platform
-      return const BouncingScrollPhysics(
-        parent: ClampingScrollPhysics(),
-      );
+      return const BouncingScrollPhysics(parent: ClampingScrollPhysics());
     } else {
       // Standard physics for mobile platforms
       return isHorizontal
-          ? const BouncingScrollPhysics(
-              parent: ClampingScrollPhysics(),
-            )
-          : const BouncingScrollPhysics(
-              parent: ClampingScrollPhysics(),
-            );
+          ? const BouncingScrollPhysics(parent: ClampingScrollPhysics())
+          : const BouncingScrollPhysics(parent: ClampingScrollPhysics());
     }
   }
 
@@ -58,7 +53,9 @@ class ScrollBehaviorUtils {
     return SingleChildScrollView(
       controller: controller,
       scrollDirection: scrollDirection,
-      physics: physics ?? getScrollPhysics(isHorizontal: scrollDirection == Axis.horizontal),
+      physics:
+          physics ??
+          getScrollPhysics(isHorizontal: scrollDirection == Axis.horizontal),
       padding: padding,
       child: child,
     );
@@ -92,9 +89,7 @@ class _CrossPlatformScrollBehavior extends ScrollBehavior {
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
     // Use enhanced physics for better web experience
-    return const BouncingScrollPhysics(
-      parent: ClampingScrollPhysics(),
-    );
+    return const BouncingScrollPhysics(parent: ClampingScrollPhysics());
   }
 
   @override
@@ -110,12 +105,12 @@ class _CrossPlatformScrollBehavior extends ScrollBehavior {
 
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        // Support both mouse and touch for web
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-      };
+    // Support both mouse and touch for web
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+  };
 }
 
 /// Enhanced scroll controller with web-specific optimizations
@@ -129,7 +124,7 @@ class EnhancedScrollController extends ScrollController {
   @override
   void attach(ScrollPosition position) {
     super.attach(position);
-    
+
     // Add web-specific optimizations
     if (kIsWeb) {
       // Enable smooth scrolling for web
@@ -144,11 +139,7 @@ class EnhancedScrollController extends ScrollController {
     Curve curve = Curves.easeInOut,
   }) async {
     if (hasClients) {
-      await animateTo(
-        offset,
-        duration: duration,
-        curve: curve,
-      );
+      await animateTo(offset, duration: duration, curve: curve);
     }
   }
 
@@ -184,9 +175,11 @@ class EnhancedScrollable extends StatelessWidget {
       child: SingleChildScrollView(
         controller: controller,
         scrollDirection: scrollDirection,
-        physics: physics ?? ScrollBehaviorUtils.getScrollPhysics(
-          isHorizontal: scrollDirection == Axis.horizontal,
-        ),
+        physics:
+            physics ??
+            ScrollBehaviorUtils.getScrollPhysics(
+              isHorizontal: scrollDirection == Axis.horizontal,
+            ),
         padding: padding,
         child: child,
       ),
@@ -216,13 +209,16 @@ class EnhancedHorizontalScrollable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScrollConfiguration(
-      behavior: _HorizontalScrollBehavior(), // Custom behavior for horizontal scrolling
+      behavior:
+          _HorizontalScrollBehavior(), // Custom behavior for horizontal scrolling
       child: SizedBox(
         height: height,
         child: ListView.builder(
           controller: controller,
           scrollDirection: Axis.horizontal,
-          physics: physics ?? ScrollBehaviorUtils.getScrollPhysics(isHorizontal: true),
+          physics:
+              physics ??
+              ScrollBehaviorUtils.getScrollPhysics(isHorizontal: true),
           itemCount: itemCount,
           itemBuilder: itemBuilder,
           padding: padding,
@@ -252,10 +248,10 @@ class _HorizontalScrollBehavior extends ScrollBehavior {
 
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        // Support both mouse and touch for web
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-      };
+    // Support both mouse and touch for web
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+  };
 }

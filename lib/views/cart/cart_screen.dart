@@ -15,6 +15,7 @@ import '../../providers/home_provider.dart';
 import '../../storage/local_storage.dart';
 import '../../widgets/order_success_popup.dart';
 import '../home/widgets/add_to_cart_popup.dart';
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Full cart screen with complete cart functionality
 class CartScreen extends StatefulWidget {
@@ -25,7 +26,9 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  final TextEditingController _guestsController = TextEditingController(text: '1');
+  final TextEditingController _guestsController = TextEditingController(
+    text: '1',
+  );
   final FocusNode _guestsFocusNode = FocusNode();
   late final bool _showQrGuestsField;
 
@@ -37,7 +40,10 @@ class _CartScreenState extends State<CartScreen> {
     final orderTypeId = int.tryParse(queryParams['order_type'] ?? '');
     final tableId = int.tryParse(queryParams['table_id'] ?? '');
     _showQrGuestsField =
-        orderTypeId != null && tableId != null && orderTypeId > 0 && tableId > 0;
+        orderTypeId != null &&
+        tableId != null &&
+        orderTypeId > 0 &&
+        tableId > 0;
   }
 
   @override
@@ -53,130 +59,153 @@ class _CartScreenState extends State<CartScreen> {
       builder: (context, provider, child) {
         return Scaffold(
           appBar: AppBar(
-              title: Responsive.isDesktop(context)
-                  ? null // Hide default title for desktop
-                  : Text(
-                      provider.isEnglish ? 'Cart' : 'السلة',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+            title: Responsive.isDesktop(context)
+                ? null // Hide default title for desktop
+                : Text(
+                    provider.isEnglish ? 'Cart' : 'السلة',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              elevation: 0,
-              leading: Responsive.isDesktop(context)
-                  ? null // Hide default leading for desktop
-                  : IconButton(
-                      icon: Icon(
-                        Icons.arrow_back_ios,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
+                  ),
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            elevation: 0,
+            leading: Responsive.isDesktop(context)
+                ? null // Hide default leading for desktop
+                : IconButton(
+                    icon: Icon(
+                      Icons.arrow_back_ios,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
-              actions: Responsive.isDesktop(context)
-                  ? null // Hide default actions for desktop
-                  : [
-                      // Orders button
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pushNamed(AppRoutes.orderTracking),
-                        child: Text(
-                          provider.isEnglish ? 'Orders' : 'الطلبات',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontSize: Responsive.fontSize(context, 14),
-                            fontWeight: FontWeight.w600,
-                          ),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+            actions: Responsive.isDesktop(context)
+                ? null // Hide default actions for desktop
+                : [
+                    // Orders button
+                    TextButton(
+                      onPressed: () => Navigator.of(
+                        context,
+                      ).pushNamed(AppRoutes.orderTracking),
+                      child: Text(
+                        provider.isEnglish ? 'Orders' : 'الطلبات',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: Responsive.fontSize(context, 14),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      Consumer<CartController>(
-                        builder: (context, cartController, child) {
-                          if (cartController.isNotEmpty) {
-                            return TextButton(
-                              onPressed: () => _showClearCartDialog(context, cartController, provider.isEnglish),
+                    ),
+                    Consumer<CartController>(
+                      builder: (context, cartController, child) {
+                        if (cartController.isNotEmpty) {
+                          return TextButton(
+                            onPressed: () => _showClearCartDialog(
+                              context,
+                              cartController,
+                              provider.isEnglish,
+                            ),
+                            child: Text(
+                              provider.isEnglish ? 'Clear' : 'مسح',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                                fontSize: Responsive.fontSize(context, 14),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ],
+            flexibleSpace: Responsive.isDesktop(context)
+                ? Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                    child: Center(
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxWidth: Responsive.maxContentWidth(context),
+                        ),
+                        child: Row(
+                          children: [
+                            // Back button
+                            IconButton(
+                              icon: Icon(
+                                Icons.arrow_back_ios,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                            // Title
+                            Expanded(
                               child: Text(
-                                provider.isEnglish ? 'Clear' : 'مسح',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error,
-                                  fontSize: Responsive.fontSize(context, 14),
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                provider.isEnglish ? 'Cart' : 'السلة',
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
                               ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ],
-              flexibleSpace: Responsive.isDesktop(context)
-                  ? Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                      child: Center(
-                        child: Container(
-                          constraints: BoxConstraints(
-                            maxWidth: Responsive.maxContentWidth(context),
-                          ),
-                          child: Row(
-                            children: [
-                              // Back button
-                              IconButton(
-                                icon: Icon(
-                                  Icons.arrow_back_ios,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                                onPressed: () => Navigator.of(context).pop(),
-                              ),
-                              // Title
-                              Expanded(
-                                child: Text(
-                                  provider.isEnglish ? 'Cart' : 'السلة',
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              // Actions
-                              Consumer<CartController>(
-                                builder: (context, cartController, child) {
-                                  return Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // Orders button
+                            ),
+                            // Actions
+                            Consumer<CartController>(
+                              builder: (context, cartController, child) {
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Orders button
+                                    TextButton(
+                                      onPressed: () => Navigator.of(
+                                        context,
+                                      ).pushNamed(AppRoutes.orderTracking),
+                                      child: Text(
+                                        provider.isEnglish
+                                            ? 'Orders'
+                                            : 'الطلبات',
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                          fontSize: Responsive.fontSize(
+                                            context,
+                                            14,
+                                          ),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    // Clear button
+                                    if (cartController.isNotEmpty)
                                       TextButton(
-                                        onPressed: () => Navigator.of(context).pushNamed(AppRoutes.orderTracking),
+                                        onPressed: () => _showClearCartDialog(
+                                          context,
+                                          cartController,
+                                          provider.isEnglish,
+                                        ),
                                         child: Text(
-                                          provider.isEnglish ? 'Orders' : 'الطلبات',
+                                          provider.isEnglish ? 'Clear' : 'مسح',
                                           style: TextStyle(
-                                            color: Theme.of(context).colorScheme.primary,
-                                            fontSize: Responsive.fontSize(context, 14),
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.error,
+                                            fontSize: Responsive.fontSize(
+                                              context,
+                                              14,
+                                            ),
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                       ),
-                                      // Clear button
-                                      if (cartController.isNotEmpty)
-                                        TextButton(
-                                          onPressed: () => _showClearCartDialog(context, cartController, provider.isEnglish),
-                                          child: Text(
-                                            provider.isEnglish ? 'Clear' : 'مسح',
-                                            style: TextStyle(
-                                              color: Theme.of(context).colorScheme.error,
-                                              fontSize: Responsive.fontSize(context, 14),
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ),
-                    )
-                  : null,
+                    ),
+                  )
+                : null,
           ),
           body: Responsive.isDesktop(context)
               ? _buildDesktopLayout(context, provider)
@@ -203,7 +232,12 @@ class _CartScreenState extends State<CartScreen> {
                 itemCount: cartController.cartItems.length,
                 itemBuilder: (context, index) {
                   final cartItem = cartController.cartItems[index];
-                  return _buildCartItemCard(context, cartController, cartItem, provider);
+                  return _buildCartItemCard(
+                    context,
+                    cartController,
+                    cartItem,
+                    provider,
+                  );
                 },
               ),
             ),
@@ -237,12 +271,21 @@ class _CartScreenState extends State<CartScreen> {
                     itemCount: cartController.cartItems.length,
                     itemBuilder: (context, index) {
                       final cartItem = cartController.cartItems[index];
-                      return _buildCartItemCard(context, cartController, cartItem, provider);
+                      return _buildCartItemCard(
+                        context,
+                        cartController,
+                        cartItem,
+                        provider,
+                      );
                     },
                   ),
                 ),
                 // Total and checkout section
-                _buildCheckoutSection(context, cartController, provider.isEnglish),
+                _buildCheckoutSection(
+                  context,
+                  cartController,
+                  provider.isEnglish,
+                ),
               ],
             );
           },
@@ -260,21 +303,29 @@ class _CartScreenState extends State<CartScreen> {
           Icon(
             Icons.shopping_cart_outlined,
             size: Responsive.fontSize(context, 80),
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           SizedBox(height: Responsive.padding(context, 24)),
           Text(
             isEnglish ? 'Your cart is empty' : 'سلتك فارغة',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
               fontWeight: FontWeight.w600,
             ),
           ),
           SizedBox(height: Responsive.padding(context, 8)),
           Text(
-            isEnglish ? 'Add some delicious items to get started!' : 'أضف بعض الأطباق اللذيذة للبدء!',
+            isEnglish
+                ? 'Add some delicious items to get started!'
+                : 'أضف بعض الأطباق اللذيذة للبدء!',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
           SizedBox(height: Responsive.padding(context, 32)),
@@ -313,13 +364,11 @@ class _CartScreenState extends State<CartScreen> {
   ) {
     final theme = Theme.of(context);
     final isEnglish = homeProvider.isEnglish;
-    
+
     return Card(
       margin: EdgeInsets.only(bottom: Responsive.padding(context, 12)),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: EdgeInsets.all(Responsive.padding(context, 16)),
         child: Column(
@@ -357,7 +406,11 @@ class _CartScreenState extends State<CartScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isEnglish ? cartItem.item.iname : (cartItem.item.nameinol.isNotEmpty ? cartItem.item.nameinol : cartItem.item.iname),
+                        isEnglish
+                            ? cartItem.item.iname
+                            : (cartItem.item.nameinol.isNotEmpty
+                                  ? cartItem.item.nameinol
+                                  : cartItem.item.iname),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           fontSize: Responsive.fontSize(context, 16),
@@ -370,11 +423,11 @@ class _CartScreenState extends State<CartScreen> {
                         Text(
                           isEnglish
                               ? (cartItem.unavailableReason?.isNotEmpty == true
-                                  ? cartItem.unavailableReason!
-                                  : 'Not available for this order type')
+                                    ? cartItem.unavailableReason!
+                                    : 'Not available for this order type')
                               : (cartItem.unavailableReason?.isNotEmpty == true
-                                  ? cartItem.unavailableReason!
-                                  : 'غير متوفر لهذا النوع من الطلب'),
+                                    ? cartItem.unavailableReason!
+                                    : 'غير متوفر لهذا النوع من الطلب'),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.error,
                             fontWeight: FontWeight.w600,
@@ -386,7 +439,9 @@ class _CartScreenState extends State<CartScreen> {
                       Text(
                         cartItem.unitDisplayName,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                           fontSize: Responsive.fontSize(context, 12),
                         ),
                       ),
@@ -404,7 +459,8 @@ class _CartScreenState extends State<CartScreen> {
                 ),
                 IconButton(
                   tooltip: isEnglish ? 'Edit item' : 'تعديل العنصر',
-                  onPressed: () => _openEditCartItemPopup(context, cartItem, homeProvider),
+                  onPressed: () =>
+                      _openEditCartItemPopup(context, cartItem, homeProvider),
                   icon: Icon(
                     Icons.edit_outlined,
                     color: theme.colorScheme.primary,
@@ -413,7 +469,8 @@ class _CartScreenState extends State<CartScreen> {
                 ),
                 IconButton(
                   tooltip: isEnglish ? 'Remove item' : 'إزالة العنصر',
-                  onPressed: () async => await cartController.removeItem(cartItem),
+                  onPressed: () async =>
+                      await cartController.removeItem(cartItem),
                   icon: Icon(
                     Icons.delete_outline,
                     color: theme.colorScheme.error,
@@ -422,7 +479,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ],
             ),
-            
+
             // Modifiers section - show all modifiers, including those with 0 quantity
             if (cartItem.modifiers.isNotEmpty) ...[
               SizedBox(height: Responsive.padding(context, 12)),
@@ -434,15 +491,17 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
               SizedBox(height: Responsive.padding(context, 8)),
-              ...cartItem.modifiers.map((modifier) => _buildModifierRow(
-                context,
-                cartController,
-                cartItem,
-                modifier,
-                isEnglish,
-              )),
+              ...cartItem.modifiers.map(
+                (modifier) => _buildModifierRow(
+                  context,
+                  cartController,
+                  cartItem,
+                  modifier,
+                  isEnglish,
+                ),
+              ),
             ],
-            
+
             // Special instructions with edit option
             SizedBox(height: Responsive.padding(context, 12)),
             Container(
@@ -463,7 +522,9 @@ class _CartScreenState extends State<CartScreen> {
                     child: Text(
                       cartItem.specialInstructions?.isNotEmpty == true
                           ? cartItem.specialInstructions!
-                          : (isEnglish ? 'No special instructions' : 'لا توجد تعليمات خاصة'),
+                          : (isEnglish
+                                ? 'No special instructions'
+                                : 'لا توجد تعليمات خاصة'),
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: Responsive.fontSize(context, 12),
                         fontStyle: FontStyle.italic,
@@ -494,7 +555,7 @@ class _CartScreenState extends State<CartScreen> {
                 ],
               ),
             ),
-            
+
             // Quantity controls and total
             SizedBox(height: Responsive.padding(context, 16)),
             Row(
@@ -506,7 +567,8 @@ class _CartScreenState extends State<CartScreen> {
                     _buildQuantityButton(
                       context,
                       icon: Icons.remove,
-                      onPressed: () async => await cartController.decreaseQuantity(cartItem),
+                      onPressed: () async =>
+                          await cartController.decreaseQuantity(cartItem),
                     ),
                     SizedBox(width: Responsive.padding(context, 16)),
                     Container(
@@ -530,7 +592,8 @@ class _CartScreenState extends State<CartScreen> {
                     _buildQuantityButton(
                       context,
                       icon: Icons.add,
-                      onPressed: () async => await cartController.increaseQuantity(cartItem),
+                      onPressed: () async =>
+                          await cartController.increaseQuantity(cartItem),
                     ),
                   ],
                 ),
@@ -592,7 +655,7 @@ class _CartScreenState extends State<CartScreen> {
   ) {
     final theme = Theme.of(context);
     final isZeroQuantity = modifier.quantity == 0;
-    
+
     return Padding(
       padding: EdgeInsets.only(bottom: Responsive.padding(context, 8)),
       child: Row(
@@ -631,7 +694,7 @@ class _CartScreenState extends State<CartScreen> {
             style: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
               fontSize: Responsive.fontSize(context, 12),
-              color: isZeroQuantity 
+              color: isZeroQuantity
                   ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
                   : theme.colorScheme.onSurface,
             ),
@@ -643,7 +706,7 @@ class _CartScreenState extends State<CartScreen> {
                 context,
                 icon: Icons.remove,
                 isEnabled: modifier.quantity > 0,
-                onPressed: modifier.quantity > 0 
+                onPressed: modifier.quantity > 0
                     ? () async => await cartController.decreaseModifierQuantity(
                         cartItem,
                         modifier.id,
@@ -657,7 +720,7 @@ class _CartScreenState extends State<CartScreen> {
                   vertical: Responsive.padding(context, 4),
                 ),
                 decoration: BoxDecoration(
-                  color: isZeroQuantity 
+                  color: isZeroQuantity
                       ? theme.colorScheme.outline.withValues(alpha: 0.1)
                       : theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
@@ -667,7 +730,7 @@ class _CartScreenState extends State<CartScreen> {
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: Responsive.fontSize(context, 12),
-                    color: isZeroQuantity 
+                    color: isZeroQuantity
                         ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
                         : theme.colorScheme.primary,
                   ),
@@ -678,10 +741,8 @@ class _CartScreenState extends State<CartScreen> {
                 context,
                 icon: Icons.add,
                 isEnabled: true,
-                onPressed: () async => await cartController.increaseModifierQuantity(
-                  cartItem,
-                  modifier.id,
-                ),
+                onPressed: () async => await cartController
+                    .increaseModifierQuantity(cartItem, modifier.id),
               ),
             ],
           ),
@@ -703,17 +764,12 @@ class _CartScreenState extends State<CartScreen> {
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           side: BorderSide(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
           ),
         ),
-        child: Icon(
-          icon,
-          size: Responsive.fontSize(context, 16),
-        ),
+        child: Icon(icon, size: Responsive.fontSize(context, 16)),
       ),
     );
   }
@@ -726,7 +782,7 @@ class _CartScreenState extends State<CartScreen> {
     bool isEnabled = true,
   }) {
     final theme = Theme.of(context);
-    
+
     return SizedBox(
       width: Responsive.padding(context, 24),
       height: Responsive.padding(context, 24),
@@ -734,11 +790,9 @@ class _CartScreenState extends State<CartScreen> {
         onPressed: isEnabled ? onPressed : null,
         style: OutlinedButton.styleFrom(
           padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
           side: BorderSide(
-            color: isEnabled 
+            color: isEnabled
                 ? theme.colorScheme.outline.withValues(alpha: 0.3)
                 : theme.colorScheme.outline.withValues(alpha: 0.1),
           ),
@@ -746,7 +800,7 @@ class _CartScreenState extends State<CartScreen> {
         child: Icon(
           icon,
           size: Responsive.fontSize(context, 12),
-          color: isEnabled 
+          color: isEnabled
               ? theme.colorScheme.onSurface
               : theme.colorScheme.onSurface.withValues(alpha: 0.3),
         ),
@@ -755,7 +809,11 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   /// Build checkout section with total and place order button
-  Widget _buildCheckoutSection(BuildContext context, CartController cartController, bool isEnglish) {
+  Widget _buildCheckoutSection(
+    BuildContext context,
+    CartController cartController,
+    bool isEnglish,
+  ) {
     final theme = Theme.of(context);
     final total = cartController.totalPrice;
     final itemCount = cartController.itemCount;
@@ -801,13 +859,15 @@ class _CartScreenState extends State<CartScreen> {
                   Text(
                     needsSync
                         ? (isEnglish
-                            ? 'Your order type has changed. Prices and item availability may be different. Please update your cart before placing the order.'
-                            : 'تم تغيير نوع الطلب. قد تختلف الأسعار وتوفر الأصناف. يرجى تحديث السلة قبل إتمام الطلب.')
+                              ? 'Your order type has changed. Prices and item availability may be different. Please update your cart before placing the order.'
+                              : 'تم تغيير نوع الطلب. قد تختلف الأسعار وتوفر الأصناف. يرجى تحديث السلة قبل إتمام الطلب.')
                         : (isEnglish
-                            ? 'Some items or add-ons are not available for this order type. Please review your cart before placing the order.'
-                            : 'بعض الأصناف أو الإضافات غير متوفرة لهذا النوع من الطلب. يرجى مراجعة السلة قبل إتمام الطلب.'),
+                              ? 'Some items or add-ons are not available for this order type. Please review your cart before placing the order.'
+                              : 'بعض الأصناف أو الإضافات غير متوفرة لهذا النوع من الطلب. يرجى مراجعة السلة قبل إتمام الطلب.'),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.85,
+                      ),
                       height: 1.3,
                     ),
                   ),
@@ -825,9 +885,13 @@ class _CartScreenState extends State<CartScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  isEnglish ? 'Failed to update cart. Please try again.' : 'فشل تحديث السلة. حاول مرة أخرى.',
+                                  isEnglish
+                                      ? 'Failed to update cart. Please try again.'
+                                      : 'فشل تحديث السلة. حاول مرة أخرى.',
                                 ),
-                                backgroundColor: Theme.of(context).colorScheme.error,
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.error,
                                 duration: const Duration(seconds: 2),
                               ),
                             );
@@ -850,7 +914,7 @@ class _CartScreenState extends State<CartScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isEnglish 
+                isEnglish
                     ? 'Total ($itemCount ${itemCount == 1 ? 'item' : 'items'}):'
                     : 'المجموع ($itemCount ${itemCount == 1 ? 'عنصر' : 'عناصر'}):',
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -903,25 +967,29 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   /// Build order notes text field
-  Widget _buildOrderNotesField(BuildContext context, CartController cartController, bool isEnglish) {
+  Widget _buildOrderNotesField(
+    BuildContext context,
+    CartController cartController,
+    bool isEnglish,
+  ) {
     final theme = Theme.of(context);
-    
+
     return TextFormField(
       initialValue: cartController.orderNotes,
       onChanged: (value) => cartController.setOrderNotes(value),
       decoration: InputDecoration(
-        labelText: isEnglish ? 'Order Notes (Optional)' : 'ملاحظات الطلب (اختياري)',
-        hintText: isEnglish 
-            ? 'Add special instructions for your order...' 
+        labelText: isEnglish
+            ? 'Order Notes (Optional)'
+            : 'ملاحظات الطلب (اختياري)',
+        hintText: isEnglish
+            ? 'Add special instructions for your order...'
             : 'أضف تعليمات خاصة لطلبك...',
         prefixIcon: Icon(
           Icons.note_outlined,
           color: theme.colorScheme.primary,
           size: Responsive.fontSize(context, 20),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
@@ -930,10 +998,7 @@ class _CartScreenState extends State<CartScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: theme.colorScheme.primary,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
         ),
         contentPadding: EdgeInsets.symmetric(
           horizontal: Responsive.padding(context, 16),
@@ -964,9 +1029,7 @@ class _CartScreenState extends State<CartScreen> {
           color: theme.colorScheme.primary,
           size: Responsive.fontSize(context, 20),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
@@ -975,16 +1038,11 @@ class _CartScreenState extends State<CartScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: theme.colorScheme.primary,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: theme.colorScheme.error,
-          ),
+          borderSide: BorderSide(color: theme.colorScheme.error),
         ),
         contentPadding: EdgeInsets.symmetric(
           horizontal: Responsive.padding(context, 16),
@@ -994,9 +1052,7 @@ class _CartScreenState extends State<CartScreen> {
       style: theme.textTheme.bodyMedium?.copyWith(
         fontSize: Responsive.fontSize(context, 14),
       ),
-      inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
-      ],
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
     );
   }
 
@@ -1027,21 +1083,21 @@ class _CartScreenState extends State<CartScreen> {
           maxLines: 3,
           decoration: InputDecoration(
             labelText: isEnglish ? 'Special Instructions' : 'تعليمات خاصة',
-            hintText: isEnglish 
-                ? 'Add note (extra mayo, no onions, etc.)' 
+            hintText: isEnglish
+                ? 'Add note (extra mayo, no onions, etc.)'
                 : 'أضف ملاحظة (مايونيز إضافي، بدون بصل، إلخ)',
             prefixIcon: Icon(
               Icons.note_outlined,
               color: Theme.of(context).colorScheme.primary,
               size: Responsive.fontSize(context, 20),
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -1069,7 +1125,9 @@ class _CartScreenState extends State<CartScreen> {
             child: Text(
               isEnglish ? 'Cancel' : 'إلغاء',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
                 fontSize: Responsive.fontSize(context, 14),
               ),
             ),
@@ -1077,17 +1135,20 @@ class _CartScreenState extends State<CartScreen> {
           TextButton(
             onPressed: () async {
               final newInstructions = controller.text.trim();
-              await cartController.updateSpecialInstructions(cartItem, newInstructions);
+              await cartController.updateSpecialInstructions(
+                cartItem,
+                newInstructions,
+              );
               controller.dispose();
               Navigator.of(dialogContext).pop();
-              
+
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      isEnglish 
-                          ? 'Special instructions updated successfully' 
-                          : 'تم تحديث التعليمات الخاصة بنجاح'
+                      isEnglish
+                          ? 'Special instructions updated successfully'
+                          : 'تم تحديث التعليمات الخاصة بنجاح',
                     ),
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     duration: const Duration(seconds: 2),
@@ -1110,18 +1171,22 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   /// Show clear cart confirmation dialog
-  void _showClearCartDialog(BuildContext context, CartController cartController, bool isEnglish) {
+  void _showClearCartDialog(
+    BuildContext context,
+    CartController cartController,
+    bool isEnglish,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
           isEnglish ? 'Clear Cart' : 'مسح السلة',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          isEnglish 
+          isEnglish
               ? 'Are you sure you want to remove all items from your cart?'
               : 'هل أنت متأكد من أنك تريد إزالة جميع العناصر من سلة التسوق؟',
           style: Theme.of(context).textTheme.bodyMedium,
@@ -1132,7 +1197,9 @@ class _CartScreenState extends State<CartScreen> {
             child: Text(
               isEnglish ? 'Cancel' : 'إلغاء',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -1142,7 +1209,11 @@ class _CartScreenState extends State<CartScreen> {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(isEnglish ? 'Cart cleared successfully' : 'تم مسح السلة بنجاح'),
+                  content: Text(
+                    isEnglish
+                        ? 'Cart cleared successfully'
+                        : 'تم مسح السلة بنجاح',
+                  ),
                   backgroundColor: Theme.of(context).colorScheme.primary,
                 ),
               );
@@ -1195,20 +1266,20 @@ class _CartScreenState extends State<CartScreen> {
     }
 
     final customerProvider = context.read<CustomerProvider>();
-    
+
     // Check if customer is already registered
     final needsRegistration = await customerProvider.needsRegistration();
-    
+
     if (needsRegistration && context.mounted) {
       // Show customer details bottom sheet
-        final customerAdded = await _showCustomerBottomSheet(context);
-      
+      final customerAdded = await _showCustomerBottomSheet(context);
+
       if (!customerAdded) {
         // User cancelled or failed to add customer details
         return;
       }
     }
-    
+
     // Proceed with service type selection
     if (context.mounted) {
       await _showServiceTypeAndPlaceOrder(context);
@@ -1216,7 +1287,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   /// Show customer details bottom sheet
-  /// 
+  ///
   /// Returns true if customer was added successfully, false otherwise
   Future<bool> _showCustomerBottomSheet(BuildContext context) async {
     final result = await showModalBottomSheet<bool>(
@@ -1227,7 +1298,7 @@ class _CartScreenState extends State<CartScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => const CustomerBottomSheet(),
     );
-    
+
     return result ?? false;
   }
 
@@ -1250,7 +1321,11 @@ class _CartScreenState extends State<CartScreen> {
     final qrTableId = int.tryParse(qrTableIdParam ?? '');
 
     // Both params must be present and look valid (IDs are expected to be positive).
-    final qrHasBothParams = qrOrderTypeId != null && qrTableId != null && qrOrderTypeId > 0 && qrTableId > 0;
+    final qrHasBothParams =
+        qrOrderTypeId != null &&
+        qrTableId != null &&
+        qrOrderTypeId > 0 &&
+        qrTableId > 0;
 
     // If QR contains BOTH order_type and table_id, skip the popup (only if we can match the order type).
     if (qrHasBothParams) {
@@ -1368,10 +1443,10 @@ class _CartScreenState extends State<CartScreen> {
     OrderTypeModel orderType, {
     int? tableIdOverride,
   }) async {
-    // debugPrint('_placeOrderForNonDineIn----');
+    appDebugLog('_placeOrderForNonDineIn----');
     // Get cart controller
     final cartController = context.read<CartController>();
-    
+
     // Check if cart is empty
     if (cartController.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1405,7 +1480,9 @@ class _CartScreenState extends State<CartScreen> {
       if (numberOfGuests == null || numberOfGuests <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Please enter a valid number of guests (must be greater than 0)'),
+            content: const Text(
+              'Please enter a valid number of guests (must be greater than 0)',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
             duration: const Duration(seconds: 2),
           ),
@@ -1414,7 +1491,7 @@ class _CartScreenState extends State<CartScreen> {
         return;
       }
     }
-    
+
     // Get branch ID from local storage
     final branchIdString = await LocalStorage.getBranchId();
     if (branchIdString == null) {
@@ -1429,9 +1506,9 @@ class _CartScreenState extends State<CartScreen> {
       }
       return;
     }
-    
+
     final branchId = int.tryParse(branchIdString) ?? 0;
-    
+
     // Show loading dialog
     if (context.mounted) {
       showDialog(
@@ -1466,7 +1543,7 @@ class _CartScreenState extends State<CartScreen> {
         ),
       );
     }
-    
+
     // Call create order API for non-dine-in orders.
     // For QR bypass: use the QR-provided tableId. For manual flow: fallback to 0.
     final orderProvider = context.read<OrderProvider>();
@@ -1475,20 +1552,22 @@ class _CartScreenState extends State<CartScreen> {
       tableId: tableIdOverride ?? 0, // table_id = 0 for non-dine-in orders
       orderTypeId: orderType.id.toString(),
       branchId: branchId,
-      orderNotes: cartController.orderNotes.isNotEmpty ? cartController.orderNotes : null,
+      orderNotes: cartController.orderNotes.isNotEmpty
+          ? cartController.orderNotes
+          : null,
       noOfGuest: numberOfGuests ?? 0,
     );
-    
+
     // Close loading dialog
     if (context.mounted) {
       Navigator.of(context).pop();
     }
-    
+
     // Handle response
     if (response != null && response.success) {
       // Clear cart after successful order placement
       await cartController.clearCart();
-      
+
       // Show success popup
       if (context.mounted) {
         await showDialog(
@@ -1502,7 +1581,9 @@ class _CartScreenState extends State<CartScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(orderProvider.errorMessage ?? 'Failed to place order'),
+            content: Text(
+              orderProvider.errorMessage ?? 'Failed to place order',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
             duration: const Duration(seconds: 3),
           ),
@@ -1551,7 +1632,9 @@ class _CartScreenState extends State<CartScreen> {
     if (numberOfGuests == null || numberOfGuests <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please enter a valid number of guests (must be greater than 0)'),
+          content: const Text(
+            'Please enter a valid number of guests (must be greater than 0)',
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
           duration: const Duration(seconds: 2),
         ),
@@ -1559,7 +1642,6 @@ class _CartScreenState extends State<CartScreen> {
       _guestsFocusNode.requestFocus();
       return;
     }
-
 
     // Get branch ID from local storage
     final branchIdString = await LocalStorage.getBranchId();
@@ -1613,14 +1695,15 @@ class _CartScreenState extends State<CartScreen> {
       );
     }
 
-
     final orderProvider = context.read<OrderProvider>();
     final response = await orderProvider.createOrder(
       cartItems: cartController.cartItems,
       tableId: tableIdOverride,
       orderTypeId: orderType.id.toString(),
       branchId: branchId,
-      orderNotes: cartController.orderNotes.isNotEmpty ? cartController.orderNotes : null,
+      orderNotes: cartController.orderNotes.isNotEmpty
+          ? cartController.orderNotes
+          : null,
       noOfGuest: numberOfGuests,
     );
 
@@ -1644,7 +1727,9 @@ class _CartScreenState extends State<CartScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(orderProvider.errorMessage ?? 'Failed to place order'),
+            content: Text(
+              orderProvider.errorMessage ?? 'Failed to place order',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
             duration: const Duration(seconds: 3),
           ),
@@ -1655,7 +1740,7 @@ class _CartScreenState extends State<CartScreen> {
 }
 
 /// Customer Bottom Sheet Widget
-/// 
+///
 /// This widget displays a bottom sheet to collect customer information
 /// (name and phone number) for first-time users before placing an order.
 class CustomerBottomSheet extends StatefulWidget {
@@ -1681,213 +1766,242 @@ class _CustomerBottomSheetState extends State<CustomerBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Consumer<HomeProvider>(
       builder: (context, provider, child) {
         final isEnglish = provider.isEnglish;
-        
+
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
           child: Container(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
               ),
-              child: SafeArea(
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.all(Responsive.padding(context, 24)),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Handle bar
-                          Center(
-                            child: Container(
-                              width: Responsive.padding(context, 40),
-                              height: Responsive.padding(context, 4),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(2),
+            ),
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.all(Responsive.padding(context, 24)),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Handle bar
+                        Center(
+                          child: Container(
+                            width: Responsive.padding(context, 40),
+                            height: Responsive.padding(context, 4),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.2,
+                              ),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: Responsive.padding(context, 24)),
+
+                        // Title
+                        Text(
+                          isEnglish ? 'Complete Your Order' : 'أكمل طلبك',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: Responsive.fontSize(context, 20),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: Responsive.padding(context, 8)),
+
+                        // Subtitle
+                        Text(
+                          isEnglish
+                              ? 'We need your contact info to deliver your order'
+                              : 'نحتاج معلومات الاتصال الخاصة بك لتوصيل طلبك',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
+                            fontSize: Responsive.fontSize(context, 14),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: Responsive.padding(context, 32)),
+
+                        // Name field
+                        TextFormField(
+                          controller: _nameController,
+                          enabled: !_isLoading,
+                          decoration: InputDecoration(
+                            labelText: isEnglish ? 'Your Name' : 'اسمك',
+                            hintText: isEnglish
+                                ? 'Enter your full name'
+                                : 'أدخل اسمك الكامل',
+                            prefixIcon: Icon(
+                              Icons.person_outline,
+                              color: theme.colorScheme.primary,
+                              size: Responsive.fontSize(context, 20),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: theme.colorScheme.outline.withValues(
+                                  alpha: 0.3,
+                                ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: Responsive.padding(context, 24)),
-                          
-                          // Title
-                          Text(
-                            isEnglish ? 'Complete Your Order' : 'أكمل طلبك',
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: Responsive.fontSize(context, 20),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: Responsive.padding(context, 8)),
-                          
-                          // Subtitle
-                          Text(
-                            isEnglish ? 'We need your contact info to deliver your order' : 'نحتاج معلومات الاتصال الخاصة بك لتوصيل طلبك',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                              fontSize: Responsive.fontSize(context, 14),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: Responsive.padding(context, 32)),
-                          
-                          // Name field
-                          TextFormField(
-                            controller: _nameController,
-                            enabled: !_isLoading,
-                            decoration: InputDecoration(
-                              labelText: isEnglish ? 'Your Name' : 'اسمك',
-                              hintText: isEnglish ? 'Enter your full name' : 'أدخل اسمك الكامل',
-                              prefixIcon: Icon(
-                                Icons.person_outline,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
                                 color: theme.colorScheme.primary,
-                                size: Responsive.fontSize(context, 20),
+                                width: 2,
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: theme.colorScheme.error,
                               ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: theme.colorScheme.primary,
-                                  width: 2,
-                                ),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: theme.colorScheme.error,
+                            ),
+                          ),
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return isEnglish
+                                  ? 'Please enter your name'
+                                  : 'يرجى إدخال اسمك';
+                            }
+                            if (value.trim().length < 2) {
+                              return isEnglish
+                                  ? 'Name should be at least 2 characters'
+                                  : 'يجب أن يكون الاسم حرفين على الأقل';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: Responsive.padding(context, 20)),
+
+                        // Phone field
+                        TextFormField(
+                          controller: _phoneController,
+                          enabled: !_isLoading,
+                          decoration: InputDecoration(
+                            labelText: isEnglish
+                                ? 'Mobile Number'
+                                : 'رقم الجوال',
+                            hintText: isEnglish
+                                ? 'Enter your mobile number'
+                                : 'أدخل رقم جوالك',
+                            prefixIcon: Icon(
+                              Icons.phone_outlined,
+                              color: theme.colorScheme.primary,
+                              size: Responsive.fontSize(context, 20),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: theme.colorScheme.outline.withValues(
+                                  alpha: 0.3,
                                 ),
                               ),
                             ),
-                            textInputAction: TextInputAction.next,
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return isEnglish ? 'Please enter your name' : 'يرجى إدخال اسمك';
-                              }
-                              if (value.trim().length < 2) {
-                                return isEnglish ? 'Name should be at least 2 characters' : 'يجب أن يكون الاسم حرفين على الأقل';
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: Responsive.padding(context, 20)),
-                          
-                          // Phone field
-                          TextFormField(
-                            controller: _phoneController,
-                            enabled: !_isLoading,
-                            decoration: InputDecoration(
-                              labelText: isEnglish ? 'Mobile Number' : 'رقم الجوال',
-                              hintText: isEnglish ? 'Enter your mobile number' : 'أدخل رقم جوالك',
-                              prefixIcon: Icon(
-                                Icons.phone_outlined,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
                                 color: theme.colorScheme.primary,
-                                size: Responsive.fontSize(context, 20),
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: theme.colorScheme.primary,
-                                  width: 2,
-                                ),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: theme.colorScheme.error,
-                                ),
+                                width: 2,
                               ),
                             ),
-                            keyboardType: TextInputType.phone,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            textInputAction: TextInputAction.done,
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return isEnglish ? 'Please enter your mobile number' : 'يرجى إدخال رقم جوالك';
-                              }
-                              if (value.trim().length < 8) {
-                                return isEnglish ? 'Please enter a valid mobile number' : 'يرجى إدخال رقم جوال صحيح';
-                              }
-                              return null;
-                            },
-                            onFieldSubmitted: (_) => _handleContinue(),
-                          ),
-                          SizedBox(height: Responsive.padding(context, 32)),
-                          
-                          // Continue button
-                          SizedBox(
-                            height: Responsive.padding(context, 52),
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _handleContinue,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.colorScheme.primary,
-                                foregroundColor: theme.colorScheme.onPrimary,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 2,
-                                disabledBackgroundColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: theme.colorScheme.error,
                               ),
-                              child: _isLoading
-                                  ? SizedBox(
-                                      height: Responsive.padding(context, 20),
-                                      width: Responsive.padding(context, 20),
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          theme.colorScheme.onPrimary,
-                                        ),
-                                      ),
-                                    )
-                                  : Text(
-                                      isEnglish ? 'Continue' : 'متابعة',
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        color: theme.colorScheme.onPrimary,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: Responsive.fontSize(context, 16),
+                            ),
+                          ),
+                          keyboardType: TextInputType.phone,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          textInputAction: TextInputAction.done,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return isEnglish
+                                  ? 'Please enter your mobile number'
+                                  : 'يرجى إدخال رقم جوالك';
+                            }
+                            if (value.trim().length < 8) {
+                              return isEnglish
+                                  ? 'Please enter a valid mobile number'
+                                  : 'يرجى إدخال رقم جوال صحيح';
+                            }
+                            return null;
+                          },
+                          onFieldSubmitted: (_) => _handleContinue(),
+                        ),
+                        SizedBox(height: Responsive.padding(context, 32)),
+
+                        // Continue button
+                        SizedBox(
+                          height: Responsive.padding(context, 52),
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _handleContinue,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary,
+                              foregroundColor: theme.colorScheme.onPrimary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                              disabledBackgroundColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.5),
+                            ),
+                            child: _isLoading
+                                ? SizedBox(
+                                    height: Responsive.padding(context, 20),
+                                    width: Responsive.padding(context, 20),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        theme.colorScheme.onPrimary,
                                       ),
                                     ),
-                            ),
+                                  )
+                                : Text(
+                                    isEnglish ? 'Continue' : 'متابعة',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          color: theme.colorScheme.onPrimary,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: Responsive.fontSize(
+                                            context,
+                                            16,
+                                          ),
+                                        ),
+                                  ),
                           ),
-                          SizedBox(height: Responsive.padding(context, 12)),
-                        ],
-                      ),
+                        ),
+                        SizedBox(height: Responsive.padding(context, 12)),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
-          );
+          ),
+        );
       },
     );
   }
@@ -1896,47 +2010,48 @@ class _CustomerBottomSheetState extends State<CustomerBottomSheet> {
   void _handleContinue() async {
     // Unfocus keyboard
     FocusScope.of(context).unfocus();
-    
+
     // Validate form
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     final customerProvider = context.read<CustomerProvider>();
-    
+
     // Add customer
     final customerId = await customerProvider.addCustomer(
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
     );
-    
+
     if (!mounted) return;
-    
+
     setState(() {
       _isLoading = false;
     });
-    
+
     if (customerId != null) {
       // Success - close bottom sheet with success result
       final provider = context.read<HomeProvider>();
       _showSuccessSnackBar(
-        provider.isEnglish 
-          ? 'Your information saved successfully!' 
-          : 'تم حفظ معلوماتك بنجاح!'
+        provider.isEnglish
+            ? 'Your information saved successfully!'
+            : 'تم حفظ معلوماتك بنجاح!',
       );
       Navigator.of(context).pop(true);
     } else {
       // Error - show error message
       final provider = context.read<HomeProvider>();
-      final errorMessage = customerProvider.errorMessage ?? 
-          (provider.isEnglish 
-            ? 'Failed to save your information. Please try again.' 
-            : 'فشل حفظ معلوماتك. يرجى المحاولة مرة أخرى.');
-      
+      final errorMessage =
+          customerProvider.errorMessage ??
+          (provider.isEnglish
+              ? 'Failed to save your information. Please try again.'
+              : 'فشل حفظ معلوماتك. يرجى المحاولة مرة أخرى.');
+
       _showErrorSnackBar(errorMessage);
     }
   }
@@ -1967,9 +2082,7 @@ class _CustomerBottomSheetState extends State<CustomerBottomSheet> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -1977,7 +2090,7 @@ class _CustomerBottomSheetState extends State<CustomerBottomSheet> {
   /// Show error snackbar with retry option
   void _showErrorSnackBar(String message) {
     final provider = context.read<HomeProvider>();
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -2002,9 +2115,7 @@ class _CustomerBottomSheetState extends State<CustomerBottomSheet> {
         backgroundColor: Theme.of(context).colorScheme.error,
         duration: const Duration(seconds: 4),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         action: SnackBarAction(
           label: provider.isEnglish ? 'Retry' : 'إعادة المحاولة',
           textColor: Colors.white,

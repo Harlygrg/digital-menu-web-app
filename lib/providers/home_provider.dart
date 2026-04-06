@@ -7,6 +7,7 @@ import '../models/cart_item_model.dart';
 import '../models/option_models.dart';
 import '../services/api/api_service.dart';
 import '../storage/local_storage.dart';
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Provider for managing home screen state
 class HomeProvider extends ChangeNotifier {
@@ -14,14 +15,16 @@ class HomeProvider extends ChangeNotifier {
   String _language = 'en';
   bool get isEnglish => _language == 'en';
   bool get isArabic => _language == 'ar';
-  TextDirection get textDirection => isEnglish ? TextDirection.ltr : TextDirection.rtl;
+  TextDirection get textDirection =>
+      isEnglish ? TextDirection.ltr : TextDirection.rtl;
 
   // UI state
   bool _isGridView = true;
   bool? _isVegFilter; // null = no filter, true = veg only, false = non-veg only
   String _searchQuery = '';
   int _selectedCategoryId = 0; // Changed to int for new API
-  bool _isLoading = true; // Start with loading true to prevent flash of "No items found"
+  bool _isLoading =
+      true; // Start with loading true to prevent flash of "No items found"
   String? _errorMessage;
 
   // Data
@@ -55,13 +58,15 @@ class HomeProvider extends ChangeNotifier {
       items = items.where((item) {
         final query = _searchQuery.toLowerCase();
         return item.getProductName(_language).toLowerCase().contains(query) ||
-               item.getDescription(_language).toLowerCase().contains(query);
+            item.getDescription(_language).toLowerCase().contains(query);
       }).toList();
     }
 
     // Filter by category
     if (_selectedCategoryId != 0) {
-      items = items.where((item) => item.categoryId == _selectedCategoryId).toList();
+      items = items
+          .where((item) => item.categoryId == _selectedCategoryId)
+          .toList();
     }
 
     // Filter by veg preference
@@ -69,7 +74,11 @@ class HomeProvider extends ChangeNotifier {
     // When _isVegFilter is true, show only vegetarian items
     // When _isVegFilter is false, show only non-vegetarian items
     if (_isVegFilter != null) {
-      items = items.where((item) => _isVegFilter! ? item.isVegetarian : !item.isVegetarian).toList();
+      items = items
+          .where(
+            (item) => _isVegFilter! ? item.isVegetarian : !item.isVegetarian,
+          )
+          .toList();
     }
 
     // Filter by availability
@@ -86,14 +95,16 @@ class HomeProvider extends ChangeNotifier {
   }
 
   /// Fetch product related data from API
-  /// 
+  ///
   /// [branchId] - The branch ID to fetch data for
   /// [silentRefresh] - If true, skips loading state updates to prevent UI stuttering during pull-to-refresh
   Future<void> fetchProductRelatedData({
     String branchId = '1',
     bool silentRefresh = false,
   }) async {
-    // debugPrint('---->📦 HomeProvider: fetchProductRelatedData for branch $branchId (silent: $silentRefresh)');
+    appDebugLog(
+      '---->📦 HomeProvider: fetchProductRelatedData for branch $branchId (silent: $silentRefresh)',
+    );
     try {
       // Only show loading state if not a silent refresh
       if (!silentRefresh) {
@@ -106,48 +117,60 @@ class HomeProvider extends ChangeNotifier {
       }
 
       final apiService = ApiService();
-      
+
       // Check if we have a valid access token before making the request
       final accessToken = await LocalStorage.getAccessToken();
       if (accessToken == null) {
-        throw Exception('No access token available. Please register as a guest user first.');
+        throw Exception(
+          'No access token available. Please register as a guest user first.',
+        );
       }
-      // debugPrint('------->>> fetch product related data success1:');
-      final response = await apiService.getProductRelatedData(branchId: branchId );
-      // debugPrint('------->>> fetch product related data success2:');
+      appDebugLog('------->>> fetch product related data success1:');
+      final response = await apiService.getProductRelatedData(
+        branchId: branchId,
+      );
+      appDebugLog('------->>> fetch product related data success2:');
       if (response['success'] == true && response['data'] != null) {
         final data = response['data'];
-        
+
         // Parse data asynchronously to avoid blocking the main thread
         // Yield to the scheduler between heavy operations for smoother animations
         await Future.delayed(Duration.zero);
-        
+
         // Parse categories
-        _categories = (data['categories'] as List<dynamic>?)
-            ?.map((item) => CategoryModel.fromJson(item))
-            .toList() ?? [];
-        
+        _categories =
+            (data['categories'] as List<dynamic>?)
+                ?.map((item) => CategoryModel.fromJson(item))
+                .toList() ??
+            [];
+
         // Yield frame to keep UI responsive
         await Future.delayed(Duration.zero);
-        
+
         // Parse products
-        _allItems = (data['products'] as List<dynamic>?)
-            ?.map((item) => ItemModel.fromJson(item))
-            .toList() ?? [];
-        
+        _allItems =
+            (data['products'] as List<dynamic>?)
+                ?.map((item) => ItemModel.fromJson(item))
+                .toList() ??
+            [];
+
         // Yield frame to keep UI responsive
         await Future.delayed(Duration.zero);
-        
+
         // Parse modifiers
-        _modifiers = (data['modifiers'] as List<dynamic>?)
-            ?.map((item) => ModifierModel.fromJson(item))
-            .toList() ?? [];
-        
-        // debugPrint('✅ Loaded ${_categories.length} categories, ${_allItems.length} items, ${_modifiers.length} modifiers');
-        
+        _modifiers =
+            (data['modifiers'] as List<dynamic>?)
+                ?.map((item) => ModifierModel.fromJson(item))
+                .toList() ??
+            [];
+
+        appDebugLog(
+          '✅ Loaded ${_categories.length} categories, ${_allItems.length} items, ${_modifiers.length} modifiers',
+        );
+
         _hasEverLoadedData = true; // Mark that data has been loaded
         _isLoading = false;
-        
+
         // Only notify once at the end to batch all updates into a single rebuild
         notifyListeners();
       } else {
@@ -161,13 +184,13 @@ class HomeProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      // debugPrint('❌ Error in fetchProductRelatedData: $e');
+      appDebugLog('❌ Error in fetchProductRelatedData: $e');
       final errorText = e.toString().replaceFirst('Exception:', '').trim();
       _errorMessage = errorText.isNotEmpty
           ? errorText
           : (isEnglish
-              ? 'Error loading menu data. Please try again.'
-              : 'حدث خطأ أثناء تحميل بيانات القائمة. يرجى المحاولة مرة أخرى.');
+                ? 'Error loading menu data. Please try again.'
+                : 'حدث خطأ أثناء تحميل بيانات القائمة. يرجى المحاولة مرة أخرى.');
       _isLoading = false;
       notifyListeners();
     }
@@ -283,8 +306,10 @@ class HomeProvider extends ChangeNotifier {
 
   /// Add item to cart
   void addToCart(ItemModel item) {
-    final existingIndex = _cartItems.indexWhere((cartItem) => cartItem.item.id == item.id);
-    
+    final existingIndex = _cartItems.indexWhere(
+      (cartItem) => cartItem.item.id == item.id,
+    );
+
     if (existingIndex >= 0) {
       // Update quantity
       _cartItems[existingIndex] = _cartItems[existingIndex].copyWith(
@@ -292,13 +317,15 @@ class HomeProvider extends ChangeNotifier {
       );
     } else {
       // Add new item
-      _cartItems.add(CartItemModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        item: item,
-        modifiers: const [],
-        quantity: 1,
-        unitPrice: item.price,
-      ));
+      _cartItems.add(
+        CartItemModel(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          item: item,
+          modifiers: const [],
+          quantity: 1,
+          unitPrice: item.price,
+        ),
+      );
     }
     notifyListeners();
   }
@@ -316,7 +343,9 @@ class HomeProvider extends ChangeNotifier {
       return;
     }
 
-    final index = _cartItems.indexWhere((cartItem) => cartItem.item.id == itemId);
+    final index = _cartItems.indexWhere(
+      (cartItem) => cartItem.item.id == itemId,
+    );
     if (index >= 0) {
       _cartItems[index] = _cartItems[index].copyWith(quantity: quantity);
       notifyListeners();
@@ -331,8 +360,13 @@ class HomeProvider extends ChangeNotifier {
 
   /// Get modifiers for a specific product
   List<ModifierModel> getModifiersForProduct(int productId) {
-    final item = _allItems.firstWhere((item) => item.id == productId, orElse: () => throw Exception('Product not found'));
-    return _modifiers.where((modifier) => item.relatedModifiers.contains(modifier.id)).toList();
+    final item = _allItems.firstWhere(
+      (item) => item.id == productId,
+      orElse: () => throw Exception('Product not found'),
+    );
+    return _modifiers
+        .where((modifier) => item.relatedModifiers.contains(modifier.id))
+        .toList();
   }
 
   /// Get category by ID
@@ -350,7 +384,8 @@ class HomeProvider extends ChangeNotifier {
       return isEnglish ? 'All Items' : 'جميع الأصناف';
     } else {
       final category = getCategoryById(_selectedCategoryId);
-      return category?.category.capitalizeFirst() ?? (isEnglish ? 'All Items' : 'جميع الأصناف');
+      return category?.category.capitalizeFirst() ??
+          (isEnglish ? 'All Items' : 'جميع الأصناف');
     }
   }
 
@@ -373,10 +408,11 @@ class HomeProvider extends ChangeNotifier {
   Future<void> forceReAuthentication() async {
     try {
       await LocalStorage.clearAuthData();
-      _errorMessage = 'Authentication expired. Please restart the app to re-authenticate.';
+      _errorMessage =
+          'Authentication expired. Please restart the app to re-authenticate.';
       notifyListeners();
     } catch (e) {
-// debugPrint('❌ Error during force re-authentication: $e');
+      appDebugLog('❌ Error during force re-authentication: $e');
     }
   }
 
@@ -385,55 +421,65 @@ class HomeProvider extends ChangeNotifier {
   /// Optimized to yield frames during parsing for smoother UI performance
   Future<void> refreshProductListSilently({String branchId = '1'}) async {
     try {
-      // debugPrint('🔄 Refreshing product list silently...');
-      
+      appDebugLog('🔄 Refreshing product list silently...');
+
       final apiService = ApiService();
-      
+
       // Check if we have a valid access token before making the request
       final accessToken = await LocalStorage.getAccessToken();
       if (accessToken == null) {
-        // debugPrint('⚠️ No access token available for silent refresh');
+        appDebugLog('⚠️ No access token available for silent refresh');
         return;
       }
-      
-      final response = await apiService.getProductRelatedData(branchId: branchId);
-      
+
+      final response = await apiService.getProductRelatedData(
+        branchId: branchId,
+      );
+
       if (response['success'] == true && response['data'] != null) {
         final data = response['data'];
-        
+
         // Yield to frame scheduler for smoother UI
         await Future.delayed(Duration.zero);
-        
+
         // Parse categories
-        _categories = (data['categories'] as List<dynamic>?)
-            ?.map((item) => CategoryModel.fromJson(item))
-            .toList() ?? [];
-        
+        _categories =
+            (data['categories'] as List<dynamic>?)
+                ?.map((item) => CategoryModel.fromJson(item))
+                .toList() ??
+            [];
+
         // Yield frame to keep UI responsive
         await Future.delayed(Duration.zero);
-        
+
         // Parse products
-        _allItems = (data['products'] as List<dynamic>?)
-            ?.map((item) => ItemModel.fromJson(item))
-            .toList() ?? [];
-        
+        _allItems =
+            (data['products'] as List<dynamic>?)
+                ?.map((item) => ItemModel.fromJson(item))
+                .toList() ??
+            [];
+
         // Yield frame to keep UI responsive
         await Future.delayed(Duration.zero);
-        
+
         // Parse modifiers
-        _modifiers = (data['modifiers'] as List<dynamic>?)
-            ?.map((item) => ModifierModel.fromJson(item))
-            .toList() ?? [];
-        
-// debugPrint('✅ Product list refreshed silently: ${_allItems.length} items');
-        
+        _modifiers =
+            (data['modifiers'] as List<dynamic>?)
+                ?.map((item) => ModifierModel.fromJson(item))
+                .toList() ??
+            [];
+
+        appDebugLog(
+          '✅ Product list refreshed silently: ${_allItems.length} items',
+        );
+
         // Notify listeners once at the end to batch updates
         notifyListeners();
       } else {
-// debugPrint('⚠️ Failed to refresh product list silently');
+        appDebugLog('⚠️ Failed to refresh product list silently');
       }
     } catch (e) {
-// debugPrint('❌ Error during silent product list refresh: $e');
+      appDebugLog('❌ Error during silent product list refresh: $e');
       // Don't show error message for silent refresh
     }
   }

@@ -50,6 +50,7 @@ class AddToCartPopup<T> extends StatefulWidget {
   final ItemModel item;
   final List<UnitPriceListModel> sizes;
   final List<ModifierModel> addons;
+
   /// When set, quantity is fixed, primary action updates the existing line.
   final CartItemModel? editingCartItem;
   final ValueChanged<T?>? onSubmit;
@@ -85,11 +86,15 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
       } else {
         final su = editing.selectedUnit;
         if (su != null && su.unitFkId > 0) {
-          final byFk = widget.sizes.indexWhere((u) => u.unitFkId == su.unitFkId);
+          final byFk = widget.sizes.indexWhere(
+            (u) => u.unitFkId == su.unitFkId,
+          );
           if (byFk >= 0) {
             _selectedSizeIndex = byFk;
           } else {
-            final byName = widget.sizes.indexWhere((u) => u.unitName == su.unitName);
+            final byName = widget.sizes.indexWhere(
+              (u) => u.unitName == su.unitName,
+            );
             _selectedSizeIndex = byName >= 0 ? byName : 0;
           }
         } else {
@@ -126,7 +131,7 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
     final basePrice = widget.sizes.isNotEmpty
         ? widget.sizes[_selectedSizeIndex].price
         : widget.item.price;
-    
+
     return basePrice;
   }
 
@@ -158,24 +163,33 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
   Future<void> _submit() async {
     try {
       // Get the cart controller and home provider
-      final cartController = Provider.of<CartController>(context, listen: false);
+      final cartController = Provider.of<CartController>(
+        context,
+        listen: false,
+      );
       final homeProvider = Provider.of<HomeProvider>(context, listen: false);
       final isEnglish = homeProvider.isEnglish;
-      
+
       // Create the payload for the cart controller
       final payload = {
         'itemId': widget.item.id,
-        'size': widget.sizes.isNotEmpty ? widget.sizes[_selectedSizeIndex].unitName : null,
+        'size': widget.sizes.isNotEmpty
+            ? widget.sizes[_selectedSizeIndex].unitName
+            : null,
         'quantity': _quantity,
         'addons': [
           for (int i = 0; i < widget.addons.length; i++)
             if (_addonQuantities[i] > 0)
               {
                 'id': widget.addons[i].id,
-                'title': isEnglish ? widget.addons[i].modifier : (widget.addons[i].otherLang.isNotEmpty ? widget.addons[i].otherLang : widget.addons[i].modifier),
+                'title': isEnglish
+                    ? widget.addons[i].modifier
+                    : (widget.addons[i].otherLang.isNotEmpty
+                          ? widget.addons[i].otherLang
+                          : widget.addons[i].modifier),
                 'qty': _addonQuantities[i],
                 'price': widget.addons[i].price,
-              }
+              },
         ],
         'note': _noteController.text.trim(),
         'unitPrice': _computeUnitPrice(),
@@ -208,7 +222,9 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isEnglish ? 'Item added to cart!' : 'تم إضافة العنصر للسلة!'),
+            content: Text(
+              isEnglish ? 'Item added to cart!' : 'تم إضافة العنصر للسلة!',
+            ),
             backgroundColor: Theme.of(context).colorScheme.primary,
             duration: const Duration(seconds: 2),
           ),
@@ -221,22 +237,31 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
       // Handle different error cases
       final homeProvider = Provider.of<HomeProvider>(context, listen: false);
       final isEnglish = homeProvider.isEnglish;
-      
+
       String errorMessage;
       bool shouldRefreshMenu = false;
-      
+
       // Check if this is an availability error that requires menu refresh
-      if (e.toString().contains('no longer available') || e.toString().contains('Refreshing menu')) {
-        errorMessage = isEnglish ? '⚠️ This item is no longer available. Refreshing menu...' : '⚠️ هذا العنصر لم يعد متوفراً. جاري تحديث القائمة...';
+      if (e.toString().contains('no longer available') ||
+          e.toString().contains('Refreshing menu')) {
+        errorMessage = isEnglish
+            ? '⚠️ This item is no longer available. Refreshing menu...'
+            : '⚠️ هذا العنصر لم يعد متوفراً. جاري تحديث القائمة...';
         shouldRefreshMenu = true;
       } else if (e.toString().contains('Session expired')) {
-        errorMessage = isEnglish ? 'Session expired. Please log in again.' : 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.';
+        errorMessage = isEnglish
+            ? 'Session expired. Please log in again.'
+            : 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.';
       } else if (e.toString().contains('Product ID missing')) {
-        errorMessage = isEnglish ? 'Product ID missing — please try again.' : 'معرف المنتج مفقود — يرجى المحاولة مرة أخرى.';
+        errorMessage = isEnglish
+            ? 'Product ID missing — please try again.'
+            : 'معرف المنتج مفقود — يرجى المحاولة مرة أخرى.';
       } else {
-        errorMessage = isEnglish ? 'Unable to check item availability. Please try again.' : 'غير قادر على التحقق من توفر العنصر. يرجى المحاولة مرة أخرى.';
+        errorMessage = isEnglish
+            ? 'Unable to check item availability. Please try again.'
+            : 'غير قادر على التحقق من توفر العنصر. يرجى المحاولة مرة أخرى.';
       }
-      
+
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -245,7 +270,7 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
           duration: Duration(seconds: 3),
         ),
       );
-      
+
       // If product is unavailable, refresh the menu in background
       if (shouldRefreshMenu) {
         // Get branch ID from home provider or use default
@@ -270,8 +295,13 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
         final padding16 = Responsive.padding(context, 16);
         final padding12 = Responsive.padding(context, 12);
         final radius12 = 12.0;
-        final String title =  isEnglish ? widget.item.iname : (widget.item.nameinol.isNotEmpty ? widget.item.nameinol : widget.item.iname);
-        final cacheWidth = (100 * MediaQuery.of(context).devicePixelRatio).toInt();
+        final String title = isEnglish
+            ? widget.item.iname
+            : (widget.item.nameinol.isNotEmpty
+                  ? widget.item.nameinol
+                  : widget.item.iname);
+        final cacheWidth = (100 * MediaQuery.of(context).devicePixelRatio)
+            .toInt();
         return Directionality(
           textDirection: langState.textDirection,
           child: ConstrainedBox(
@@ -304,29 +334,54 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                                       child: ImageUtils.buildImageFromBase64(
                                         widget.item.image,
                                         imageUrl: widget.item.imageUrl,
-                                        width: Responsive.isMobile(context) ? 64 : 84,
-                                        height: Responsive.isMobile(context) ? 64 : 84,
+                                        width: Responsive.isMobile(context)
+                                            ? 64
+                                            : 84,
+                                        height: Responsive.isMobile(context)
+                                            ? 64
+                                            : 84,
                                         fit: BoxFit.cover,
                                         cacheWidth: cacheWidth,
                                         cacheHeight: cacheWidth,
                                         placeholder: Container(
-                                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withValues(alpha: 0.05),
                                           child: Center(
                                             child: Icon(
                                               Icons.fastfood,
-                                              size: Responsive.fontSize(context, 24),
-                                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                                              size: Responsive.fontSize(
+                                                context,
+                                                24,
+                                              ),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                                  .withValues(alpha: 0.3),
                                             ),
                                           ),
                                         ),
                                         errorWidget: Container(
-                                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                                          width: Responsive.isMobile(context) ? 64 : 84,
-                                          height: Responsive.isMobile(context) ? 64 : 84,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withValues(alpha: 0.1),
+                                          width: Responsive.isMobile(context)
+                                              ? 64
+                                              : 84,
+                                          height: Responsive.isMobile(context)
+                                              ? 64
+                                              : 84,
                                           child: Icon(
                                             Icons.fastfood,
-                                            size: Responsive.fontSize(context, 30),
-                                            color: Theme.of(context).colorScheme.primary,
+                                            size: Responsive.fontSize(
+                                              context,
+                                              30,
+                                            ),
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
                                           ),
                                         ),
                                       ),
@@ -334,57 +389,142 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                                     SizedBox(width: padding12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
                                             children: [
                                               Expanded(
                                                 child: Text(
-                                                 title.capitalizeFirst().length > 24 ?('${title.capitalizeFirst().substring(0,24)}\n${title.capitalizeFirst().substring(24,title.length)}'):title.capitalizeFirst() ,
+                                                  title
+                                                              .capitalizeFirst()
+                                                              .length >
+                                                          24
+                                                      ? ('${title.capitalizeFirst().substring(0, 24)}\n${title.capitalizeFirst().substring(24, title.length)}')
+                                                      : title.capitalizeFirst(),
                                                   maxLines: 2,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: theme.textTheme.titleLarge?.copyWith(
-                                                    fontSize: Responsive.fontSize(context, 18),
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: theme
+                                                      .textTheme
+                                                      .titleLarge
+                                                      ?.copyWith(
+                                                        fontSize:
+                                                            Responsive.fontSize(
+                                                              context,
+                                                              18,
+                                                            ),
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                      ),
                                                 ),
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: Responsive.padding(context, 6)),
-                                          Text(
-                                            isEnglish ? widget.item.descriptionEn : (widget.item.descriptionOtherLang.isNotEmpty ? widget.item.descriptionOtherLang : widget.item.descriptionEn),
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              fontSize: Responsive.fontSize(context, 12),
-                                              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                          SizedBox(
+                                            height: Responsive.padding(
+                                              context,
+                                              6,
                                             ),
                                           ),
-                                          SizedBox(height: Responsive.padding(context, 10)),
+                                          Text(
+                                            isEnglish
+                                                ? widget.item.descriptionEn
+                                                : (widget
+                                                          .item
+                                                          .descriptionOtherLang
+                                                          .isNotEmpty
+                                                      ? widget
+                                                            .item
+                                                            .descriptionOtherLang
+                                                      : widget
+                                                            .item
+                                                            .descriptionEn),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontSize: Responsive.fontSize(
+                                                    context,
+                                                    12,
+                                                  ),
+                                                  color: theme
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withValues(alpha: 0.7),
+                                                ),
+                                          ),
+                                          SizedBox(
+                                            height: Responsive.padding(
+                                              context,
+                                              10,
+                                            ),
+                                          ),
                                           Row(
                                             children: [
                                               Text(
                                                 'QR${widget.item.price.toStringAsFixed(2)}',
-                                                style: theme.textTheme.titleMedium?.copyWith(
-                                                  fontSize: Responsive.fontSize(context, 16),
-                                                  fontWeight: FontWeight.w800,
-                                                  color: theme.colorScheme.onSurface,
-                                                ),
+                                                style: theme
+                                                    .textTheme
+                                                    .titleMedium
+                                                    ?.copyWith(
+                                                      fontSize:
+                                                          Responsive.fontSize(
+                                                            context,
+                                                            16,
+                                                          ),
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      color: theme
+                                                          .colorScheme
+                                                          .onSurface,
+                                                    ),
                                               ),
-                                              if (widget.item.preparationtime.isNotEmpty) ...[
-                                                SizedBox(width: Responsive.padding(context, 12)),
+                                              if (widget
+                                                  .item
+                                                  .preparationtime
+                                                  .isNotEmpty) ...[
+                                                SizedBox(
+                                                  width: Responsive.padding(
+                                                    context,
+                                                    12,
+                                                  ),
+                                                ),
                                                 Icon(
                                                   Icons.access_time,
-                                                  size: Responsive.fontSize(context, 16),
-                                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                                  size: Responsive.fontSize(
+                                                    context,
+                                                    16,
+                                                  ),
+                                                  color: theme
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withValues(alpha: 0.7),
                                                 ),
-                                                SizedBox(width: Responsive.padding(context, 4)),
+                                                SizedBox(
+                                                  width: Responsive.padding(
+                                                    context,
+                                                    4,
+                                                  ),
+                                                ),
                                                 Text(
                                                   widget.item.preparationtime,
-                                                  style: theme.textTheme.titleMedium?.copyWith(
-                                                    fontSize: Responsive.fontSize(context, 14),
-                                                    fontWeight: FontWeight.w600,
-                                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                                                  ),
+                                                  style: theme
+                                                      .textTheme
+                                                      .titleMedium
+                                                      ?.copyWith(
+                                                        fontSize:
+                                                            Responsive.fontSize(
+                                                              context,
+                                                              14,
+                                                            ),
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: theme
+                                                            .colorScheme
+                                                            .onSurface
+                                                            .withValues(
+                                                              alpha: 0.7,
+                                                            ),
+                                                      ),
                                                 ),
                                               ],
                                             ],
@@ -397,8 +537,12 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                                 Align(
                                   alignment: AlignmentDirectional.topEnd,
                                   child: InkWell(
-                                    onTap: () => Navigator.of(context).maybePop(),
-                                    child: const Icon(Icons.cancel_outlined,color: AppColors.nonVeg,),
+                                    onTap: () =>
+                                        Navigator.of(context).maybePop(),
+                                    child: const Icon(
+                                      Icons.cancel_outlined,
+                                      color: AppColors.nonVeg,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -407,7 +551,9 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                             SizedBox(height: Responsive.padding(context, 16)),
 
                             // Quantity (fixed when editing an existing cart line)
-                            _SectionLabel(text: isEnglish ? 'Quantity' : 'الكمية'),
+                            _SectionLabel(
+                              text: isEnglish ? 'Quantity' : 'الكمية',
+                            ),
                             SizedBox(height: Responsive.padding(context, 8)),
                             if (_isEditing)
                               Container(
@@ -416,7 +562,9 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                                   vertical: Responsive.padding(context, 8),
                                 ),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.06),
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.06,
+                                  ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -447,9 +595,14 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                                 final option = widget.sizes[i];
                                 return _SizeChip(
                                   selected: selected,
-                                  label:isEnglish ? option.unitName : (option.otherLang.isEmpty ? option.unitName : option.otherLang),
+                                  label: isEnglish
+                                      ? option.unitName
+                                      : (option.otherLang.isEmpty
+                                            ? option.unitName
+                                            : option.otherLang),
                                   price: option.price,
-                                  onTap: () => setState(() => _selectedSizeIndex = i),
+                                  onTap: () =>
+                                      setState(() => _selectedSizeIndex = i),
                                 );
                               }),
                             ),
@@ -457,14 +610,18 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                             SizedBox(height: Responsive.padding(context, 18)),
 
                             // Addons
-                            _SectionLabel(text: isEnglish ? 'Add-ons' : 'الإضافات'),
+                            _SectionLabel(
+                              text: isEnglish ? 'Add-ons' : 'الإضافات',
+                            ),
                             SizedBox(height: Responsive.padding(context, 8)),
                             SizedBox(
                               height: Responsive.isMobile(context) ? 120 : 140,
                               child: ListView.separated(
                                 scrollDirection: Axis.horizontal,
                                 physics: const BouncingScrollPhysics(),
-                                padding: EdgeInsets.symmetric(horizontal: Responsive.padding(context, 4)),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: Responsive.padding(context, 4),
+                                ),
                                 itemBuilder: (c, i) {
                                   final addon = widget.addons[i];
                                   final qty = _addonQuantities[i];
@@ -476,7 +633,9 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                                     onIncrement: () => _updateAddonQty(i, 1),
                                   );
                                 },
-                                separatorBuilder: (c, i) => SizedBox(width: Responsive.padding(context, 10)),
+                                separatorBuilder: (c, i) => SizedBox(
+                                  width: Responsive.padding(context, 10),
+                                ),
                                 itemCount: widget.addons.length,
                               ),
                             ),
@@ -484,11 +643,17 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                             SizedBox(height: Responsive.padding(context, 18)),
 
                             // Notes
-                            _SectionLabel(text: isEnglish ? 'Special Instructions' : 'تعليمات خاصة'),
+                            _SectionLabel(
+                              text: isEnglish
+                                  ? 'Special Instructions'
+                                  : 'تعليمات خاصة',
+                            ),
                             SizedBox(height: Responsive.padding(context, 8)),
                             _NoteField(
                               controller: _noteController,
-                              hint: isEnglish ? 'Add note (extra mayo, cheese, etc.)' : 'أضف ملاحظة (مايونيز إضافي، جبن، إلخ)',
+                              hint: isEnglish
+                                  ? 'Add note (extra mayo, cheese, etc.)'
+                                  : 'أضف ملاحظة (مايونيز إضافي، جبن، إلخ)',
                             ),
                           ],
                         ),
@@ -500,8 +665,12 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                   Container(
                     padding: EdgeInsets.all(padding16),
                     decoration: BoxDecoration(
-                      color: isDark ? theme.colorScheme.surface : AppColors.white,
-                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(radius12)),
+                      color: isDark
+                          ? theme.colorScheme.surface
+                          : AppColors.white,
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(radius12),
+                      ),
                     ),
                     child: SizedBox(
                       height: 52,
@@ -509,7 +678,9 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: theme.colorScheme.primary,
                           foregroundColor: theme.colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         onPressed: _submit,
                         child: Text(
@@ -538,10 +709,7 @@ class _LanguageState {
   final bool isEnglish;
   final TextDirection textDirection;
 
-  _LanguageState({
-    required this.isEnglish,
-    required this.textDirection,
-  });
+  _LanguageState({required this.isEnglish, required this.textDirection});
 
   @override
   bool operator ==(Object other) =>
@@ -556,7 +724,6 @@ class _LanguageState {
 }
 
 /// Static product image widget that won't rebuild on state changes
-
 
 class _SectionLabel extends StatelessWidget {
   final String text;
@@ -578,7 +745,11 @@ class _Counter extends StatelessWidget {
   final int value;
   final VoidCallback onDecrement;
   final VoidCallback onIncrement;
-  const _Counter({required this.value, required this.onDecrement, required this.onIncrement});
+  const _Counter({
+    required this.value,
+    required this.onDecrement,
+    required this.onIncrement,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -593,7 +764,9 @@ class _Counter extends StatelessWidget {
         child: OutlinedButton(
           style: OutlinedButton.styleFrom(
             padding: EdgeInsets.zero,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(radius),
+            ),
           ),
           onPressed: onTap,
           child: Icon(icon, size: 18),
@@ -632,7 +805,12 @@ class _SizeChip extends StatelessWidget {
   final String label;
   final double price;
   final VoidCallback onTap;
-  const _SizeChip({required this.selected, required this.label, required this.price, required this.onTap});
+  const _SizeChip({
+    required this.selected,
+    required this.label,
+    required this.price,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -660,7 +838,9 @@ class _SizeChip extends StatelessWidget {
             Icon(
               selected ? Icons.radio_button_checked : Icons.radio_button_off,
               size: 18,
-              color: selected ? theme.colorScheme.primary : theme.colorScheme.outline,
+              color: selected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outline,
             ),
             const SizedBox(width: 8),
             Text(
@@ -683,7 +863,13 @@ class _AddonCard extends StatelessWidget {
   final bool isEnglish;
   final VoidCallback onDecrement;
   final VoidCallback onIncrement;
-  const _AddonCard({required this.addon, required this.qty, required this.isEnglish, required this.onDecrement, required this.onIncrement});
+  const _AddonCard({
+    required this.addon,
+    required this.qty,
+    required this.isEnglish,
+    required this.onDecrement,
+    required this.onIncrement,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -693,7 +879,9 @@ class _AddonCard extends StatelessWidget {
       width: width,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
       ),
       padding: const EdgeInsets.all(10),
       child: Row(
@@ -719,7 +907,11 @@ class _AddonCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        isEnglish ? addon.modifier : (addon.descriptionOl.isNotEmpty ? addon.descriptionOl : addon.modifier),
+                        isEnglish
+                            ? addon.modifier
+                            : (addon.descriptionOl.isNotEmpty
+                                  ? addon.descriptionOl
+                                  : addon.modifier),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodyMedium?.copyWith(
@@ -736,12 +928,14 @@ class _AddonCard extends StatelessWidget {
                       child: Container(
                         padding: EdgeInsets.all(Responsive.padding(context, 4)),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.info_outline, 
-                          size: 16, 
+                          Icons.info_outline,
+                          size: 16,
                           color: theme.colorScheme.primary,
                         ),
                       ),
@@ -761,14 +955,19 @@ class _AddonCard extends StatelessWidget {
                   children: [
                     _QtyMiniButton(icon: Icons.remove, onPressed: onDecrement),
                     const SizedBox(width: 8),
-                    Text('$qty', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                    Text(
+                      '$qty',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     _QtyMiniButton(icon: Icons.add, onPressed: onIncrement),
                   ],
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -786,7 +985,10 @@ class _QtyMiniButton extends StatelessWidget {
       height: 28,
       child: OutlinedButton(
         onPressed: onPressed,
-        style: OutlinedButton.styleFrom(padding: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
+        style: OutlinedButton.styleFrom(
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        ),
         child: Icon(icon, size: 16),
       ),
     );
@@ -810,17 +1012,24 @@ class _NoteField extends StatelessWidget {
         fillColor: theme.colorScheme.primary.withValues(alpha: 0.04),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+          borderSide: BorderSide(
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+          borderSide: BorderSide(
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: theme.colorScheme.primary),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
       ),
     );
   }

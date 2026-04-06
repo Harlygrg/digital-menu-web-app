@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../models/order_type_model.dart';
 import '../services/api/api_service.dart';
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Order Type Provider
-/// 
+///
 /// This provider manages the state for order types (service types like DINE-IN, TAKE-AWAY)
 /// It handles fetching order types from the API and managing the selected order type
 class OrderTypeProvider with ChangeNotifier {
@@ -44,19 +45,23 @@ class OrderTypeProvider with ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-// debugPrint('OrderTypeProvider: Fetching order types...');
+      appDebugLog('OrderTypeProvider: Fetching order types...');
       final response = await _apiService.getOrderTypes();
 
       if (response.success && response.orderTypes.isNotEmpty) {
         _orderTypes = response.activeOrderTypes; // Only get active order types
-// debugPrint('OrderTypeProvider: Successfully fetched ${_orderTypes.length} order types');
+        appDebugLog(
+          'OrderTypeProvider: Successfully fetched ${_orderTypes.length} order types',
+        );
       } else {
-        _setError(response.message.isNotEmpty 
-            ? response.message 
-            : 'No order types available');
+        _setError(
+          response.message.isNotEmpty
+              ? response.message
+              : 'No order types available',
+        );
       }
     } catch (e) {
-// debugPrint('OrderTypeProvider: Error fetching order types: $e');
+      appDebugLog('OrderTypeProvider: Error fetching order types: $e');
       _setError(_getErrorMessage(e));
     } finally {
       _setLoading(false);
@@ -66,14 +71,16 @@ class OrderTypeProvider with ChangeNotifier {
   /// Select an order type
   void selectOrderType(OrderTypeModel orderType) {
     _selectedOrderType = orderType;
-// debugPrint('OrderTypeProvider: Selected order type: ${orderType.displayName}');
+    appDebugLog(
+      'OrderTypeProvider: Selected order type: ${orderType.displayName}',
+    );
     notifyListeners();
   }
 
   /// Clear the selected order type
   void clearSelection() {
     _selectedOrderType = null;
-// debugPrint('OrderTypeProvider: Cleared order type selection');
+    appDebugLog('OrderTypeProvider: Cleared order type selection');
     notifyListeners();
   }
 
@@ -83,7 +90,7 @@ class OrderTypeProvider with ChangeNotifier {
     _selectedOrderType = null;
     _errorMessage = null;
     _isLoading = false;
-// debugPrint('OrderTypeProvider: Cleared all data');
+    appDebugLog('OrderTypeProvider: Cleared all data');
     notifyListeners();
   }
 
@@ -131,7 +138,7 @@ class OrderTypeProvider with ChangeNotifier {
 
   @override
   void dispose() {
-// debugPrint('OrderTypeProvider: Disposing provider');
+    appDebugLog('OrderTypeProvider: Disposing provider');
     super.dispose();
   }
 }

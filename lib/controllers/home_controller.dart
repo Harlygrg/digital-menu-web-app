@@ -14,6 +14,7 @@ import '../models/cart_item_model.dart';
 import '../services/api/guest_user_api.dart';
 import '../storage/local_storage.dart';
 import 'dart:io' show Platform;
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Controller for home screen business logic
 class HomeController {
@@ -21,55 +22,57 @@ class HomeController {
   Timer? _searchDebounceTimer;
   final BranchProvider? _branchProvider;
 
-  HomeController(this._provider, {BranchProvider? branchProvider}) 
+  HomeController(this._provider, {BranchProvider? branchProvider})
     : _branchProvider = branchProvider;
 
   /// Optimized initialization flow
-  /// 
+  ///
   /// Order of operations:
   /// 1. Register guest user (if needed) - ensures tokens are available first
   /// 2. Fetch product data (main content) - loads UI as fast as possible
   /// 3. Fetch branch list (background) - non-critical data loaded after main content
   /// 4. Register FCM token (background) - happens last, doesn't block UI
   Future<void> initialize({required BuildContext context}) async {
-// debugPrint('🚀 HomeController: initialize started');
-    
+    appDebugLog('🚀 HomeController: initialize started');
+
     try {
       // STEP 1: Register guest user FIRST (critical for token availability)
       // This must complete before any authenticated API calls
       await _ensureGuestUserRegistered();
-      
+
       // STEP 2: Fetch product data immediately (main content, highest priority)
       // This is what users see first, so it should load ASAP
       final branchId = await LocalStorage.getBranchId() ?? '1';
-// debugPrint('📦 Fetching product data for branch: $branchId');
+      appDebugLog('📦 Fetching product data for branch: $branchId');
       await _provider.fetchProductRelatedData(branchId: branchId);
-// debugPrint('✅ Product data loaded successfully');
-      
+      appDebugLog('✅ Product data loaded successfully');
+
       // STEP 3: Fetch branch list in background (lower priority)
       // This can happen after the main UI is rendered
       if (_branchProvider != null) {
         _fetchBranchListInBackground();
       }
-      
+
       // STEP 4: Register FCM token in background (lowest priority, non-blocking)
       // This happens last and doesn't affect UI rendering
       _registerFcmTokenInBackground();
-      
-// debugPrint('✅ Initialization complete');
+
+      appDebugLog('✅ Initialization complete');
     } catch (e) {
-// debugPrint('❌ Error during initialization: $e');
-      
+      appDebugLog('❌ Error during initialization: $e');
+
       // Handle authentication errors with retry logic
-      if (e.toString().contains('401') || 
-          e.toString().contains('Unauthorized') || 
+      if (e.toString().contains('401') ||
+          e.toString().contains('Unauthorized') ||
           e.toString().contains('Invalid access token') ||
           e.toString().contains('Access token missing')) {
-// debugPrint('🔄 Authentication error detected. Attempting to re-register...');
+        appDebugLog(
+          '🔄 Authentication error detected. Attempting to re-register...',
+        );
         await _handleAuthenticationError();
       } else {
         // For other errors, try to load data without branch ID
-// debugPrint('⚠️ Loading data with fallback...');
+        appDebugLog('⚠️ Loading data with fallback...');
         await _provider.fetchProductRelatedData();
       }
     }
@@ -80,25 +83,26 @@ class HomeController {
   Future<void> _ensureGuestUserRegistered() async {
     final isRegistered = await LocalStorage.isGuestUserRegistered();
     final accessToken = await LocalStorage.getAccessToken();
-    
+
     if (!isRegistered || accessToken == null || accessToken.isEmpty) {
-// debugPrint('👤 Guest user not registered or no access token. Registering...');
+      appDebugLog(
+        '👤 Guest user not registered or no access token. Registering...',
+      );
       final deviceId = await generateDeviceId();
-// debugPrint('📱 HomeController: Device ID: $deviceId');
-      
+      appDebugLog('📱 HomeController: Device ID: $deviceId');
+
       // Register without FCM token initially (FCM will be registered later)
-      await GuestUserApi.registerGuestUser(
-        deviceId,);
-      
+      await GuestUserApi.registerGuestUser(deviceId);
+
       // Verify tokens were saved
       final savedToken = await LocalStorage.getAccessToken();
       if (savedToken == null || savedToken.isEmpty) {
         throw Exception('Failed to save authentication tokens');
       }
-      
-// debugPrint('✅ Guest user registered successfully with access token');
+
+      appDebugLog('✅ Guest user registered successfully with access token');
     } else {
-// debugPrint('✅ Guest user already registered with valid token');
+      appDebugLog('✅ Guest user already registered with valid token');
     }
   }
 
@@ -107,11 +111,11 @@ class HomeController {
     // Run asynchronously without awaiting
     Future.microtask(() async {
       try {
-// debugPrint('🏪 Fetching branch list in background...');
+        appDebugLog('🏪 Fetching branch list in background...');
         await _branchProvider!.fetchBranchList();
-// debugPrint('✅ Branch list fetched successfully');
+        appDebugLog('✅ Branch list fetched successfully');
       } catch (e) {
-// debugPrint('⚠️ Error fetching branch list (non-critical): $e');
+        appDebugLog('⚠️ Error fetching branch list (non-critical): $e');
       }
     });
   }
@@ -121,18 +125,18 @@ class HomeController {
     // Run asynchronously without awaiting
     Future.microtask(() async {
       try {
-// debugPrint('🔔 Registering FCM token in background...');
+        appDebugLog('🔔 Registering FCM token in background...');
         final deviceId = await generateDeviceId();
         final fcmToken = await NotificationService().getFcmToken();
-        
+
         if (fcmToken.isNotEmpty) {
           await GuestUserApi.callAddUserFcmToken(deviceId, fcmToken);
-// debugPrint('✅ FCM token registered successfully');
+          appDebugLog('✅ FCM token registered successfully');
         } else {
-// debugPrint('⚠️ FCM token is empty, skipping registration');
+          appDebugLog('⚠️ FCM token is empty, skipping registration');
         }
       } catch (e) {
-// debugPrint('⚠️ Error registering FCM token (non-critical): $e');
+        appDebugLog('⚠️ Error registering FCM token (non-critical): $e');
       }
     });
   }
@@ -142,21 +146,21 @@ class HomeController {
     try {
       // Clear old authentication data
       await LocalStorage.clearAuthData();
-      
+
       // Re-register guest user
       await _ensureGuestUserRegistered();
-      
+
       // Retry fetching data
-// debugPrint('✅ Re-registration successful. Retrying data fetch...');
+      appDebugLog('✅ Re-registration successful. Retrying data fetch...');
       final branchId = await LocalStorage.getBranchId() ?? '1';
       await _provider.fetchProductRelatedData(branchId: branchId);
-      
+
       // Fetch branch list in background
       if (_branchProvider != null) {
         _fetchBranchListInBackground();
       }
     } catch (reRegisterError) {
-// debugPrint('❌ Re-registration failed: $reRegisterError');
+      appDebugLog('❌ Re-registration failed: $reRegisterError');
       // Last resort: load without authentication
       await _provider.fetchProductRelatedData();
     }
@@ -172,14 +176,14 @@ class HomeController {
 
         if (storedId != null && storedId.isNotEmpty) {
           // Return the same ID stored previously
-// debugPrint('✅ Using existing web device ID: $storedId');
+          appDebugLog('✅ Using existing web device ID: $storedId');
           return storedId;
         }
 
         // Generate a new unique but fixed ID
         final newId = 'web_${const Uuid().v4()}';
         await prefs.setString('web_device_id', newId);
-// debugPrint('🆕 Generated and saved new web device ID: $newId');
+        appDebugLog('🆕 Generated and saved new web device ID: $newId');
         return newId;
       }
 
@@ -206,7 +210,7 @@ class HomeController {
       // 3️⃣ Fallback for unknown platforms
       return 'unknown_${DateTime.now().millisecondsSinceEpoch}';
     } catch (e) {
-// debugPrint('⚠️ Error generating device ID: $e');
+      appDebugLog('⚠️ Error generating device ID: $e');
       // 4️⃣ Final fallback — still stored persistently
       final prefs = await SharedPreferences.getInstance();
       final fallback = prefs.getString('fallback_device_id');
@@ -262,7 +266,7 @@ class HomeController {
   void updateSearchQuery(String query) {
     // Cancel previous timer
     _searchDebounceTimer?.cancel();
-    
+
     // Set new timer for debounce (300ms)
     _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
       _provider.updateSearchQuery(query);
@@ -376,7 +380,7 @@ class HomeController {
           unitPriceList: [],
           productdetails: [],
           relatedModifiers: [],
-          preparationtime: ''
+          preparationtime: '',
         ),
         modifiers: const [],
         quantity: 0,

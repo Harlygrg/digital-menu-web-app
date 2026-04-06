@@ -3,7 +3,7 @@ import 'package:shimmer/shimmer.dart';
 import '../theme/theme.dart';
 
 /// Shimmer loading widget for table screen
-/// 
+///
 /// This widget provides shimmer loading effects for:
 /// - Floor tabs
 /// - Table grid items
@@ -15,16 +15,16 @@ class TableShimmerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
       baseColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
-      highlightColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+      highlightColor: Theme.of(
+        context,
+      ).colorScheme.outline.withValues(alpha: 0.3),
       child: Column(
         children: [
           // Floor tabs shimmer
           _buildFloorTabsShimmer(context),
           SizedBox(height: Responsive.padding(context, 16)),
           // Table grid shimmer
-          Expanded(
-            child: _buildTableGridShimmer(context),
-          ),
+          Expanded(child: _buildTableGridShimmer(context)),
         ],
       ),
     );
@@ -123,10 +123,14 @@ class FloorTabsShimmerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
       baseColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
-      highlightColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+      highlightColor: Theme.of(
+        context,
+      ).colorScheme.outline.withValues(alpha: 0.3),
       child: Container(
         height: Responsive.padding(context, 48),
-        margin: EdgeInsets.symmetric(horizontal: Responsive.padding(context, 16)),
+        margin: EdgeInsets.symmetric(
+          horizontal: Responsive.padding(context, 16),
+        ),
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: 3, // Show 3 shimmer tabs
@@ -155,7 +159,9 @@ class TableGridShimmerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
       baseColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
-      highlightColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+      highlightColor: Theme.of(
+        context,
+      ).colorScheme.outline.withValues(alpha: 0.3),
       child: GridView.builder(
         padding: EdgeInsets.all(Responsive.padding(context, 16)),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

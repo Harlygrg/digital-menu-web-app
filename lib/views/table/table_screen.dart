@@ -13,7 +13,7 @@ import '../../widgets/order_success_popup.dart';
 import '../../storage/local_storage.dart';
 
 /// Table selection screen with floor tabs and table grid
-/// 
+///
 /// This screen allows users to select tables from different floors
 /// for their order. It features:
 /// - Floor-based tab navigation
@@ -33,22 +33,25 @@ class _TableScreenState extends State<TableScreen>
   TabController? _tabController;
   int _currentTabIndex = 0;
   OrderTypeModel? _selectedOrderType;
-  
+
   // Number of guests controller and focus node
-  final TextEditingController _guestsController = TextEditingController(text: '1');
+  final TextEditingController _guestsController = TextEditingController(
+    text: '1',
+  );
   final FocusNode _guestsFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    
+
     // Get selected order type from arguments
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       if (args != null && args['selectedOrderType'] is OrderTypeModel) {
         _selectedOrderType = args['selectedOrderType'] as OrderTypeModel;
       }
-      
+
       // Fetch table data when screen loads
       context.read<TableProvider>().fetchTableList();
     });
@@ -95,12 +98,16 @@ class _TableScreenState extends State<TableScreen>
 
           // Initialize or update tab controller when floors are loaded
           if (tableProvider.floors.isNotEmpty) {
-            if (_tabController == null || _tabController!.length != tableProvider.floors.length) {
+            if (_tabController == null ||
+                _tabController!.length != tableProvider.floors.length) {
               _tabController?.dispose();
               _tabController = TabController(
                 length: tableProvider.floors.length,
                 vsync: this,
-                initialIndex: _currentTabIndex.clamp(0, tableProvider.floors.length - 1),
+                initialIndex: _currentTabIndex.clamp(
+                  0,
+                  tableProvider.floors.length - 1,
+                ),
               );
               _tabController!.addListener(_onTabChanged);
             }
@@ -120,9 +127,9 @@ class _TableScreenState extends State<TableScreen>
         children: [
           Text(
             'Select Table',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -159,12 +166,15 @@ class _TableScreenState extends State<TableScreen>
   }
 
   /// Build table selection content with tabs and grid
-  Widget _buildTableSelectionContent(BuildContext context, TableProvider tableProvider) {
+  Widget _buildTableSelectionContent(
+    BuildContext context,
+    TableProvider tableProvider,
+  ) {
     return Column(
       children: [
         // Floor tabs
         _buildFloorTabs(context, tableProvider),
-        
+
         // Table grid
         Expanded(
           child: _tabController != null
@@ -174,11 +184,9 @@ class _TableScreenState extends State<TableScreen>
                     return _buildFloorTableGrid(context, tableProvider, floor);
                   }).toList(),
                 )
-              : const Center(
-                  child: CircularProgressIndicator(),
-                ),
+              : const Center(child: CircularProgressIndicator()),
         ),
-        
+
         // Confirm selection button
         _buildConfirmSelectionButton(context, tableProvider),
       ],
@@ -223,9 +231,7 @@ class _TableScreenState extends State<TableScreen>
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(floor.floorName),
-                ],
+                children: [Text(floor.floorName)],
               ),
             ),
           );
@@ -235,7 +241,11 @@ class _TableScreenState extends State<TableScreen>
   }
 
   /// Build table grid for a specific floor
-  Widget _buildFloorTableGrid(BuildContext context, TableProvider tableProvider, FloorModel floor) {
+  Widget _buildFloorTableGrid(
+    BuildContext context,
+    TableProvider tableProvider,
+    FloorModel floor,
+  ) {
     return ScrollConfiguration(
       behavior: ScrollBehaviorUtils.createCrossPlatformScrollBehavior(),
       child: GridView.builder(
@@ -256,7 +266,11 @@ class _TableScreenState extends State<TableScreen>
   }
 
   /// Build individual table card
-  Widget _buildTableCard(BuildContext context, TableProvider tableProvider, TableModel table) {
+  Widget _buildTableCard(
+    BuildContext context,
+    TableProvider tableProvider,
+    TableModel table,
+  ) {
     final isSelected = tableProvider.isTableSelected(table.tableId);
     final theme = Theme.of(context);
 
@@ -265,19 +279,19 @@ class _TableScreenState extends State<TableScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? theme.colorScheme.primary.withValues(alpha: 0.1)
               : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? theme.colorScheme.primary
                 : theme.colorScheme.outline.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: isSelected 
+              color: isSelected
                   ? theme.colorScheme.primary.withValues(alpha: 0.2)
                   : Colors.black.withValues(alpha: 0.1),
               blurRadius: isSelected ? 8 : 4,
@@ -306,7 +320,10 @@ class _TableScreenState extends State<TableScreen>
   }
 
   /// Build confirm selection button
-  Widget _buildConfirmSelectionButton(BuildContext context, TableProvider tableProvider) {
+  Widget _buildConfirmSelectionButton(
+    BuildContext context,
+    TableProvider tableProvider,
+  ) {
     if (!tableProvider.hasSelectedTables) {
       return const SizedBox.shrink();
     }
@@ -364,7 +381,7 @@ class _TableScreenState extends State<TableScreen>
   /// Build number of guests input field
   Widget _buildNumberOfGuestsField(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return TextFormField(
       controller: _guestsController,
       focusNode: _guestsFocusNode,
@@ -377,9 +394,7 @@ class _TableScreenState extends State<TableScreen>
           color: theme.colorScheme.primary,
           size: Responsive.fontSize(context, 20),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
@@ -388,16 +403,11 @@ class _TableScreenState extends State<TableScreen>
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: theme.colorScheme.primary,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: theme.colorScheme.error,
-          ),
+          borderSide: BorderSide(color: theme.colorScheme.error),
         ),
         contentPadding: EdgeInsets.symmetric(
           horizontal: Responsive.padding(context, 16),
@@ -407,9 +417,7 @@ class _TableScreenState extends State<TableScreen>
       style: theme.textTheme.bodyMedium?.copyWith(
         fontSize: Responsive.fontSize(context, 14),
       ),
-      inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
-      ],
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
     );
   }
 
@@ -438,7 +446,9 @@ class _TableScreenState extends State<TableScreen>
             Text(
               tableProvider.errorMessage ?? 'An unknown error occurred',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -481,21 +491,27 @@ class _TableScreenState extends State<TableScreen>
             Icon(
               Icons.table_restaurant_outlined,
               size: Responsive.fontSize(context, 80),
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.3),
             ),
             SizedBox(height: Responsive.padding(context, 24)),
             Text(
               'No Tables Available',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             SizedBox(height: Responsive.padding(context, 8)),
             Text(
               'There are no tables available at the moment.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               textAlign: TextAlign.center,
             ),
@@ -506,7 +522,10 @@ class _TableScreenState extends State<TableScreen>
   }
 
   /// Handle confirm selection action
-  Future<void> _confirmSelection(BuildContext context, TableProvider tableProvider) async {
+  Future<void> _confirmSelection(
+    BuildContext context,
+    TableProvider tableProvider,
+  ) async {
     // Validate number of guests
     final guestsText = _guestsController.text.trim();
     if (guestsText.isEmpty) {
@@ -520,12 +539,14 @@ class _TableScreenState extends State<TableScreen>
       _guestsFocusNode.requestFocus();
       return;
     }
-    
+
     final numberOfGuests = int.tryParse(guestsText);
     if (numberOfGuests == null || numberOfGuests <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please enter a valid number of guests (must be greater than 0)'),
+          content: const Text(
+            'Please enter a valid number of guests (must be greater than 0)',
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
           duration: const Duration(seconds: 2),
         ),
@@ -533,12 +554,12 @@ class _TableScreenState extends State<TableScreen>
       _guestsFocusNode.requestFocus();
       return;
     }
-    
+
     // Get the selected table
-    final selectedTable = tableProvider.selectedTables.isNotEmpty 
-        ? tableProvider.selectedTables.first 
+    final selectedTable = tableProvider.selectedTables.isNotEmpty
+        ? tableProvider.selectedTables.first
         : null;
-    
+
     if (selectedTable == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -549,7 +570,7 @@ class _TableScreenState extends State<TableScreen>
       );
       return;
     }
-    
+
     // Check if order type is selected
     if (_selectedOrderType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -561,7 +582,7 @@ class _TableScreenState extends State<TableScreen>
       );
       return;
     }
-    
+
     // Get cart items
     final cartController = context.read<CartController>();
     if (cartController.isEmpty) {
@@ -574,7 +595,7 @@ class _TableScreenState extends State<TableScreen>
       );
       return;
     }
-    
+
     // Get branch ID from local storage
     final branchIdString = await LocalStorage.getBranchId();
     if (branchIdString == null) {
@@ -587,9 +608,9 @@ class _TableScreenState extends State<TableScreen>
       );
       return;
     }
-    
+
     final branchId = int.tryParse(branchIdString) ?? 0;
-    
+
     // Show loading dialog
     if (context.mounted) {
       showDialog(
@@ -624,7 +645,7 @@ class _TableScreenState extends State<TableScreen>
         ),
       );
     }
-    
+
     // Call create order API
     final orderProvider = context.read<OrderProvider>();
     final response = await orderProvider.createOrder(
@@ -632,20 +653,22 @@ class _TableScreenState extends State<TableScreen>
       tableId: selectedTable.tableId,
       orderTypeId: _selectedOrderType!.id.toString(),
       branchId: branchId,
-      orderNotes: cartController.orderNotes.isNotEmpty ? cartController.orderNotes : null,
+      orderNotes: cartController.orderNotes.isNotEmpty
+          ? cartController.orderNotes
+          : null,
       noOfGuest: numberOfGuests,
     );
-    
+
     // Close loading dialog
     if (context.mounted) {
       Navigator.of(context).pop();
     }
-    
+
     // Handle response
     if (response != null && response.success) {
       // Clear cart after successful order placement
       await cartController.clearCart();
-      
+
       // Show success popup
       if (context.mounted) {
         await showDialog(
@@ -659,7 +682,9 @@ class _TableScreenState extends State<TableScreen>
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(orderProvider.errorMessage ?? 'Failed to place order'),
+            content: Text(
+              orderProvider.errorMessage ?? 'Failed to place order',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
             duration: const Duration(seconds: 3),
           ),

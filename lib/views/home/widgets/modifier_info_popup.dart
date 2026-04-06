@@ -8,10 +8,7 @@ import '../../../models/option_models.dart';
 class ModifierInfoPopup extends StatelessWidget {
   final ModifierModel modifier;
 
-  const ModifierInfoPopup({
-    super.key,
-    required this.modifier,
-  });
+  const ModifierInfoPopup({super.key, required this.modifier});
 
   /// Show the popup
   static void show({
@@ -30,9 +27,15 @@ class ModifierInfoPopup extends StatelessWidget {
     return Consumer<HomeProvider>(
       builder: (context, provider, child) {
         final isEnglish = provider.isEnglish;
-        final modifierName = isEnglish ? modifier.modifier : (modifier.otherLang.isNotEmpty ? modifier.otherLang : modifier.modifier);
-        final description = isEnglish ? (modifier.otherLang): (modifier.descriptionOl.isNotEmpty ? modifier.descriptionOl : '');
-        
+        final modifierName = isEnglish
+            ? modifier.modifier
+            : (modifier.otherLang.isNotEmpty
+                  ? modifier.otherLang
+                  : modifier.modifier);
+        final description = isEnglish
+            ? (modifier.otherLang)
+            : (modifier.descriptionOl.isNotEmpty ? modifier.descriptionOl : '');
+
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -53,7 +56,9 @@ class ModifierInfoPopup extends StatelessWidget {
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(16),
                     ),
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
                   ),
                   child: Stack(
                     children: [
@@ -63,7 +68,9 @@ class ModifierInfoPopup extends StatelessWidget {
                           width: Responsive.padding(context, 80),
                           height: Responsive.padding(context, 80),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -80,7 +87,9 @@ class ModifierInfoPopup extends StatelessWidget {
                         child: GestureDetector(
                           onTap: () => Navigator.of(context).pop(),
                           child: Container(
-                            padding: EdgeInsets.all(Responsive.padding(context, 8)),
+                            padding: EdgeInsets.all(
+                              Responsive.padding(context, 8),
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.5),
                               shape: BoxShape.circle,
@@ -107,39 +116,48 @@ class ModifierInfoPopup extends StatelessWidget {
                         // Modifier name
                         Text(
                           modifierName,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                         ),
                         SizedBox(height: Responsive.padding(context, 8)),
                         // Price
                         Text(
                           'QR${modifier.price.toStringAsFixed(2)}',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                         SizedBox(height: Responsive.padding(context, 16)),
                         // Description
                         if (description.isNotEmpty) ...[
                           Text(
                             isEnglish ? 'Description' : 'الوصف',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                ),
                           ),
                           SizedBox(height: Responsive.padding(context, 8)),
                           Flexible(
                             child: SingleChildScrollView(
                               child: Text(
                                 description,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-                                  height: 1.5,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.8),
+                                      height: 1.5,
+                                    ),
                               ),
                             ),
                           ),
@@ -147,9 +165,13 @@ class ModifierInfoPopup extends StatelessWidget {
                           // No description available
                           Container(
                             width: double.infinity,
-                            padding: EdgeInsets.all(Responsive.padding(context, 20)),
+                            padding: EdgeInsets.all(
+                              Responsive.padding(context, 20),
+                            ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surface.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Column(
@@ -157,18 +179,23 @@ class ModifierInfoPopup extends StatelessWidget {
                                 Icon(
                                   Icons.description_outlined,
                                   size: Responsive.fontSize(context, 32),
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.5),
                                 ),
                                 SizedBox(
-                                    height: Responsive.padding(context, 8)
+                                  height: Responsive.padding(context, 8),
                                 ),
                                 Text(
                                   isEnglish
                                       ? 'No description available'
                                       : 'لا يوجد وصف متاح',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                                  ),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.6),
+                                      ),
                                 ),
                               ],
                             ),
@@ -181,8 +208,12 @@ class ModifierInfoPopup extends StatelessWidget {
                           child: ElevatedButton(
                             onPressed: () => Navigator.of(context).pop(),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
-                              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onPrimary,
                               padding: EdgeInsets.symmetric(
                                 vertical: Responsive.padding(context, 12),
                               ),

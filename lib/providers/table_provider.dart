@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/table_model.dart';
 import '../services/api/api_service.dart';
 import '../storage/local_storage.dart';
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Provider for managing table screen state
 class TableProvider extends ChangeNotifier {
@@ -32,6 +33,7 @@ class TableProvider extends ChangeNotifier {
     }
     return selectedTables;
   }
+
   bool get hasSelectedTables => _selectedTableIds.isNotEmpty;
   int get selectedTableCount => _selectedTableIds.length;
 
@@ -44,30 +46,33 @@ class TableProvider extends ChangeNotifier {
 
       // Check if we have a valid access token before making the request
       final accessToken = await LocalStorage.getAccessToken();
-       String ? branchId = await LocalStorage.getBranchId() ;
+      String? branchId = await LocalStorage.getBranchId();
       if (accessToken == null) {
-        throw Exception('No access token available. Please register as a guest user first.');
+        throw Exception(
+          'No access token available. Please register as a guest user first.',
+        );
       }
-      if(branchId == null){
-        _errorMessage = 'Error loading table list: No branch id available. Please select branch first.';
+      if (branchId == null) {
+        _errorMessage =
+            'Error loading table list: No branch id available. Please select branch first.';
         throw Exception('No  branch id available. Please select branch first.');
       }
 
-      final response = await _apiService.getTableList(branchId:branchId  );
-      
+      final response = await _apiService.getTableList(branchId: branchId);
+
       if (response.success) {
         _floors = response.floors;
         _isLoading = false;
         notifyListeners();
       } else {
-        _errorMessage = response.message.isNotEmpty 
-            ? response.message 
+        _errorMessage = response.message.isNotEmpty
+            ? response.message
             : 'Failed to load table list from server';
         _isLoading = false;
         notifyListeners();
       }
     } catch (e) {
-// print('Error in fetchTableList: $e');
+      appDebugLog('Error in fetchTableList: $e');
       _errorMessage = 'Error loading table list: ${e.toString()}';
       _isLoading = false;
       notifyListeners();
@@ -116,7 +121,7 @@ class TableProvider extends ChangeNotifier {
       (floor) => floor.floorId == floorId,
       orElse: () => throw Exception('Floor not found'),
     );
-    
+
     for (final table in floor.tables) {
       _selectedTableIds.add(table.tableId);
     }
@@ -129,7 +134,7 @@ class TableProvider extends ChangeNotifier {
       (floor) => floor.floorId == floorId,
       orElse: () => throw Exception('Floor not found'),
     );
-    
+
     for (final table in floor.tables) {
       _selectedTableIds.remove(table.tableId);
     }
@@ -142,7 +147,7 @@ class TableProvider extends ChangeNotifier {
       (floor) => floor.floorId == floorId,
       orElse: () => throw Exception('Floor not found'),
     );
-    
+
     int count = 0;
     for (final table in floor.tables) {
       if (_selectedTableIds.contains(table.tableId)) {
@@ -158,9 +163,9 @@ class TableProvider extends ChangeNotifier {
       (floor) => floor.floorId == floorId,
       orElse: () => throw Exception('Floor not found'),
     );
-    
+
     if (floor.tables.isEmpty) return false;
-    
+
     for (final table in floor.tables) {
       if (!_selectedTableIds.contains(table.tableId)) {
         return false;
@@ -196,7 +201,7 @@ class TableProvider extends ChangeNotifier {
       (floor) => floor.floorId == floorId,
       orElse: () => throw Exception('Floor not found'),
     );
-    
+
     return floor.tables
         .where((table) => _selectedTableIds.contains(table.tableId))
         .toList();
@@ -215,10 +220,11 @@ class TableProvider extends ChangeNotifier {
   Future<void> forceReAuthentication() async {
     try {
       await LocalStorage.clearAuthData();
-      _errorMessage = 'Authentication expired. Please restart the app to re-authenticate.';
+      _errorMessage =
+          'Authentication expired. Please restart the app to re-authenticate.';
       notifyListeners();
     } catch (e) {
-// print('Error during force re-authentication: $e');
+      appDebugLog('Error during force re-authentication: $e');
     }
   }
 

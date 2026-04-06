@@ -1,17 +1,17 @@
 /// Order Type Model
-/// 
+///
 /// This model represents an order type (service type) such as DINE-IN or TAKE-AWAY
 /// It maps the response fields from the getOrderTypes API endpoint.
 class OrderTypeModel {
   /// Unique identifier for the order type
   final int id;
-  
+
   /// The name of the order type (e.g., "DINE-IN", "TAKE-AWAY")
   final String orderType;
-  
+
   /// Whether this order type is inactive (0 = active, 1 = inactive)
   final int inactive;
-  
+
   /// Company/Branch ID this order type belongs to
   final int cid;
 
@@ -34,12 +34,7 @@ class OrderTypeModel {
 
   /// Convert OrderTypeModel to JSON
   Map<String, dynamic> toJson() {
-    return {
-      'ID': id,
-      'OrderType': orderType,
-      'inactive': inactive,
-      'CID': cid,
-    };
+    return {'ID': id, 'OrderType': orderType, 'inactive': inactive, 'CID': cid};
   }
 
   /// Check if this order type is active
@@ -81,10 +76,7 @@ class OrderTypeModel {
 
   @override
   int get hashCode {
-    return id.hashCode ^
-        orderType.hashCode ^
-        inactive.hashCode ^
-        cid.hashCode;
+    return id.hashCode ^ orderType.hashCode ^ inactive.hashCode ^ cid.hashCode;
   }
 
   @override
@@ -94,15 +86,15 @@ class OrderTypeModel {
 }
 
 /// Order Types Response Model
-/// 
+///
 /// This model represents the complete response from the getOrderTypes API endpoint
 class OrderTypesResponse {
   /// Whether the API call was successful
   final bool success;
-  
+
   /// The message from the API response
   final String message;
-  
+
   /// List of order types returned from the API
   final List<OrderTypeModel> orderTypes;
 
@@ -115,14 +107,17 @@ class OrderTypesResponse {
   /// Factory constructor to create OrderTypesResponse from JSON
   factory OrderTypesResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>?;
-    
+
     return OrderTypesResponse(
       success: json['success'] ?? false,
       message: data?['message'] ?? '',
       orderTypes: data?['order_types'] != null
           ? (data!['order_types'] as List)
-              .map((item) => OrderTypeModel.fromJson(item as Map<String, dynamic>))
-              .toList()
+                .map(
+                  (item) =>
+                      OrderTypeModel.fromJson(item as Map<String, dynamic>),
+                )
+                .toList()
           : <OrderTypeModel>[],
     );
   }
@@ -133,7 +128,9 @@ class OrderTypesResponse {
       'success': success,
       'data': {
         'message': message,
-        'order_types': orderTypes.map((orderType) => orderType.toJson()).toList(),
+        'order_types': orderTypes
+            .map((orderType) => orderType.toJson())
+            .toList(),
       },
     };
   }

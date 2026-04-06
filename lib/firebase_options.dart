@@ -17,7 +17,8 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   /// VAPID key for Firebase Cloud Messaging (Web Push Notifications)
   /// This is a public key used for web push notification subscriptions
-  static const String webVapidKey = 'BLubwTQXRJZo5eGNMWcNKFnDijdAkr_IlBILsDUX7OZn3V9_HC4jsbXuy-MST_A5AqPjRYzlfkojhTDiIZjwR4Q';
+  static const String webVapidKey =
+      'BLubwTQXRJZo5eGNMWcNKFnDijdAkr_IlBILsDUX7OZn3V9_HC4jsbXuy-MST_A5AqPjRYzlfkojhTDiIZjwR4Q';
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
       return web;

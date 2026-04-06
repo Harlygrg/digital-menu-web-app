@@ -1,5 +1,6 @@
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Web-specific implementation for URL parameter extraction
 String? getQueryParameterImpl(String paramName) {
@@ -7,7 +8,7 @@ String? getQueryParameterImpl(String paramName) {
     final uri = Uri.parse(html.window.location.href);
     return uri.queryParameters[paramName];
   } catch (e) {
-// print('Error extracting query parameter $paramName: $e');
+    appDebugLog('Error extracting query parameter $paramName: $e');
     return null;
   }
 }
@@ -18,8 +19,7 @@ Map<String, String> getAllQueryParametersImpl() {
     final uri = Uri.parse(html.window.location.href);
     return uri.queryParameters;
   } catch (e) {
-// print('Error extracting query parameters: $e');
+    appDebugLog('Error extracting query parameters: $e');
     return {};
   }
 }
-

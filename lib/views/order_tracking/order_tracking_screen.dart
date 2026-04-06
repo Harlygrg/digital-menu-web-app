@@ -37,67 +37,62 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar( ),
-      body: _buildBody(context),
-    );
+    return Scaffold(appBar: _buildAppBar(), body: _buildBody(context));
   }
-  /// Build app bar with refresh action
- PreferredSizeWidget _buildAppBar(){
-    return AppBar(
 
+  /// Build app bar with refresh action
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
       title: Responsive.isDesktop(context)
           ? null // Hide default title for desktop
           : Consumer<HomeProvider>(
-            builder: (context,provider,child) {
-              return Text(
-                      provider.isEnglish ? 'My orders' : 'طلباتي',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-                      ),
-                    );
-            }
-          ),
+              builder: (context, provider, child) {
+                return Text(
+                  provider.isEnglish ? 'My orders' : 'طلباتي',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                );
+              },
+            ),
       backgroundColor: Theme.of(context).colorScheme.surface,
       elevation: 0.0,
       leading: Responsive.isDesktop(context)
           ? null // Hide default leading for desktop
           : IconButton(
-        icon: Icon(
-          Icons.arrow_back_ios,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
+              icon: Icon(
+                Icons.arrow_back_ios,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
       actions: Responsive.isDesktop(context)
           ? null // Hide default actions for desktop
-          :
-         [
-          Consumer<OrderTrackingController>(
-            builder: (context, controller, child) {
-              return IconButton(
-                icon: controller.isLoading
-                    ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.black,
-                  ),
-                )
-                    :  Icon(Icons.refresh,color: AppColors.primary,),
-                onPressed: controller.isLoading
-                    ? null
-                    : () => controller.refreshOrders(),
-                tooltip: 'Refresh orders',
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
+          : [
+              Consumer<OrderTrackingController>(
+                builder: (context, controller, child) {
+                  return IconButton(
+                    icon: controller.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.black,
+                            ),
+                          )
+                        : Icon(Icons.refresh, color: AppColors.primary),
+                    onPressed: controller.isLoading
+                        ? null
+                        : () => controller.refreshOrders(),
+                    tooltip: 'Refresh orders',
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+            ],
     );
- }
-
+  }
 
   /// Build main body content
   Widget _buildBody(BuildContext context) {
@@ -135,7 +130,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           Consumer<HomeProvider>(
             builder: (context, provider, child) {
               return Text(
-                provider.isEnglish ? 'Loading your orders...' : 'جاري تحميل طلباتك...',
+                provider.isEnglish
+                    ? 'Loading your orders...'
+                    : 'جاري تحميل طلباتك...',
               );
             },
           ),
@@ -161,7 +158,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             Consumer<HomeProvider>(
               builder: (context, provider, child) {
                 return Text(
-                  provider.isEnglish ? 'Failed to load orders' : 'فشل تحميل الطلبات',
+                  provider.isEnglish
+                      ? 'Failed to load orders'
+                      : 'فشل تحميل الطلبات',
                   style: Theme.of(context).textTheme.titleLarge,
                 );
               },
@@ -214,7 +213,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             Consumer<HomeProvider>(
               builder: (context, provider, child) {
                 return Text(
-                  provider.isEnglish 
+                  provider.isEnglish
                       ? 'Your orders will appear here once you place them'
                       : 'ستظهر طلباتك هنا بمجرد تقديمها',
                   style: Theme.of(context).textTheme.bodyMedium,
@@ -233,7 +232,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     // Sort orders by date - latest first
     final sortedOrders = List<UserOrder>.from(controller.userOrders)
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    
+
     return RefreshIndicator(
       onRefresh: () => controller.refreshOrders(),
       child: ListView.builder(
@@ -268,15 +267,15 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                     child: Text(
                       order.onlineOrderId,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: Responsive.fontSize(context, 16),
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontSize: Responsive.fontSize(context, 16),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   _buildStatusChip(order.orderStatus),
                 ],
               ),
-              
+
               SizedBox(height: Responsive.padding(context, 12)),
 
               // Order details
@@ -295,7 +294,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                         Expanded(
                           child: Text(
                             _formatOrderDateTime(order.createdAt),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
                                   fontSize: Responsive.fontSize(context, 12),
                                 ),
                           ),
@@ -307,10 +307,10 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   Text(
                     order.formattedTotal,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: Responsive.fontSize(context, 16),
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
+                      fontSize: Responsive.fontSize(context, 16),
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ],
               ),
@@ -347,7 +347,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     return Consumer<HomeProvider>(
       builder: (context, provider, child) {
         String statusText;
-        
+
         switch (orderStatus) {
           case 0: // Pending
             statusText = provider.isEnglish ? 'Pending' : 'قيد الانتظار';
@@ -377,10 +377,10 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           child: Text(
             statusText,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: Responsive.fontSize(context, 12),
-                  color: textColor,
-                  fontWeight: FontWeight.w600,
-                ),
+              fontSize: Responsive.fontSize(context, 12),
+              color: textColor,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         );
       },
@@ -422,9 +422,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   /// Navigate to order details screen
   void _navigateToOrderDetails(UserOrder order) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => OrderDetailsScreen(order: order),
-      ),
+      MaterialPageRoute(builder: (context) => OrderDetailsScreen(order: order)),
     );
   }
 
@@ -433,4 +431,3 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     return DateFormat('MMM dd, yyyy - hh:mm a').format(dateTime);
   }
 }
-

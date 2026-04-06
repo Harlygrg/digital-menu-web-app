@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Table and Floor models for API response parsing
-/// 
+///
 /// This file contains models for handling table list API responses,
 /// including floor and table data structures.
 
@@ -66,18 +66,20 @@ class TableModel {
       if (tableColour == '-1') {
         return const Color(0xFFE0E0E0); // Default light gray
       }
-      
+
       // Try to parse as hex color
       if (tableColour.startsWith('#')) {
-        return Color(int.parse(tableColour.substring(1), radix: 16) + 0xFF000000);
+        return Color(
+          int.parse(tableColour.substring(1), radix: 16) + 0xFF000000,
+        );
       }
-      
+
       // Try to parse as integer
       final colorValue = int.tryParse(tableColour);
       if (colorValue != null) {
         return Color(colorValue + 0xFF000000);
       }
-      
+
       return const Color(0xFFE0E0E0); // Default fallback
     } catch (e) {
       return const Color(0xFFE0E0E0); // Default fallback
@@ -90,18 +92,20 @@ class TableModel {
       if (fontColour == '0') {
         return const Color(0xFF000000); // Black
       }
-      
+
       // Try to parse as hex color
       if (fontColour.startsWith('#')) {
-        return Color(int.parse(fontColour.substring(1), radix: 16) + 0xFF000000);
+        return Color(
+          int.parse(fontColour.substring(1), radix: 16) + 0xFF000000,
+        );
       }
-      
+
       // Try to parse as integer
       final colorValue = int.tryParse(fontColour);
       if (colorValue != null) {
         return Color(colorValue + 0xFF000000);
       }
-      
+
       return const Color(0xFF000000); // Default black
     } catch (e) {
       return const Color(0xFF000000); // Default black
@@ -168,9 +172,11 @@ class FloorModel {
       tableCount: _safeToInt(json['table_count']),
       tablePrefix: json['table_prefix'] ?? '',
       dineinOrder: _safeToInt(json['dinein_order']),
-      tables: (json['tables'] as List<dynamic>?)
-          ?.map((item) => TableModel.fromJson(item))
-          .toList() ?? [],
+      tables:
+          (json['tables'] as List<dynamic>?)
+              ?.map((item) => TableModel.fromJson(item))
+              .toList() ??
+          [],
     );
   }
 
@@ -237,14 +243,16 @@ class TableListResponse {
   /// Create from JSON
   factory TableListResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>? ?? {};
-    
+
     return TableListResponse(
       success: json['success'] ?? false,
       message: data['message'] ?? '',
       branchId: _safeToInt(data['branch_id']),
-      floors: (data['floors'] as List<dynamic>?)
-          ?.map((item) => FloorModel.fromJson(item))
-          .toList() ?? [],
+      floors:
+          (data['floors'] as List<dynamic>?)
+              ?.map((item) => FloorModel.fromJson(item))
+              .toList() ??
+          [],
     );
   }
 

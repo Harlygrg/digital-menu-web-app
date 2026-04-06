@@ -16,10 +16,7 @@ import '../../../widgets/home_shimmer_widget.dart';
 class ItemsGridWidget extends StatelessWidget {
   final HomeController controller;
 
-  const ItemsGridWidget({
-    super.key,
-    required this.controller,
-  });
+  const ItemsGridWidget({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +25,12 @@ class ItemsGridWidget extends StatelessWidget {
         final items = provider.filteredItems;
         final columns = Responsive.gridColumns(context);
         final language = provider.language;
-        
+
         // Show shimmer only while active loading is in progress.
         if (provider.isLoading) {
-          return const SliverToBoxAdapter(
-            child: ItemsGridShimmerWidget(),
-          );
+          return const SliverToBoxAdapter(child: ItemsGridShimmerWidget());
         }
-        
+
         // Show empty state only when not loading, data has been loaded, and no items
         if (items.isEmpty) {
           return SliverToBoxAdapter(
@@ -47,7 +42,9 @@ class ItemsGridWidget extends StatelessWidget {
                     Icon(
                       Icons.search_off,
                       size: Responsive.fontSize(context, 48),
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.3),
                     ),
                     SizedBox(height: Responsive.padding(context, 16)),
                     Text(
@@ -56,7 +53,9 @@ class ItemsGridWidget extends StatelessWidget {
                           : 'لم يتم العثور على أطباق',
                       style: TextStyle(
                         fontSize: Responsive.fontSize(context, 16),
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -95,7 +94,9 @@ class ItemsGridWidget extends StatelessWidget {
               // Optimizations for better scroll performance
               findChildIndexCallback: (Key key) {
                 if (key is ValueKey<int>) {
-                  final index = items.indexWhere((item) => item.id == key.value);
+                  final index = items.indexWhere(
+                    (item) => item.id == key.value,
+                  );
                   return index >= 0 ? index : null;
                 }
                 return null;
@@ -129,13 +130,12 @@ class _ItemCard extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final columns = Responsive.gridColumns(context);
     final cardWidth = (screenWidth / columns).toInt();
-    final cacheWidth = (cardWidth * MediaQuery.of(context).devicePixelRatio).toInt();
-    
+    final cacheWidth = (cardWidth * MediaQuery.of(context).devicePixelRatio)
+        .toInt();
+
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -155,17 +155,23 @@ class _ItemCard extends StatelessWidget {
                 cacheWidth: cacheWidth,
                 cacheHeight: cacheWidth,
                 placeholder: Container(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.05),
                   child: Center(
                     child: Icon(
                       Icons.fastfood,
                       size: Responsive.fontSize(context, 24),
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.3),
                     ),
                   ),
                 ),
                 errorWidget: Container(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.1),
                   width: double.infinity,
                   child: Icon(
                     Icons.fastfood,
@@ -192,10 +198,11 @@ class _ItemCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             item.getProductName(language),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.black,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.black,
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -207,7 +214,7 @@ class _ItemCard extends StatelessWidget {
                               item: item,
                             );
                           },
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -219,10 +226,11 @@ class _ItemCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             'QR ${item.lowestPrice.toStringAsFixed(2)}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

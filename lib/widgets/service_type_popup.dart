@@ -7,10 +7,10 @@ import '../theme/theme.dart';
 import '../widgets/table_shimmer_widget.dart';
 
 /// Service Type Selection Popup
-/// 
+///
 /// This popup allows users to select a service type (Eat-In or Take-Away)
 /// before proceeding to the table selection screen.
-/// 
+///
 /// Features:
 /// - Fetches order types from API
 /// - Displays order types in a responsive grid
@@ -39,14 +39,14 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 8,
       child: Container(
         constraints: BoxConstraints(
           maxWidth: Responsive.maxContentWidth(context),
-          maxHeight: MediaQuery.of(context).size.height * 0.7, // Increased slightly to prevent overflow
+          maxHeight:
+              MediaQuery.of(context).size.height *
+              0.7, // Increased slightly to prevent overflow
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -81,9 +81,11 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
   /// Build popup header with title and close button
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
-      padding: EdgeInsets.all(Responsive.padding(context, 16)), // Reduced header padding
+      padding: EdgeInsets.all(
+        Responsive.padding(context, 16),
+      ), // Reduced header padding
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.05),
         borderRadius: const BorderRadius.only(
@@ -129,9 +131,7 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
             ),
           ),
           SizedBox(height: Responsive.padding(context, 16)),
-          const Expanded(
-            child: TableShimmerWidget(),
-          ),
+          const Expanded(child: TableShimmerWidget()),
         ],
       ),
     );
@@ -140,7 +140,7 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
   /// Build error state with retry option
   Widget _buildErrorState(BuildContext context, OrderTypeProvider provider) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: EdgeInsets.all(Responsive.padding(context, 20)),
       child: Column(
@@ -171,10 +171,7 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
           SizedBox(height: Responsive.padding(context, 24)),
           ElevatedButton.icon(
             onPressed: () => provider.refresh(),
-            icon: Icon(
-              Icons.refresh,
-              size: Responsive.fontSize(context, 16),
-            ),
+            icon: Icon(Icons.refresh, size: Responsive.fontSize(context, 16)),
             label: Text(
               'Retry',
               style: TextStyle(
@@ -199,7 +196,7 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
   /// Build empty state when no order types are available
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: EdgeInsets.all(Responsive.padding(context, 20)),
       child: Column(
@@ -232,12 +229,17 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
   }
 
   /// Build grid of order types for selection
-  Widget _buildOrderTypesGrid(BuildContext context, OrderTypeProvider provider) {
+  Widget _buildOrderTypesGrid(
+    BuildContext context,
+    OrderTypeProvider provider,
+  ) {
     final theme = Theme.of(context);
     final orderTypes = provider.activeOrderTypes;
-    
+
     return Container(
-      padding: EdgeInsets.all(Responsive.padding(context, 16)), // Reduced padding
+      padding: EdgeInsets.all(
+        Responsive.padding(context, 16),
+      ), // Reduced padding
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -263,7 +265,7 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
               itemBuilder: (context, index) {
                 final orderType = orderTypes[index];
                 final isSelected = _selectedOrderType?.id == orderType.id;
-                if(orderType.id == 1 || orderType.id == 2) {
+                if (orderType.id == 1 || orderType.id == 2) {
                   return _buildOrderTypeCard(context, orderType, isSelected);
                 }
                 // For safety: if an unexpected order type ID is present,
@@ -284,7 +286,7 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
     bool isSelected,
   ) {
     final theme = Theme.of(context);
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -294,11 +296,11 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? theme.colorScheme.primary.withValues(alpha: 0.1)
               : theme.colorScheme.surface,
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? theme.colorScheme.primary
                 : theme.colorScheme.outline.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
@@ -317,10 +319,12 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
           children: [
             // Icon with increased top padding
             Container(
-              margin: EdgeInsets.only(top: Responsive.padding(context, 8)), // Added top margin for better spacing
+              margin: EdgeInsets.only(
+                top: Responsive.padding(context, 8),
+              ), // Added top margin for better spacing
               padding: EdgeInsets.all(Responsive.padding(context, 16)),
               decoration: BoxDecoration(
-                color: isSelected 
+                color: isSelected
                     ? theme.colorScheme.primary.withValues(alpha: 0.2)
                     : theme.colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
@@ -328,7 +332,7 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
               child: Icon(
                 _getIconForOrderType(orderType.orderType),
                 size: Responsive.fontSize(context, 32),
-                color: isSelected 
+                color: isSelected
                     ? theme.colorScheme.primary
                     : theme.colorScheme.primary.withValues(alpha: 0.7),
               ),
@@ -340,7 +344,7 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 fontSize: Responsive.fontSize(context, 16),
-                color: isSelected 
+                color: isSelected
                     ? theme.colorScheme.primary
                     : theme.colorScheme.onSurface,
               ),
@@ -357,7 +361,7 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
   Widget _buildSubmitButton(BuildContext context) {
     final theme = Theme.of(context);
     final isEnabled = _selectedOrderType != null;
-    
+
     return Container(
       padding: EdgeInsets.all(Responsive.padding(context, 20)),
       decoration: BoxDecoration(
@@ -374,10 +378,10 @@ class _ServiceTypePopupState extends State<ServiceTypePopup> {
         child: ElevatedButton(
           onPressed: isEnabled ? () => _submitSelection(context) : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: isEnabled 
+            backgroundColor: isEnabled
                 ? theme.colorScheme.primary
                 : theme.colorScheme.outline.withValues(alpha: 0.3),
-            foregroundColor: isEnabled 
+            foregroundColor: isEnabled
                 ? theme.colorScheme.onPrimary
                 : theme.colorScheme.onSurface.withValues(alpha: 0.5),
             shape: RoundedRectangleBorder(

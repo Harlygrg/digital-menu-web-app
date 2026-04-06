@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../storage/local_storage.dart';
 import '../../firebase_options.dart';
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Guest User API Service
 ///
 /// This class handles all API calls related to guest user registration and management.
 /// It uses Dio for HTTP requests and includes an interceptor for automatic token injection.
 class GuestUserApi {
-
   /// Gets or creates a singleton instance of Dio with interceptors
 
   /// Registers a guest user with the provided device ID
@@ -25,27 +25,28 @@ class GuestUserApi {
   /// Throws:
   /// - [DioException] on network errors
   /// - [Exception] on other errors
-  /// 
+  ///
   /// Note: FCM token can be registered later using callAddUserFcmToken()
   static Future<GuestUserResponse> registerGuestUser(
     String deviceId, {
     BuildContext? context,
   }) async {
-    // debugPrint('registerGuestUser called');
-    // debugPrint('Device ID: $deviceId');
+    appDebugLog('registerGuestUser called');
+    appDebugLog('Device ID: $deviceId');
     try {
       if (deviceId.isEmpty) {
         throw Exception('Device ID cannot be empty');
       }
 
       final apiService = ApiService();
-      // debugPrint('Calling registerGuestUserApiCall...');
-      
+      appDebugLog('Calling registerGuestUserApiCall...');
+
       // Call API with FCM token (can be empty string)
       dynamic responseData = await apiService.registerGuestUserApiCall(
-        deviceId: deviceId,);
+        deviceId: deviceId,
+      );
 
-      // debugPrint('Guest user registration response received');
+      appDebugLog('Guest user registration response received');
 
       final guestUserResponse = GuestUserResponse.fromJson(responseData);
 
@@ -54,21 +55,22 @@ class GuestUserApi {
         final refreshToken = guestUserResponse.data!.refreshToken;
 
         // Validate and save tokens IMMEDIATELY
-        if (accessToken != null && accessToken.isNotEmpty && 
-            refreshToken != null && refreshToken.isNotEmpty) {
-          
+        if (accessToken != null &&
+            accessToken.isNotEmpty &&
+            refreshToken != null &&
+            refreshToken.isNotEmpty) {
           // Save tokens first (critical for subsequent API calls)
           await LocalStorage.saveTokens(accessToken, refreshToken);
-          // debugPrint('✅ Access and refresh tokens saved successfully');
-          
+          appDebugLog('✅ Access and refresh tokens saved successfully');
+
           // Save device ID
           await LocalStorage.saveDeviceId(deviceId);
-          // debugPrint('✅ Device ID saved successfully');
-          
+          appDebugLog('✅ Device ID saved successfully');
+
           // Mark user as registered
           await LocalStorage.setGuestUserRegistered(true);
-          // debugPrint('✅ Guest user marked as registered');
-          
+          appDebugLog('✅ Guest user marked as registered');
+
           // Note: FCM token is NOT stored locally
           // It will be fetched fresh from Firebase when needed
           // if (fcmToken.isNotEmpty) {
@@ -77,15 +79,20 @@ class GuestUserApi {
           //   debugPrint('ℹ️ FCM token not provided during registration (will be registered later)');
           // }
         } else {
-          throw Exception('Invalid tokens received from server: accessToken or refreshToken is null/empty');
+          throw Exception(
+            'Invalid tokens received from server: accessToken or refreshToken is null/empty',
+          );
         }
       } else {
-        throw Exception(guestUserResponse.data?.message ?? 'Registration failed: No data in response');
+        throw Exception(
+          guestUserResponse.data?.message ??
+              'Registration failed: No data in response',
+        );
       }
 
       return guestUserResponse;
     } catch (e) {
-      // debugPrint('❌ Error during guest user registration: $e');
+      appDebugLog('❌ Error during guest user registration: $e');
       rethrow;
     }
   }
@@ -107,12 +114,14 @@ class GuestUserApi {
     String fcmToken, // Kept for backward compatibility, but not used
   ) async {
     try {
-      // debugPrint('🔄 callAddUserFcmToken: Fetching fresh FCM token from Firebase...');
-      
+      appDebugLog(
+        '🔄 callAddUserFcmToken: Fetching fresh FCM token from Firebase...',
+      );
+
       // IMPORTANT: Always fetch fresh token from Firebase, ignore the passed parameter
       final firebaseMessaging = FirebaseMessaging.instance;
       String? freshFcmToken;
-      
+
       if (kIsWeb) {
         freshFcmToken = await firebaseMessaging.getToken(
           vapidKey: DefaultFirebaseOptions.webVapidKey,
@@ -120,26 +129,30 @@ class GuestUserApi {
       } else {
         freshFcmToken = await firebaseMessaging.getToken();
       }
-      
+
       if (freshFcmToken == null || freshFcmToken.isEmpty) {
-        // debugPrint('⚠️ Failed to fetch FCM token from Firebase');
-        // debugPrint('ℹ️ This may happen if notification permissions are not granted');
+        appDebugLog('⚠️ Failed to fetch FCM token from Firebase');
+        appDebugLog(
+          'ℹ️ This may happen if notification permissions are not granted',
+        );
         return;
       }
-      
-      // debugPrint('✅ Fresh FCM token fetched from Firebase');
-      // debugPrint('📤 Sending fresh token to server...');
-      // debugPrint('   Device ID: $deviceId');
-      // debugPrint('   Token preview: ${freshFcmToken.substring(0, 20)}...');
-      
+
+      appDebugLog('✅ Fresh FCM token fetched from Firebase');
+      appDebugLog('📤 Sending fresh token to server...');
+      appDebugLog('   Device ID: $deviceId');
+      appDebugLog('   Token preview: ${freshFcmToken.substring(0, 20)}...');
+
       final apiService = ApiService();
       await apiService.addUserFcmToken(
         deviceId: deviceId,
         fcmToken: freshFcmToken, // Use fresh token from Firebase
       );
     } catch (e) {
-      // debugPrint('❌ Error adding FCM token: $e');
-      // debugPrint('ℹ️ This is not critical - notifications may not work until token is registered');
+      appDebugLog('❌ Error adding FCM token: $e');
+      appDebugLog(
+        'ℹ️ This is not critical - notifications may not work until token is registered',
+      );
     }
   }
 
@@ -157,15 +170,15 @@ class GuestUserApi {
   /// Note: This method should be called automatically by the API interceptor
   /// when an "Invalid access token" error is detected.
   static Future<RefreshTokenResponse> refreshAccessToken() async {
-    // debugPrint('🔄 refreshAccessToken called - attempting to refresh tokens');
-    
+    appDebugLog('🔄 refreshAccessToken called - attempting to refresh tokens');
+
     try {
       final apiService = ApiService();
-      // debugPrint('Calling refreshTokenApiCall...');
-      
+      appDebugLog('Calling refreshTokenApiCall...');
+
       // Call the refresh token API
       dynamic responseData = await apiService.refreshTokenApiCall();
-      // debugPrint('Refresh token response received');
+      appDebugLog('Refresh token response received');
 
       final refreshTokenResponse = RefreshTokenResponse.fromJson(responseData);
 
@@ -174,30 +187,35 @@ class GuestUserApi {
         final newRefreshToken = refreshTokenResponse.data!.refreshToken;
 
         // Validate and update tokens
-        if (newAccessToken != null && newAccessToken.isNotEmpty && 
-            newRefreshToken != null && newRefreshToken.isNotEmpty) {
-          
+        if (newAccessToken != null &&
+            newAccessToken.isNotEmpty &&
+            newRefreshToken != null &&
+            newRefreshToken.isNotEmpty) {
           // Save new tokens to local storage
           await LocalStorage.saveTokens(newAccessToken, newRefreshToken);
-          // debugPrint('✅ New access and refresh tokens saved successfully');
-          
+          appDebugLog('✅ New access and refresh tokens saved successfully');
+
           return refreshTokenResponse;
         } else {
-          throw Exception('Invalid tokens received from refresh endpoint: tokens are null/empty');
+          throw Exception(
+            'Invalid tokens received from refresh endpoint: tokens are null/empty',
+          );
         }
       } else {
         // If refresh fails, clear auth data and throw exception
         await LocalStorage.clearAuthData();
-        throw Exception(refreshTokenResponse.data?.message ?? 'Token refresh failed: No data in response');
+        throw Exception(
+          refreshTokenResponse.data?.message ??
+              'Token refresh failed: No data in response',
+        );
       }
     } catch (e) {
-      // debugPrint('❌ Error during token refresh: $e');
+      appDebugLog('❌ Error during token refresh: $e');
       // Clear invalid tokens on failure
       await LocalStorage.clearAuthData();
       rethrow;
     }
   }
-
 }
 
 /// Guest User Response Model
@@ -207,10 +225,7 @@ class GuestUserResponse {
   final bool success;
   final GuestUserData? data;
 
-  GuestUserResponse({
-    required this.success,
-    this.data,
-  });
+  GuestUserResponse({required this.success, this.data});
 
   factory GuestUserResponse.fromJson(Map<String, dynamic> json) {
     return GuestUserResponse(
@@ -255,12 +270,7 @@ class UserInfo {
   final String? status;
   final String? device;
 
-  UserInfo({
-    this.firstName,
-    this.loginType,
-    this.status,
-    this.device,
-  });
+  UserInfo({this.firstName, this.loginType, this.status, this.device});
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
     return UserInfo(
@@ -279,15 +289,14 @@ class RefreshTokenResponse {
   final bool success;
   final RefreshTokenData? data;
 
-  RefreshTokenResponse({
-    required this.success,
-    this.data,
-  });
+  RefreshTokenResponse({required this.success, this.data});
 
   factory RefreshTokenResponse.fromJson(Map<String, dynamic> json) {
     return RefreshTokenResponse(
       success: json['success'] ?? false,
-      data: json['data'] != null ? RefreshTokenData.fromJson(json['data']) : null,
+      data: json['data'] != null
+          ? RefreshTokenData.fromJson(json['data'])
+          : null,
     );
   }
 }
@@ -317,4 +326,3 @@ class RefreshTokenData {
     );
   }
 }
-

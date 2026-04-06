@@ -9,10 +9,7 @@ import '../../../routes/routes.dart';
 class CartButtonWidget extends StatelessWidget {
   final HomeController controller;
 
-  const CartButtonWidget({
-    super.key,
-    required this.controller,
-  });
+  const CartButtonWidget({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -20,13 +17,13 @@ class CartButtonWidget extends StatelessWidget {
       builder: (context, cartController, child) {
         final total = cartController.totalPrice;
         final itemCount = cartController.itemCount;
-        
+
         return Stack(
           children: [
             InkWell(
               onTap: () => _navigateToCartScreen(context),
               child: Container(
-                height:MediaQuery.of(context).size.width > 1200 ? 38 : 30,
+                height: MediaQuery.of(context).size.width > 1200 ? 38 : 30,
                 padding: EdgeInsets.all(Responsive.padding(context, 5)),
                 constraints: BoxConstraints(
                   minWidth: 80, // minimum width
@@ -49,7 +46,7 @@ class CartButtonWidget extends StatelessWidget {
                       'QR ${total.toStringAsFixed(2)}',
                       style: Theme.of(context).textTheme.bodySmall!.copyWith(
                         color: Theme.of(context).colorScheme.onPrimary,
-                        fontWeight: FontWeight.w500
+                        fontWeight: FontWeight.w500,
                       ),
                       textAlign: TextAlign.center,
                     ),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/theme.dart';
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Helper class for managing dynamic category icons loaded from JSON
 class CategoryIconHelper {
@@ -17,49 +18,55 @@ class CategoryIconHelper {
 
     try {
       // Load JSON file from assets
-      final jsonString = await rootBundle.loadString('assets/data/category_icons.json');
+      final jsonString = await rootBundle.loadString(
+        'assets/data/category_icons.json',
+      );
       final Map<String, dynamic> jsonData = json.decode(jsonString);
-      
+
       // Extract categories array
-      _categoryData = List<Map<String, dynamic>>.from(jsonData['categories'] ?? []);
+      _categoryData = List<Map<String, dynamic>>.from(
+        jsonData['categories'] ?? [],
+      );
       _isInitialized = true;
-      
-// debugPrint('✅ Category icon data loaded successfully: ${_categoryData?.length} categories');
+
+      appDebugLog(
+        '✅ Category icon data loaded successfully: ${_categoryData?.length} categories',
+      );
     } catch (e) {
-// debugPrint('❌ Error loading category icon data: $e');
+      appDebugLog('❌ Error loading category icon data: $e');
       _categoryData = [];
       _isInitialized = true;
     }
   }
 
   /// Get category icon widget based on category name
-  /// 
+  ///
   /// Searches for matching keywords in the loaded JSON data and returns
   /// an Icon widget with the appropriate icon and color.
   /// Falls back to a default icon if no match is found.
   static Widget getCategoryIcon(String categoryName, BuildContext context) {
     // Ensure data is loaded
     if (!_isInitialized || _categoryData == null) {
-// debugPrint('⚠️ Category data not loaded yet, using default icon');
+      appDebugLog('⚠️ Category data not loaded yet, using default icon');
       return _getDefaultIcon(context);
     }
 
     // Convert to lowercase for case-insensitive matching
     final lowerCategoryName = categoryName.toLowerCase();
-    
+
     // Search for matching category
     for (final category in _categoryData!) {
       final keywords = List<String>.from(category['keywords'] ?? []);
-      
+
       // Check if any keyword matches
       for (final keyword in keywords) {
         if (lowerCategoryName.contains(keyword.toLowerCase())) {
           final iconName = category['icon'] as String?;
           final colorHex = category['color'] as String?;
-          
+
           if (iconName != null) {
-// debugPrint('🎯 Matched "$categoryName" → $iconName');
-            
+            appDebugLog('🎯 Matched "$categoryName" → $iconName');
+
             return Icon(
               _getIconData(iconName),
               size: Responsive.padding(context, 24),
@@ -71,7 +78,7 @@ class CategoryIconHelper {
     }
 
     // No match found, return default icon
-// debugPrint('🔍 No match found for "$categoryName", using default icon');
+    appDebugLog('🔍 No match found for "$categoryName", using default icon');
     return _getDefaultIcon(context);
   }
 
@@ -136,7 +143,7 @@ class CategoryIconHelper {
       case 'local_cafe':
         return Icons.local_cafe;
       default:
-// debugPrint('⚠️ Unknown icon name: $iconName, using default');
+        appDebugLog('⚠️ Unknown icon name: $iconName, using default');
         return Icons.restaurant_menu;
     }
   }
@@ -150,7 +157,7 @@ class CategoryIconHelper {
       buffer.write(hexString.replaceFirst('#', ''));
       return Color(int.parse(buffer.toString(), radix: 16));
     } catch (e) {
-// debugPrint('⚠️ Error parsing color "$hexString": $e');
+      appDebugLog('⚠️ Error parsing color "$hexString": $e');
       return Colors.grey;
     }
   }
@@ -159,7 +166,6 @@ class CategoryIconHelper {
   static void clearCache() {
     _categoryData = null;
     _isInitialized = false;
-// debugPrint('🗑️ Category icon cache cleared');
+    appDebugLog('🗑️ Category icon cache cleared');
   }
 }
-

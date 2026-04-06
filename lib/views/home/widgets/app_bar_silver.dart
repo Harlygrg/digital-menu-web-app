@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/home_provider.dart';
 import '../../../controllers/home_controller.dart';
 import '../../../theme/theme.dart';
+import '../../../widgets/restaurant_logo.dart';
 import 'language_dropdown.dart';
 
 /// Silver app bar with logo, title, and language dropdown
@@ -15,13 +16,26 @@ class AppBarSilver extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Theme.of(context).colorScheme.onPrimary,
-      leadingWidth: 250,
+      leadingWidth: Responsive.isDesktop(context) ? null : 280,
       leading: Responsive.isDesktop(context)
           ? null // Hide default leading for desktop
-          :  Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: const BranchDropdownWidget(),
-          ),
+          : Padding(
+              padding: EdgeInsetsDirectional.only(
+                start: Responsive.padding(context, 8),
+              ),
+              child: Row(
+                children: [
+                  const RestaurantLogo(),
+                  SizedBox(width: Responsive.padding(context, 8)),
+                  const Expanded(
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: BranchDropdownWidget(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
       actions: Responsive.isDesktop(context)
           ? null // Hide default actions for desktop
           : [
@@ -54,21 +68,11 @@ class AppBarSilver extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   child: Row(
                     children: [
-                      // Logo
                       Padding(
-                        padding: EdgeInsets.only(left: Responsive.padding(context, 16)),
-                        child: Container(
-                          width: Responsive.padding(context, 40),
-                          height: Responsive.padding(context, 40),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.restaurant_menu,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: Responsive.fontSize(context, 24),
-                          ),
+                        padding: EdgeInsetsDirectional.only(
+                          start: Responsive.padding(context, 16),
                         ),
+                        child: const RestaurantLogo(),
                       ),
                       const Spacer(),
                       // Language dropdown (cart button moved to FAB in home_screen.dart)

@@ -8,4 +8,3 @@ String? getQueryParameterImpl(String paramName) {
 Map<String, String> getAllQueryParametersImpl() {
   return {};
 }
-

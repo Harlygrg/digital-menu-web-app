@@ -86,9 +86,9 @@ class UnitPriceListModel {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is UnitPriceListModel &&
-           other.unitFkId == unitFkId &&
-           other.unitName == unitName &&
-           other.price == price;
+        other.unitFkId == unitFkId &&
+        other.unitName == unitName &&
+        other.price == price;
   }
 
   @override
@@ -105,16 +105,10 @@ class SizeOption {
   final String label;
   final double extraPrice;
 
-  const SizeOption({
-    required this.label,
-    this.extraPrice = 0.0,
-  });
+  const SizeOption({required this.label, this.extraPrice = 0.0});
 
   /// Create a copy with updated properties
-  SizeOption copyWith({
-    String? label,
-    double? extraPrice,
-  }) {
+  SizeOption copyWith({String? label, double? extraPrice}) {
     return SizeOption(
       label: label ?? this.label,
       extraPrice: extraPrice ?? this.extraPrice,
@@ -125,8 +119,8 @@ class SizeOption {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is SizeOption &&
-           other.label == label &&
-           other.extraPrice == extraPrice;
+        other.label == label &&
+        other.extraPrice == extraPrice;
   }
 
   @override
@@ -224,9 +218,9 @@ class ModifierModel {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is ModifierModel &&
-           other.id == id &&
-           other.modifier == modifier &&
-           other.rate == rate;
+        other.id == id &&
+        other.modifier == modifier &&
+        other.rate == rate;
   }
 
   @override
@@ -271,14 +265,15 @@ class AddonOption {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is AddonOption &&
-           other.id == id &&
-           other.title == title &&
-           other.price == price &&
-           other.imageUrl == imageUrl;
+        other.id == id &&
+        other.title == title &&
+        other.price == price &&
+        other.imageUrl == imageUrl;
   }
 
   @override
-  int get hashCode => id.hashCode ^ title.hashCode ^ price.hashCode ^ imageUrl.hashCode;
+  int get hashCode =>
+      id.hashCode ^ title.hashCode ^ price.hashCode ^ imageUrl.hashCode;
 
   @override
   String toString() {

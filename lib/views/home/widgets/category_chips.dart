@@ -11,23 +11,24 @@ import '../../../utils/category_icon_helper.dart';
 class CategoryChipsWidget extends StatelessWidget {
   final HomeController controller;
 
-  const CategoryChipsWidget({
-    super.key,
-    required this.controller,
-  });
+  const CategoryChipsWidget({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
     return Consumer<HomeProvider>(
       builder: (context, provider, child) {
         return EnhancedHorizontalScrollable(
-          height: Responsive.padding(context, 80), // Increased height for cards with images
-          itemCount: provider.categories.length + 1, // +1 for "All Categories" chip
+          height: Responsive.padding(
+            context,
+            80,
+          ), // Increased height for cards with images
+          itemCount:
+              provider.categories.length + 1, // +1 for "All Categories" chip
           itemBuilder: (context, index) {
             // Check if this is the "All Categories" chip (first item)
             if (index == 0) {
               final isAllSelected = provider.selectedCategoryId == 0;
-              
+
               return Padding(
                 padding: EdgeInsets.only(
                   right: Responsive.padding(context, 12),
@@ -39,15 +40,13 @@ class CategoryChipsWidget extends StatelessWidget {
                 ),
               );
             }
-            
+
             // Regular category chips (adjusted index by -1)
             final category = provider.categories[index - 1];
             final isSelected = category.id == provider.selectedCategoryId;
-            
+
             return Padding(
-              padding: EdgeInsets.only(
-                right: Responsive.padding(context, 12),
-              ),
+              padding: EdgeInsets.only(right: Responsive.padding(context, 12)),
               child: _CategoryCard(
                 category: category,
                 isSelected: isSelected,
@@ -88,22 +87,24 @@ class _CategoryCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: Responsive.padding(context, 100),
-        margin: EdgeInsets.only(bottom: 5),// Fixed width for cards
+        margin: EdgeInsets.only(bottom: 5), // Fixed width for cards
         decoration: BoxDecoration(
-          color: isSelected ?  AppColors.primaryLight :  Color(0xffF5F5F9), // Light blue for selected
+          color: isSelected
+              ? AppColors.primaryLight
+              : Color(0xffF5F5F9), // Light blue for selected
           borderRadius: BorderRadius.circular(Responsive.padding(context, 15)),
           // border: Border.all(
           //   color: isSelected ? const Color(0xFF1976D2) : Colors.grey.shade300,
           //   width: 1,
           // ),
           boxShadow: [
-            if(isSelected)
-            BoxShadow(
-              color: AppColors.primary,
-              blurRadius: 3,
-              spreadRadius: -1,
-              offset: const Offset(0, 2),
-            ),
+            if (isSelected)
+              BoxShadow(
+                color: AppColors.primary,
+                blurRadius: 3,
+                spreadRadius: -1,
+                offset: const Offset(0, 2),
+              ),
           ],
         ),
         child: Column(
@@ -115,16 +116,29 @@ class _CategoryCard extends StatelessWidget {
               width: Responsive.padding(context, 30),
               height: Responsive.padding(context, 30),
               child: CategoryIconHelper.getCategoryIcon(
-                isEnglish ? category.category : (category.inOl.isNotEmpty ? category.inOl : category.category), 
-                context
+                isEnglish
+                    ? category.category
+                    : (category.inOl.isNotEmpty
+                          ? category.inOl
+                          : category.category),
+                context,
               ),
             ),
-            SizedBox(height: 5,),
+            SizedBox(height: 5),
             // Category name
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: Responsive.padding(context, 4)),
+              padding: EdgeInsets.symmetric(
+                horizontal: Responsive.padding(context, 4),
+              ),
               child: Text(
-                isEnglish ? category.category.toString().toLowerCase().capitalizeFirst() : (category.inOl.isNotEmpty ? category.inOl : category.category),
+                isEnglish
+                    ? category.category
+                          .toString()
+                          .toLowerCase()
+                          .capitalizeFirst()
+                    : (category.inOl.isNotEmpty
+                          ? category.inOl
+                          : category.category),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                   color: isSelected ? const Color(0xFF1976D2) : Colors.black87,
@@ -139,7 +153,6 @@ class _CategoryCard extends StatelessWidget {
       ),
     );
   }
-
 }
 
 /// "All Categories" card widget
@@ -191,7 +204,9 @@ class _AllCategoriesCard extends StatelessWidget {
             SizedBox(height: 5),
             // All categories text
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: Responsive.padding(context, 4)),
+              padding: EdgeInsets.symmetric(
+                horizontal: Responsive.padding(context, 4),
+              ),
               child: Text(
                 isEnglish ? 'All' : 'الكل',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(

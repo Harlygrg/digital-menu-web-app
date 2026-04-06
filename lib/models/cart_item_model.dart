@@ -67,9 +67,9 @@ class CartItemModel {
   final double unitPrice;
   final bool isAvailable;
   final String? unavailableReason;
-  double itemTotal ;
+  double itemTotal;
 
-   CartItemModel({
+  CartItemModel({
     required this.id,
     required this.item,
     this.selectedUnit,
@@ -79,14 +79,14 @@ class CartItemModel {
     required this.unitPrice,
     this.isAvailable = true,
     this.unavailableReason,
-    this.itemTotal= 0,
+    this.itemTotal = 0,
   });
 
   /// Calculate total price for this cart item (including modifiers)
 
   double get totalPrice {
-     itemTotal = unitPrice * quantity;
-     final modifierTotal = modifiers.fold<double>(
+    itemTotal = unitPrice * quantity;
+    final modifierTotal = modifiers.fold<double>(
       0.0,
       (sum, modifier) => sum + modifier.totalPrice,
     );
@@ -133,10 +133,10 @@ class CartItemModel {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is CartItemModel && 
-           other.id == id &&
-           other.selectedUnit?.unitFkId == selectedUnit?.unitFkId &&
-           _modifiersEqual(other.modifiers);
+    return other is CartItemModel &&
+        other.id == id &&
+        other.selectedUnit?.unitFkId == selectedUnit?.unitFkId &&
+        _modifiersEqual(other.modifiers);
   }
 
   bool _modifiersEqual(List<CartModifier> otherModifiers) {
@@ -148,11 +148,8 @@ class CartItemModel {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    selectedUnit?.unitFkId,
-    Object.hashAll(modifiers),
-  );
+  int get hashCode =>
+      Object.hash(id, selectedUnit?.unitFkId, Object.hashAll(modifiers));
 
   @override
   String toString() {

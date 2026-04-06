@@ -8,10 +8,7 @@ import '../../../theme/theme.dart';
 class GridListToggleWidget extends StatelessWidget {
   final HomeController controller;
 
-  const GridListToggleWidget({
-    super.key,
-    required this.controller,
-  });
+  const GridListToggleWidget({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

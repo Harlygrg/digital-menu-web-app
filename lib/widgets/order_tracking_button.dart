@@ -17,7 +17,7 @@ class OrderTrackingIconButton extends StatelessWidget {
     return Consumer<OrderTrackingController>(
       builder: (context, controller, child) {
         final hasActiveOrders = controller.hasActiveOrders;
-        
+
         return Stack(
           children: [
             IconButton(
@@ -57,7 +57,7 @@ class OrderTrackingCard extends StatelessWidget {
     return Consumer<OrderTrackingController>(
       builder: (context, controller, child) {
         final activeOrdersCount = controller.activeOrders.length;
-        
+
         return Card(
           child: InkWell(
             onTap: () {
@@ -81,9 +81,9 @@ class OrderTrackingCard extends StatelessWidget {
                       color: AppColors.primary,
                     ),
                   ),
-                  
+
                   SizedBox(width: Responsive.padding(context, 16)),
-                  
+
                   // Text
                   Expanded(
                     child: Column(
@@ -91,7 +91,8 @@ class OrderTrackingCard extends StatelessWidget {
                       children: [
                         Text(
                           'My Orders',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
                                 fontSize: Responsive.fontSize(context, 16),
                                 fontWeight: FontWeight.w600,
                               ),
@@ -101,7 +102,8 @@ class OrderTrackingCard extends StatelessWidget {
                           activeOrdersCount > 0
                               ? '$activeOrdersCount active ${activeOrdersCount == 1 ? "order" : "orders"}'
                               : 'View your order history',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 fontSize: Responsive.fontSize(context, 12),
                                 color: activeOrdersCount > 0
                                     ? AppColors.primary
@@ -111,7 +113,7 @@ class OrderTrackingCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
+
                   // Arrow
                   Icon(
                     Icons.arrow_forward_ios,
@@ -137,7 +139,7 @@ class OrderTrackingFAB extends StatelessWidget {
     return Consumer<OrderTrackingController>(
       builder: (context, controller, child) {
         final activeOrdersCount = controller.activeOrders.length;
-        
+
         return FloatingActionButton.extended(
           onPressed: () {
             Navigator.pushNamed(context, AppRoutes.orderTracking);
@@ -184,18 +186,15 @@ class OrderTrackingFAB extends StatelessWidget {
 /// List tile for order tracking (use in drawer)
 class OrderTrackingListTile extends StatelessWidget {
   final VoidCallback? onTap;
-  
-  const OrderTrackingListTile({
-    super.key,
-    this.onTap,
-  });
+
+  const OrderTrackingListTile({super.key, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Consumer<OrderTrackingController>(
       builder: (context, controller, child) {
         final activeOrdersCount = controller.activeOrders.length;
-        
+
         return ListTile(
           leading: Stack(
             children: [
@@ -233,23 +232,18 @@ class OrderTrackingListTile extends StatelessWidget {
 /// Badge widget showing active order count
 class OrderTrackingBadge extends StatelessWidget {
   final Widget child;
-  
-  const OrderTrackingBadge({
-    super.key,
-    required this.child,
-  });
+
+  const OrderTrackingBadge({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
     return Consumer<OrderTrackingController>(
       builder: (context, controller, child) {
         final activeOrdersCount = controller.activeOrders.length;
-        
+
         return Badge(
           isLabelVisible: activeOrdersCount > 0,
-          label: Text(
-            activeOrdersCount > 9 ? '9+' : '$activeOrdersCount',
-          ),
+          label: Text(activeOrdersCount > 9 ? '9+' : '$activeOrdersCount'),
           backgroundColor: AppColors.error,
           child: this.child,
         );
@@ -257,4 +251,3 @@ class OrderTrackingBadge extends StatelessWidget {
     );
   }
 }
-

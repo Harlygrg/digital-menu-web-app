@@ -3,32 +3,33 @@ import 'package:shimmer/shimmer.dart';
 import '../theme/theme.dart';
 
 /// Shimmer loading widget for home screen items
-/// 
+///
 /// This widget provides shimmer loading effects for:
 /// - Grid view items
 /// - List view items
 /// - Loading states
 class HomeShimmerWidget extends StatelessWidget {
   final bool isGridView;
-  
-  const HomeShimmerWidget({
-    super.key,
-    required this.isGridView,
-  });
+
+  const HomeShimmerWidget({super.key, required this.isGridView});
 
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
       baseColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
-      highlightColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-      child: isGridView ? _buildGridShimmer(context) : _buildListShimmer(context),
+      highlightColor: Theme.of(
+        context,
+      ).colorScheme.outline.withValues(alpha: 0.3),
+      child: isGridView
+          ? _buildGridShimmer(context)
+          : _buildListShimmer(context),
     );
   }
 
   /// Build shimmer for grid view
   Widget _buildGridShimmer(BuildContext context) {
     final columns = Responsive.gridColumns(context);
-    
+
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: Responsive.padding(context, 16),
@@ -59,9 +60,7 @@ class HomeShimmerWidget extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: 8, // Show 8 shimmer items
         itemBuilder: (context, index) => Padding(
-          padding: EdgeInsets.only(
-            bottom: Responsive.padding(context, 12),
-          ),
+          padding: EdgeInsets.only(bottom: Responsive.padding(context, 12)),
           child: _buildListItemShimmer(context),
         ),
       ),
@@ -91,9 +90,7 @@ class HomeShimmerWidget extends StatelessWidget {
             child: Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               ),
             ),
           ),

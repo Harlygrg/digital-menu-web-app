@@ -8,13 +8,13 @@ class ItemInfoButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-   return GestureDetector(
+    return GestureDetector(
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.all(2),
         child: Icon(
           Icons.info_rounded,
-          size:buttonSize ?? 14,
+          size: buttonSize ?? 14,
           color: AppColors.grey600,
         ),
       ),

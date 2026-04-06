@@ -8,4 +8,3 @@ void setupVisibilityChangeListener(Function() onVisible) {
     'setupVisibilityChangeListener is not implemented for this platform',
   );
 }
-

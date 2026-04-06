@@ -1,5 +1,4 @@
 import 'package:digital_menu_order/utils/capitalize_first_letter.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
@@ -7,9 +6,10 @@ import '../../../providers/branch_provider.dart';
 import '../../../providers/home_provider.dart';
 import '../../../controllers/cart_controller.dart';
 import '../../../theme/theme.dart';
+import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Branch dropdown widget with styling matching the cart button
-/// 
+///
 /// Displays:
 /// - Branch name text only when a saved branch is matched
 /// - Compact dropdown when no branch is selected
@@ -22,11 +22,7 @@ class BranchDropdownWidget extends StatelessWidget {
       builder: (context, branchProvider, homeProvider, child) {
         // Show shimmer while loading or not yet initialized
         if (branchProvider.isLoading || !branchProvider.isInitialized) {
-          return Row(
-            children: [
-              _buildShimmerLoading(context),
-            ],
-          );
+          return Row(children: [_buildShimmerLoading(context)]);
         }
 
         // Show error or empty state (after initialization)
@@ -39,12 +35,12 @@ class BranchDropdownWidget extends StatelessWidget {
 
         // If branch is already selected (matched with saved ID), show only the name
         if (hasBranchSelected && selectedBranch != null) {
-// debugPrint('🏪 Showing branch name: ${selectedBranch.cname}');
+          appDebugLog('🏪 Showing branch name: ${selectedBranch.cname}');
           return _buildBranchNameDisplay(context, selectedBranch.cname);
         }
 
         // Otherwise show the dropdown for selection
-// debugPrint('📋 Showing branch dropdown (no branch selected)');
+        appDebugLog('📋 Showing branch dropdown (no branch selected)');
         return _buildBranchDropdown(context, branchProvider, homeProvider);
       },
     );
@@ -52,25 +48,14 @@ class BranchDropdownWidget extends StatelessWidget {
 
   /// Build branch name display (no dropdown functionality)
   Widget _buildBranchNameDisplay(BuildContext context, String branchName) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.store,
-          color: Theme.of(context).colorScheme.primary,
-          size: Responsive.fontSize(context, 20),
-        ),
-        SizedBox(width: Responsive.padding(context, 8)),
-        Text(
-          branchName.toLowerCase().capitalizeFirst(),
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w600,
-          ),
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
-        ),
-      ],
+    return Text(
+      branchName.toLowerCase().capitalizeFirst(),
+      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+        color: Theme.of(context).colorScheme.primary,
+        fontWeight: FontWeight.w600,
+      ),
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
     );
   }
 
@@ -83,7 +68,8 @@ class BranchDropdownWidget extends StatelessWidget {
     final displayText = homeProvider.isEnglish ? 'Select Branch' : 'اختر الفرع';
 
     return InkWell(
-      onTap: () => _showBranchSelectionDialog(context, branchProvider, homeProvider),
+      onTap: () =>
+          _showBranchSelectionDialog(context, branchProvider, homeProvider),
       child: Container(
         height: Responsive.padding(context, 36),
         padding: EdgeInsets.symmetric(
@@ -175,26 +161,36 @@ class BranchDropdownWidget extends StatelessWidget {
               itemCount: branchProvider.branches.length,
               itemBuilder: (context, index) {
                 final branch = branchProvider.branches[index];
-                final isSelected = branchProvider.selectedBranch?.id == branch.id;
+                final isSelected =
+                    branchProvider.selectedBranch?.id == branch.id;
 
                 return ListTile(
                   leading: Icon(
-                    isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                    isSelected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   title: Text(
                     branch.cname,
                     style: TextStyle(
                       fontSize: Responsive.fontSize(context, 16),
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected 
-                        ? Theme.of(context).colorScheme.primary 
-                        : Theme.of(context).colorScheme.onSurface,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   onTap: () async {
                     Navigator.of(dialogContext).pop();
-                    await _handleBranchSelection(context, branchProvider, branch, homeProvider);
+                    await _handleBranchSelection(
+                      context,
+                      branchProvider,
+                      branch,
+                      homeProvider,
+                    );
                   },
                 );
               },
@@ -205,9 +201,7 @@ class BranchDropdownWidget extends StatelessWidget {
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(
                 homeProvider.isEnglish ? 'Cancel' : 'إلغاء',
-                style: TextStyle(
-                  fontSize: Responsive.fontSize(context, 14),
-                ),
+                style: TextStyle(fontSize: Responsive.fontSize(context, 14)),
               ),
             ),
           ],
@@ -232,7 +226,7 @@ class BranchDropdownWidget extends StatelessWidget {
       if (cartController.isNotEmpty) {
         // Show warning dialog
         final shouldContinue = await _showWarningDialog(context, homeProvider);
-        
+
         if (shouldContinue != true) {
           // User cancelled, don't change branch
           return;
@@ -253,12 +247,10 @@ class BranchDropdownWidget extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            homeProvider.isEnglish 
-              ? 'Branch changed to ${branch.cname}' 
-              : 'تم تغيير الفرع إلى ${branch.cname}',
-            style: TextStyle(
-              fontSize: Responsive.fontSize(context, 14),
-            ),
+            homeProvider.isEnglish
+                ? 'Branch changed to ${branch.cname}'
+                : 'تم تغيير الفرع إلى ${branch.cname}',
+            style: TextStyle(fontSize: Responsive.fontSize(context, 14)),
           ),
           duration: const Duration(seconds: 2),
           backgroundColor: Theme.of(context).colorScheme.primary,
@@ -268,7 +260,10 @@ class BranchDropdownWidget extends StatelessWidget {
   }
 
   /// Show warning dialog when changing branch with items in cart
-  Future<bool?> _showWarningDialog(BuildContext context, HomeProvider homeProvider) {
+  Future<bool?> _showWarningDialog(
+    BuildContext context,
+    HomeProvider homeProvider,
+  ) {
     return showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -283,11 +278,9 @@ class BranchDropdownWidget extends StatelessWidget {
           ),
           content: Text(
             homeProvider.isEnglish
-              ? 'Changing the branch will remove all items from the cart. Do you want to continue?'
-              : 'سيؤدي تغيير الفرع إلى إزالة جميع العناصر من السلة. هل تريد المتابعة؟',
-            style: TextStyle(
-              fontSize: Responsive.fontSize(context, 14),
-            ),
+                ? 'Changing the branch will remove all items from the cart. Do you want to continue?'
+                : 'سيؤدي تغيير الفرع إلى إزالة جميع العناصر من السلة. هل تريد المتابعة؟',
+            style: TextStyle(fontSize: Responsive.fontSize(context, 14)),
           ),
           actions: [
             TextButton(
@@ -319,4 +312,3 @@ class BranchDropdownWidget extends StatelessWidget {
     );
   }
 }
-
