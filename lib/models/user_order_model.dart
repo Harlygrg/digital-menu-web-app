@@ -1,3 +1,5 @@
+import 'package:digital_menu_order/utils/currency_format.dart';
+
 /// Helper function to safely convert dynamic values to double
 double _safeToDouble(dynamic value) {
   if (value == null) return 0.0;
@@ -134,12 +136,12 @@ class OrderDetail {
 
   /// Get formatted price
   String get formattedPrice {
-    return 'QR ${rate.toStringAsFixed(2)}';
+    return formatCurrencyAmount(rate);
   }
 
   /// Get formatted total
   String get formattedTotal {
-    return 'QR ${total.toStringAsFixed(2)}';
+    return formatCurrencyAmount(total);
   }
 
   @override
@@ -312,7 +314,7 @@ class UserOrder {
 
   /// Get formatted total amount
   String get formattedTotal {
-    return 'QR${grosstotal.toStringAsFixed(2)}';
+    return formatCurrencyAmount(grosstotal);
   }
 
   /// Get formatted creation date

@@ -7,12 +7,24 @@
 /// HomeProvider retains its own _language field for internal filtering
 /// (search by product name). Both providers are kept in sync by the
 /// view layer when language changes.
+///
+/// When [AppConfig.multiLanguage] is false (from `web/config.json`), Arabic
+/// is disabled: locale stays English and [setLanguage]/[toggleLanguage] do
+/// not switch to Arabic.
 import 'package:flutter/material.dart';
+import '../config/app_config.dart';
 
 /// Provider for managing app language and text direction
 class LanguageProvider extends ChangeNotifier {
   /// Current language code ('en' or 'ar')
   String _language = 'en';
+
+  /// Creates the provider; forces English when [AppConfig.multiLanguage] is false.
+  LanguageProvider() {
+    if (!AppConfig.multiLanguage) {
+      _language = 'en';
+    }
+  }
 
   /// Current language code
   String get language => _language;
@@ -29,12 +41,20 @@ class LanguageProvider extends ChangeNotifier {
 
   /// Toggle language between English and Arabic
   void toggleLanguage() {
+    if (!AppConfig.multiLanguage) return;
     _language = _language == 'en' ? 'ar' : 'en';
     notifyListeners();
   }
 
   /// Set language to a specific value
   void setLanguage(String lang) {
+    if (!AppConfig.multiLanguage) {
+      if (_language != 'en') {
+        _language = 'en';
+        notifyListeners();
+      }
+      return;
+    }
     if ((lang == 'en' || lang == 'ar') && lang != _language) {
       _language = lang;
       notifyListeners();

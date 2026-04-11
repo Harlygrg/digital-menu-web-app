@@ -1,4 +1,5 @@
 import 'package:digital_menu_order/utils/capitalize_first_letter.dart';
+import 'package:digital_menu_order/utils/currency_format.dart';
 
 import 'option_models.dart';
 
@@ -311,11 +312,11 @@ class ItemModel {
 
   /// Get price range string
   String get priceRange {
-    if (unitPriceList.isEmpty) return 'QR ${price.toStringAsFixed(2)}';
+    if (unitPriceList.isEmpty) return formatCurrencyAmount(price);
     if (lowestPrice == highestPrice) {
-      return 'QR ${lowestPrice.toStringAsFixed(2)}';
+      return formatCurrencyAmount(lowestPrice);
     }
-    return 'QR ${lowestPrice.toStringAsFixed(2)} - QR ${highestPrice.toStringAsFixed(2)}';
+    return formatCurrencyRange(lowestPrice, highestPrice);
   }
 
   /// Get product name based on language

@@ -12,6 +12,8 @@ import '../../storage/local_storage.dart';
 import '../../services/notification_service.dart';
 import '../../firebase_options.dart';
 import '../../routes/routes.dart';
+import '../../utils/currency_format.dart';
+import '../../utils/scroll_behavior_utils.dart';
 import '../../widgets/cart_price_sync_dialog.dart';
 import 'widgets/app_bar_silver.dart';
 import 'widgets/search_bar.dart';
@@ -552,7 +554,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 size: 24,
               ),
               label: Text(
-                'QR ${total.toStringAsFixed(2)}',
+                formatCurrencyAmount(total),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onPrimary,
                   fontWeight: FontWeight.bold,
@@ -600,18 +602,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Build mobile/tablet layout
   Widget _buildMobileLayout(HomeProvider provider) {
-    return RefreshIndicator(
-      onRefresh: _handleRefresh,
-      color: Theme.of(context).colorScheme.primary,
-      child: CustomScrollView(
-        // Optimized scroll physics for smooth, responsive scrolling
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        // Reduced cache extent — preloads fewer off-screen items to lower
-        // memory pressure and speed up initial layout on low-end devices.
-        cacheExtent: 250.0,
-        slivers: [
+    final scrollView = CustomScrollView(
+      physics: ScrollBehaviorUtils.getScrollPhysics(),
+      // Reduced cache extent — preloads fewer off-screen items to lower
+      // memory pressure and speed up initial layout on low-end devices.
+      cacheExtent: 250.0,
+      slivers: [
           // Search bar section
           SliverToBoxAdapter(
             child: Padding(
@@ -725,29 +721,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // Bottom padding
           SizedBox(height: Responsive.padding(context, 80)).toSliverBox(),
-        ],
-      ),
+      ],
+    );
+
+    if (kIsWeb) {
+      return scrollView;
+    }
+
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      color: Theme.of(context).colorScheme.primary,
+      child: scrollView,
     );
   }
 
   /// Build desktop layout with centered content
   Widget _buildDesktopLayout(HomeProvider provider) {
-    return RefreshIndicator(
-      onRefresh: _handleRefresh,
-      color: Theme.of(context).colorScheme.primary,
-      child: Center(
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: Responsive.maxContentWidth(context),
-          ),
-          child: CustomScrollView(
-            // Optimized scroll physics for smooth, responsive scrolling
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            // Reduced cache extent — see mobile layout comment
-            cacheExtent: 250.0,
-            slivers: [
+    final scrollView = Center(
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: CustomScrollView(
+          physics: ScrollBehaviorUtils.getScrollPhysics(),
+          // Reduced cache extent — see mobile layout comment
+          cacheExtent: 250.0,
+          slivers: [
               // Search bar section
               SliverToBoxAdapter(
                 child: Padding(
@@ -872,10 +871,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Bottom padding
               SizedBox(height: Responsive.padding(context, 80)).toSliverBox(),
-            ],
-          ),
+          ],
         ),
       ),
+    );
+
+    if (kIsWeb) {
+      return scrollView;
+    }
+
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      color: Theme.of(context).colorScheme.primary,
+      child: scrollView,
     );
   }
 }

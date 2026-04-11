@@ -1,6 +1,7 @@
 import 'package:digital_menu_order/utils/capitalize_first_letter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../config/app_config.dart';
 import '../models/category_model.dart';
 import '../models/item_model.dart';
 import '../models/cart_item_model.dart';
@@ -13,6 +14,13 @@ import 'package:digital_menu_order/utils/app_debug_log.dart';
 class HomeProvider extends ChangeNotifier {
   // Language and direction
   String _language = 'en';
+
+  /// Creates the provider; forces English when [AppConfig.multiLanguage] is false.
+  HomeProvider() {
+    if (!AppConfig.multiLanguage) {
+      _language = 'en';
+    }
+  }
   bool get isEnglish => _language == 'en';
   bool get isArabic => _language == 'ar';
   TextDirection get textDirection =>
@@ -210,12 +218,20 @@ class HomeProvider extends ChangeNotifier {
 
   /// Toggle language between English and Arabic
   void toggleLanguage() {
+    if (!AppConfig.multiLanguage) return;
     _language = _language == 'en' ? 'ar' : 'en';
     notifyListeners();
   }
 
   /// Set language
   void setLanguage(String lang) {
+    if (!AppConfig.multiLanguage) {
+      if (_language != 'en') {
+        _language = 'en';
+        notifyListeners();
+      }
+      return;
+    }
     if (lang == 'en' || lang == 'ar') {
       _language = lang;
       notifyListeners();

@@ -14,6 +14,7 @@ class AddItemButton extends StatelessWidget {
       builder: (context, provider, child) {
         return InkWell(
           onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
           child: Container(
             margin: EdgeInsets.only(right: Responsive.padding(context, 2)),
             padding: EdgeInsets.symmetric(
@@ -23,15 +24,13 @@ class AddItemButton extends StatelessWidget {
             alignment: Alignment.center,
             decoration: ShapeDecoration(
               color: Theme.of(context).colorScheme.onPrimary,
-              shape: StadiumBorder(),
-              shadows: [
-                BoxShadow(
-                  color: AppColors.grey400,
-                  blurRadius: 5,
-                  spreadRadius: -1,
-                  offset: const Offset(0, 2),
+              shape: StadiumBorder(
+                side: BorderSide(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.18),
                 ),
-              ],
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

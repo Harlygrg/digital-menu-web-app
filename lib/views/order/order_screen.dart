@@ -4,6 +4,7 @@ import '../../models/create_order_response_model.dart';
 import '../../controllers/cart_controller.dart';
 import '../../theme/theme.dart';
 import '../../routes/routes.dart';
+import '../../utils/currency_format.dart';
 import '../../widgets/order_qr.dart';
 
 /// Order Screen
@@ -350,7 +351,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 ),
               ),
               Text(
-                'QR${cartController.totalPrice.toStringAsFixed(2)}',
+                formatCurrencyAmount(cartController.totalPrice),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: Responsive.fontSize(context, 20),
@@ -427,7 +428,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
           // Price
           Text(
-            'QR${price.toStringAsFixed(2)}',
+            formatCurrencyAmount(price),
             style: theme.textTheme.titleSmall?.copyWith(
               fontSize: Responsive.fontSize(context, 14),
               fontWeight: FontWeight.w600,

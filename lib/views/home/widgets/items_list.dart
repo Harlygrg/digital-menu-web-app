@@ -9,6 +9,7 @@ import '../../../controllers/home_controller.dart';
 import '../../../theme/theme.dart';
 import '../../../models/item_model.dart';
 import '../../../models/option_models.dart';
+import '../../../utils/currency_format.dart';
 import '../../../utils/image_utils.dart';
 import '../../../widgets/home_shimmer_widget.dart';
 
@@ -43,7 +44,7 @@ class ItemsListWidget extends StatelessWidget {
                       size: Responsive.fontSize(context, 48),
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.3),
+                      ).colorScheme.onSurface.withValues(alpha: 0.3),
                     ),
                     SizedBox(height: Responsive.padding(context, 16)),
                     Text(
@@ -54,7 +55,7 @@ class ItemsListWidget extends StatelessWidget {
                         fontSize: Responsive.fontSize(context, 16),
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -76,15 +77,12 @@ class ItemsListWidget extends StatelessWidget {
                   padding: EdgeInsets.only(
                     bottom: Responsive.padding(context, 12),
                   ),
-                  // Use RepaintBoundary to isolate each card's repaints
-                  child: RepaintBoundary(
-                    child: _ListItemCard(
-                      key: ValueKey(item.id),
-                      item: item,
-                      controller: controller,
-                      language: language,
-                      getModifiers: provider.getModifiersForProduct,
-                    ),
+                  child: _ListItemCard(
+                    key: ValueKey(item.id),
+                    item: item,
+                    controller: controller,
+                    language: language,
+                    getModifiers: provider.getModifiersForProduct,
                   ),
                 );
               },
@@ -124,55 +122,37 @@ class _ListItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate optimal cache dimensions for list item images
     final imageSize = Responsive.padding(context, 80);
-    final cacheSize = (imageSize * MediaQuery.of(context).devicePixelRatio)
-        .toInt();
+    final hasImage = item.imageUrl?.isNotEmpty == true || item.image.isNotEmpty;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
+        ),
+      ),
       child: Padding(
         padding: EdgeInsets.all(Responsive.padding(context, 12)),
         child: Row(
           children: [
-            // Image with optimized caching
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: ImageUtils.buildImageFromBase64(
-                item.image,
-                imageUrl: item.imageUrl,
-                width: Responsive.padding(context, 80),
-                height: Responsive.padding(context, 80),
-                fit: BoxFit.cover,
-                cacheWidth: cacheSize,
-                cacheHeight: cacheSize,
-                placeholder: Container(
-                  width: Responsive.padding(context, 80),
-                  height: Responsive.padding(context, 80),
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withOpacity(0.05),
-                  child: Center(
-                    child: Icon(
-                      Icons.fastfood,
-                      size: Responsive.fontSize(context, 24),
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withOpacity(0.3),
-                    ),
-                  ),
-                ),
-                errorWidget: Container(
-                  width: Responsive.padding(context, 80),
-                  height: Responsive.padding(context, 80),
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  child: Icon(
-                    Icons.fastfood,
-                    size: Responsive.fontSize(context, 32),
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
+              child: SizedBox(
+                width: imageSize,
+                height: imageSize,
+                child: hasImage
+                    ? ImageUtils.buildImageFromBase64(
+                        item.image,
+                        imageUrl: item.imageUrl,
+                        width: imageSize,
+                        height: imageSize,
+                        fit: BoxFit.cover,
+                        placeholder: const _ListItemPlaceholder(),
+                        errorWidget: const _ListItemPlaceholder(),
+                      )
+                    : const _ListItemPlaceholder(),
               ),
             ),
             SizedBox(width: Responsive.padding(context, 12)),
@@ -213,9 +193,8 @@ class _ListItemCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Price
                       Text(
-                        'QR ${item.lowestPrice.toStringAsFixed(2)}',
+                        formatCurrencyAmount(item.lowestPrice),
                         style: TextStyle(
                           fontSize: Responsive.fontSize(context, 16),
                           fontWeight: FontWeight.bold,
@@ -240,6 +219,24 @@ class _ListItemCard extends StatelessWidget {
             ),
             SizedBox(width: Responsive.padding(context, 8)),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ListItemPlaceholder extends StatelessWidget {
+  const _ListItemPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
+      child: Center(
+        child: Icon(
+          Icons.fastfood,
+          size: Responsive.fontSize(context, 28),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.45),
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:digital_menu_order/utils/capitalize_first_letter.dart';
+import 'package:digital_menu_order/utils/currency_format.dart';
 import 'package:digital_menu_order/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -461,7 +462,7 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                                           Row(
                                             children: [
                                               Text(
-                                                'QR${widget.item.price.toStringAsFixed(2)}',
+                                                formatCurrencyAmount(widget.item.price),
                                                 style: theme
                                                     .textTheme
                                                     .titleMedium
@@ -684,7 +685,7 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                         ),
                         onPressed: _submit,
                         child: Text(
-                          '${_isEditing ? (isEnglish ? 'Update' : 'تحديث') : (isEnglish ? 'Add to Cart' : 'أضف للسلة')} – QR${_computeTotal().toStringAsFixed(2)}',
+                          '${_isEditing ? (isEnglish ? 'Update' : 'تحديث') : (isEnglish ? 'Add to Cart' : 'أضف للسلة')} – ${formatCurrencyAmount(_computeTotal())}',
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: theme.colorScheme.onPrimary,
                             fontSize: Responsive.fontSize(context, 14),
@@ -815,7 +816,7 @@ class _SizeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final priceText = ' QR${price.toStringAsFixed(2)}';
+    final priceText = ' ${formatCurrencyAmount(price)}';
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -944,7 +945,7 @@ class _AddonCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'QR${addon.price.toStringAsFixed(2)}',
+                  formatCurrencyAmount(addon.price),
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.8),

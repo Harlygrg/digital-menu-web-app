@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/home_provider.dart';
 import '../../../theme/theme.dart';
+import '../../../utils/currency_format.dart';
 import '../../../models/option_models.dart';
 
 /// Popup widget to display modifier information
@@ -125,7 +126,7 @@ class ModifierInfoPopup extends StatelessWidget {
                         SizedBox(height: Responsive.padding(context, 8)),
                         // Price
                         Text(
-                          'QR${modifier.price.toStringAsFixed(2)}',
+                          formatCurrencyAmount(modifier.price),
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,

@@ -32,8 +32,9 @@ class ScrollBehaviorUtils {
   /// Gets scroll physics optimized for the current platform
   static ScrollPhysics getScrollPhysics({bool isHorizontal = false}) {
     if (kIsWeb) {
-      // Enhanced physics for web platform
-      return const BouncingScrollPhysics(parent: ClampingScrollPhysics());
+      // Use browser-native scrolling on web. Bouncing physics feels resistant
+      // and adds extra overscroll work that isn't needed there.
+      return const ClampingScrollPhysics();
     } else {
       // Standard physics for mobile platforms
       return isHorizontal
@@ -88,8 +89,7 @@ class ScrollBehaviorUtils {
 class _CrossPlatformScrollBehavior extends ScrollBehavior {
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
-    // Use enhanced physics for better web experience
-    return const BouncingScrollPhysics(parent: ClampingScrollPhysics());
+    return ScrollBehaviorUtils.getScrollPhysics();
   }
 
   @override

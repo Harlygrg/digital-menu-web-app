@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/home_provider.dart';
 import '../../../controllers/home_controller.dart';
+import '../../../config/app_config.dart';
 import '../../../theme/theme.dart';
 import '../../../widgets/restaurant_logo.dart';
 import 'language_dropdown.dart';
@@ -39,13 +40,14 @@ class AppBarSilver extends StatelessWidget implements PreferredSizeWidget {
       actions: Responsive.isDesktop(context)
           ? null // Hide default actions for desktop
           : [
-              Consumer<HomeProvider>(
-                builder: (context, provider, child) {
-                  return LanguageDropdownWidget(
-                    controller: HomeController(provider),
-                  );
-                },
-              ),
+              if (AppConfig.multiLanguage)
+                Consumer<HomeProvider>(
+                  builder: (context, provider, child) {
+                    return LanguageDropdownWidget(
+                      controller: HomeController(provider),
+                    );
+                  },
+                ),
               // Cart button moved to Floating Action Button in home_screen.dart
               SizedBox(width: Responsive.padding(context, 16)),
             ],
@@ -76,13 +78,14 @@ class AppBarSilver extends StatelessWidget implements PreferredSizeWidget {
                       ),
                       const Spacer(),
                       // Language dropdown (cart button moved to FAB in home_screen.dart)
-                      Consumer<HomeProvider>(
-                        builder: (context, provider, child) {
-                          return LanguageDropdownWidget(
-                            controller: HomeController(provider),
-                          );
-                        },
-                      ),
+                      if (AppConfig.multiLanguage)
+                        Consumer<HomeProvider>(
+                          builder: (context, provider, child) {
+                            return LanguageDropdownWidget(
+                              controller: HomeController(provider),
+                            );
+                          },
+                        ),
                       SizedBox(width: Responsive.padding(context, 16)),
                     ],
                   ),

@@ -3,6 +3,7 @@
 // Follows MVC architecture and Material Design 3 principles
 
 import 'package:digital_menu_order/providers/home_provider.dart';
+import 'package:digital_menu_order/utils/currency_format.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -825,7 +826,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
             ),
           ),
           Text(
-            'QR ${amount.toStringAsFixed(2)}',
+            formatCurrencyAmount(amount),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontSize: Responsive.fontSize(context, 14),
               fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,

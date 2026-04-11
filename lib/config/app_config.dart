@@ -22,14 +22,33 @@ import 'package:digital_menu_order/utils/app_debug_log.dart';
 /// ## Example config.json:
 /// ```json
 /// {
-///   "apiBase": "https://your-custom-api-url.com/api/v1/"
+///   "apiBase": "https://your-custom-api-url.com/api/v1/",
+///   "multiLanguage": true,
+///   "currencySymbol": "QR"
 /// }
 /// ```
+///
+/// - **multiLanguage**: When `true`, English and Arabic are available and the
+///   language dropdown is shown. When `false`, the app stays English (LTR) and
+///   the dropdown is hidden. Omitted key defaults to `true`.
+/// - **currencySymbol**: Label shown before monetary amounts (e.g. `QR`, `$`,
+///   `€`). Omitted or invalid values default to `QR`.
 ///
 /// Note: Always include a trailing slash in the API base URL
 class AppConfig {
   /// The API base URL loaded from config.json or using the fallback default
   static String apiBase = _defaultApiBase;
+
+  /// When `false`, Arabic is disabled: no language switcher, English-only UI.
+  /// Loaded from `multiLanguage` in config.json; defaults to `true` if absent.
+  static bool multiLanguage = true;
+
+  /// Display symbol for prices (not an ISO code). Loaded from `currencySymbol`
+  /// in config.json; defaults to [defaultCurrencySymbol] if absent or invalid.
+  static String currencySymbol = defaultCurrencySymbol;
+
+  /// Fallback when config omits or invalidates `currencySymbol`.
+  static const String defaultCurrencySymbol = 'QR';
 
   /// Default/Fallback API base URL
   /// This is used if config.json is missing or fails to load
@@ -93,6 +112,37 @@ class AppConfig {
             '⚠️ AppConfig: apiBase field not found in config.json, using default',
           );
         }
+
+        if (configData.containsKey('multiLanguage') &&
+            configData['multiLanguage'] is bool) {
+          multiLanguage = configData['multiLanguage'] as bool;
+          appDebugLog(
+            '✅ AppConfig: multiLanguage = $multiLanguage (from config.json)',
+          );
+        } else if (configData.containsKey('multiLanguage')) {
+          appDebugLog(
+            '⚠️ AppConfig: multiLanguage must be a boolean; keeping default (true)',
+          );
+        }
+
+        if (configData.containsKey('currencySymbol') &&
+            configData['currencySymbol'] is String) {
+          final loaded = (configData['currencySymbol'] as String).trim();
+          if (loaded.isNotEmpty) {
+            currencySymbol = loaded;
+            appDebugLog(
+              '✅ AppConfig: currencySymbol = $currencySymbol (from config.json)',
+            );
+          } else {
+            appDebugLog(
+              '⚠️ AppConfig: currencySymbol is empty in config.json; keeping default',
+            );
+          }
+        } else if (configData.containsKey('currencySymbol')) {
+          appDebugLog(
+            '⚠️ AppConfig: currencySymbol must be a non-empty string; keeping default',
+          );
+        }
       } else {
         appDebugLog(
           '⚠️ AppConfig: Failed to load config.json (HTTP ${response.statusCode}), using default URL',
@@ -106,12 +156,16 @@ class AppConfig {
 
     // Always log the final URL being used
     appDebugLog('🌐 AppConfig: Final API Base URL: $apiBase');
+    appDebugLog('🌐 AppConfig: multiLanguage: $multiLanguage');
+    appDebugLog('🌐 AppConfig: currencySymbol: $currencySymbol');
   }
 
   /// Resets the configuration to default values
   /// Useful for testing purposes
   static void reset() {
     apiBase = _defaultApiBase;
+    multiLanguage = true;
+    currencySymbol = defaultCurrencySymbol;
     appDebugLog('🔄 AppConfig: Reset to default configuration');
   }
 }

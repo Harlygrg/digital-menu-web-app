@@ -4,6 +4,7 @@ import '../../../controllers/cart_controller.dart';
 import '../../../controllers/home_controller.dart';
 import '../../../theme/theme.dart';
 import '../../../routes/routes.dart';
+import '../../../utils/currency_format.dart';
 
 /// Cart button widget with badge showing item count
 class CartButtonWidget extends StatelessWidget {
@@ -43,7 +44,7 @@ class CartButtonWidget extends StatelessWidget {
                     ),
                     SizedBox(width: 5),
                     Text(
-                      'QR ${total.toStringAsFixed(2)}',
+                      formatCurrencyAmount(total),
                       style: Theme.of(context).textTheme.bodySmall!.copyWith(
                         color: Theme.of(context).colorScheme.onPrimary,
                         fontWeight: FontWeight.w500,

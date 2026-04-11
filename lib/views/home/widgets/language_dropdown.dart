@@ -5,8 +5,9 @@ import '../../../providers/language_provider.dart';
 import '../../../controllers/home_controller.dart';
 import '../../../theme/theme.dart';
 
-/// Language dropdown widget for switching between English and Arabic
+/// Language dropdown widget for switching between English and Arabic.
 ///
+/// Shown only when `multiLanguage` is true in `web/config.json`.
 /// Syncs both [LanguageProvider] (for MaterialApp locale/direction) and
 /// [HomeProvider] (for internal filtering by language) on every change.
 class LanguageDropdownWidget extends StatelessWidget {

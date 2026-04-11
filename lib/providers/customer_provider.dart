@@ -24,11 +24,17 @@ class CustomerProvider extends ChangeNotifier {
   // Customer data
   int? _customerId;
 
+  /// When true (from `?should_not_add_customer=true`), the Add Customer bottom sheet is never shown.
+  bool _shouldSkipCustomerInput = false;
+
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   int? get customerId => _customerId;
   bool get isCustomerRegistered => _customerId != null;
+
+  /// True if the launch URL requested skipping customer collection (session-only; not persisted).
+  bool get shouldSkipCustomerInput => _shouldSkipCustomerInput;
 
   /// Initialize customer provider by loading saved customer ID
   ///
@@ -36,6 +42,7 @@ class CustomerProvider extends ChangeNotifier {
   Future<void> initialize() async {
     try {
       appDebugLog('CustomerProvider: Initializing...');
+      _shouldSkipCustomerInput = _readShouldSkipCustomerInputFromUrl();
       _customerId = await _repository.getCustomerId();
 
       if (_customerId != null) {
@@ -48,6 +55,13 @@ class CustomerProvider extends ChangeNotifier {
     } catch (e) {
       appDebugLog('CustomerProvider: Error during initialization: $e');
     }
+  }
+
+  /// Parses [should_not_add_customer] from [Uri.base]; only the value `true` (case-insensitive) enables skip.
+  static bool _readShouldSkipCustomerInputFromUrl() {
+    final raw = Uri.base.queryParameters['should_not_add_customer']?.trim();
+    if (raw == null || raw.isEmpty) return false;
+    return raw.toLowerCase() == 'true';
   }
 
   /// Add a new customer

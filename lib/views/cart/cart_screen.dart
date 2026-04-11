@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/cart_controller.dart';
 import '../../models/cart_item_model.dart';
 import '../../models/order_type_model.dart';
+import '../../utils/currency_format.dart';
 import '../../utils/image_utils.dart';
 import '../../theme/theme.dart';
 import '../../routes/routes.dart';
@@ -12,6 +13,7 @@ import '../../providers/order_provider.dart';
 import '../../providers/order_type_provider.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/home_provider.dart';
+import '../../constants/customer_defaults.dart';
 import '../../storage/local_storage.dart';
 import '../../widgets/order_success_popup.dart';
 import '../home/widgets/add_to_cart_popup.dart';
@@ -447,7 +449,7 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                       SizedBox(height: Responsive.padding(context, 8)),
                       Text(
-                        'QR ${cartItem.unitPrice.toStringAsFixed(2)}',
+                        formatCurrencyAmount(cartItem.unitPrice),
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.bold,
@@ -599,7 +601,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
                 // Item total
                 Text(
-                  'QR ${cartItem.totalPrice.toStringAsFixed(2)}',
+                  formatCurrencyAmount(cartItem.totalPrice),
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.primary,
@@ -690,7 +692,7 @@ class _CartScreenState extends State<CartScreen> {
             ),
           ),
           Text(
-            'QR ${modifier.price.toStringAsFixed(2)}',
+            formatCurrencyAmount(modifier.price),
             style: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
               fontSize: Responsive.fontSize(context, 12),
@@ -923,7 +925,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
               Text(
-                'QR${total.toStringAsFixed(2)}',
+                formatCurrencyAmount(total),
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.primary,
@@ -1270,12 +1272,38 @@ class _CartScreenState extends State<CartScreen> {
     // Check if customer is already registered
     final needsRegistration = await customerProvider.needsRegistration();
 
-    if (needsRegistration && context.mounted) {
+    if (needsRegistration &&
+        !customerProvider.shouldSkipCustomerInput &&
+        context.mounted) {
       // Show customer details bottom sheet
       final customerAdded = await _showCustomerBottomSheet(context);
 
       if (!customerAdded) {
         // User cancelled or failed to add customer details
+        return;
+      }
+    }
+
+    if (customerProvider.shouldSkipCustomerInput && needsRegistration) {
+      if (!context.mounted) return;
+      final guestCustomerId = await customerProvider.addCustomer(
+        name: kGuestCustomerName,
+        phone: kGuestCustomerPhone,
+      );
+      if (!context.mounted) return;
+      if (guestCustomerId == null) {
+        final errorMessage =
+            customerProvider.errorMessage ??
+            (homeProvider.isEnglish
+                ? 'Failed to save your information. Please try again.'
+                : 'فشل حفظ معلوماتك. يرجى المحاولة مرة أخرى.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
         return;
       }
     }
