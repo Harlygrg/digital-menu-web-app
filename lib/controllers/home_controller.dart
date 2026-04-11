@@ -273,6 +273,12 @@ class HomeController {
     });
   }
 
+  /// Clears search immediately (empty-state actions; bypasses debounce).
+  void clearSearchQuery() {
+    _searchDebounceTimer?.cancel();
+    _provider.updateSearchQuery('');
+  }
+
   /// Select category
   void selectCategory(int categoryId) {
     _provider.selectCategory(categoryId);

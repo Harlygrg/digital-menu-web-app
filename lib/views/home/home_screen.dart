@@ -37,12 +37,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late HomeController _controller;
+  late final TextEditingController _searchFieldController;
   String? _lastShownErrorMessage;
   bool _didPromptCartPriceSync = false;
 
   @override
   void initState() {
     super.initState();
+    _searchFieldController = TextEditingController();
     final provider = context.read<HomeProvider>();
     final branchProvider = context.read<BranchProvider>();
     _controller = HomeController(provider, branchProvider: branchProvider);
@@ -485,6 +487,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _searchFieldController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -546,17 +549,13 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 Navigator.pushNamed(context, AppRoutes.cart);
               },
-              backgroundColor: Theme.of(context).colorScheme.tertiary,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
               elevation: 6,
-              icon: Icon(
-                Icons.shopping_cart,
-                color: Theme.of(context).colorScheme.onPrimary,
-                size: 24,
-              ),
+              icon: const Icon(Icons.shopping_cart, size: 24),
               label: Text(
                 formatCurrencyAmount(total),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -612,44 +611,41 @@ class _HomeScreenState extends State<HomeScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(Responsive.padding(context, 16)),
-              child: SearchBarWidget(controller: _controller),
+              child: SearchBarWidget(
+                controller: _controller,
+                searchFieldController: _searchFieldController,
+              ),
             ),
           ),
 
-          // Branch dropdown and Orders button
-          // SliverToBoxAdapter(
-          //   child: Padding(
-          //     padding: EdgeInsets.symmetric(
-          //       horizontal: Responsive.padding(context, 16),
-          //     ),
-          //     child: Row(
-          //       children: [
-          //         const BranchDropdownWidget(),
-          //         const Spacer(),
-          //         TextButton.icon(
-          //           onPressed: () {
-          //             Navigator.pushNamed(context, '/order-tracking');
-          //           },
-          //           icon: Icon(
-          //             Icons.receipt_long,
-          //             size: Responsive.fontSize(context, 20),
-          //             color: Theme.of(context).colorScheme.primary,
-          //           ),
-          //           label: Text(
-          //             provider.isEnglish ? 'Orders' : 'الطلبات',
-          //             style: TextStyle(
-          //               color: Theme.of(context).colorScheme.primary,
-          //               fontSize: Responsive.fontSize(context, 14),
-          //               fontWeight: FontWeight.w600,
-          //             ),
-          //           ),
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-
-          // SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: Responsive.padding(context, 16),
+              ),
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(context, AppRoutes.orderTracking);
+                  },
+                  icon: Icon(
+                    Icons.receipt_long,
+                    size: Responsive.fontSize(context, 20),
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  label: Text(
+                    provider.isEnglish ? 'Orders' : 'الطلبات',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: Responsive.fontSize(context, 14),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
 
           // Veg/Non-veg toggle section
           SliverToBoxAdapter(
@@ -715,9 +711,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // Items grid or list based on view mode
           if (provider.isGridView)
-            ItemsGridWidget(controller: _controller)
+            ItemsGridWidget(
+              controller: _controller,
+              onClearSearch: () {
+                _searchFieldController.clear();
+                _controller.clearSearchQuery();
+              },
+              onShowAllCategories: () => _controller.clearCategorySelection(),
+            )
           else
-            ItemsListWidget(controller: _controller),
+            ItemsListWidget(
+              controller: _controller,
+              onClearSearch: () {
+                _searchFieldController.clear();
+                _controller.clearSearchQuery();
+              },
+              onShowAllCategories: () => _controller.clearCategorySelection(),
+            ),
 
           // Bottom padding
           SizedBox(height: Responsive.padding(context, 80)).toSliverBox(),
@@ -751,7 +761,10 @@ class _HomeScreenState extends State<HomeScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.all(Responsive.padding(context, 16)),
-                  child: SearchBarWidget(controller: _controller),
+                  child: SearchBarWidget(
+                    controller: _controller,
+                    searchFieldController: _searchFieldController,
+                  ),
                 ),
               ),
 
@@ -767,7 +780,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const Spacer(),
                       TextButton.icon(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/order-tracking');
+                          Navigator.pushNamed(context, AppRoutes.orderTracking);
                         },
                         icon: Icon(
                           Icons.receipt_long,
@@ -865,9 +878,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Items grid or list based on view mode
               if (provider.isGridView)
-                ItemsGridWidget(controller: _controller)
+                ItemsGridWidget(
+                  controller: _controller,
+                  onClearSearch: () {
+                    _searchFieldController.clear();
+                    _controller.clearSearchQuery();
+                  },
+                  onShowAllCategories: () => _controller.clearCategorySelection(),
+                )
               else
-                ItemsListWidget(controller: _controller),
+                ItemsListWidget(
+                  controller: _controller,
+                  onClearSearch: () {
+                    _searchFieldController.clear();
+                    _controller.clearSearchQuery();
+                  },
+                  onShowAllCategories: () => _controller.clearCategorySelection(),
+                ),
 
               // Bottom padding
               SizedBox(height: Responsive.padding(context, 80)).toSliverBox(),

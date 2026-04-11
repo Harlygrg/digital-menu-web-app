@@ -12,12 +12,20 @@ import '../../../models/option_models.dart';
 import '../../../utils/currency_format.dart';
 import '../../../utils/image_utils.dart';
 import '../../../widgets/home_shimmer_widget.dart';
+import '../../../widgets/menu_empty_state.dart';
 
 /// Grid view widget for displaying items in a grid layout
 class ItemsGridWidget extends StatelessWidget {
   final HomeController controller;
+  final VoidCallback onClearSearch;
+  final VoidCallback onShowAllCategories;
 
-  const ItemsGridWidget({super.key, required this.controller});
+  const ItemsGridWidget({
+    super.key,
+    required this.controller,
+    required this.onClearSearch,
+    required this.onShowAllCategories,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,34 +42,15 @@ class ItemsGridWidget extends StatelessWidget {
 
         // Show empty state only when not loading, data has been loaded, and no items
         if (items.isEmpty) {
+          final hasSearch = provider.searchQuery.isNotEmpty;
+          final hasCategory = provider.selectedCategoryId != 0;
           return SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(Responsive.padding(context, 32)),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.search_off,
-                      size: Responsive.fontSize(context, 48),
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.3),
-                    ),
-                    SizedBox(height: Responsive.padding(context, 16)),
-                    Text(
-                      provider.isEnglish
-                          ? 'No items found'
-                          : 'لم يتم العثور على أطباق',
-                      style: TextStyle(
-                        fontSize: Responsive.fontSize(context, 16),
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            child: MenuEmptyState(
+              isEnglish: provider.isEnglish,
+              showClearSearch: hasSearch,
+              showShowAllCategories: hasCategory,
+              onClearSearch: hasSearch ? onClearSearch : null,
+              onShowAllCategories: hasCategory ? onShowAllCategories : null,
             ),
           );
         }
@@ -173,7 +162,7 @@ class _ItemCard extends StatelessWidget {
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.black,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

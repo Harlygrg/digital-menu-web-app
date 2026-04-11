@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../views/landing/landing_shell_screen.dart';
-import '../views/home/home_screen.dart';
 import '../views/cart/cart_screen.dart';
 import '../views/table/table_screen.dart';
 import '../views/order/order_screen.dart';
 import '../views/order_tracking/order_tracking_screen.dart';
+import '../views/errors/not_found_screen.dart';
+import '../views/errors/item_detail_placeholder_screen.dart';
 
 /// Central route configuration for the app
 class AppRoutes {
@@ -48,7 +49,8 @@ class AppRoutes {
       case itemDetail:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (context) => ItemDetailScreen(itemId: args?['itemId'] ?? ''),
+          builder: (context) =>
+              ItemDetailPlaceholderScreen(itemId: args?['itemId'] ?? ''),
           settings: settings,
         );
       default:
@@ -57,33 +59,5 @@ class AppRoutes {
           settings: settings,
         );
     }
-  }
-}
-
-/// Placeholder item detail screen
-class ItemDetailScreen extends StatelessWidget {
-  final String itemId;
-
-  const ItemDetailScreen({super.key, required this.itemId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Item Details')),
-      body: Center(child: Text('Item details for: $itemId')),
-    );
-  }
-}
-
-/// 404 screen for unknown routes
-class NotFoundScreen extends StatelessWidget {
-  const NotFoundScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Page Not Found')),
-      body: const Center(child: Text('The requested page was not found.')),
-    );
   }
 }

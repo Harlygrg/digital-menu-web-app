@@ -148,6 +148,8 @@ class OrderQrWidget extends StatelessWidget {
                 color: theme.colorScheme.outline.withValues(alpha: 0.1),
               ),
             ),
+            // QR must stay black on white for camera scanners; do not use
+            // colorScheme.onSurface (light in dark theme → invisible on white).
             child: QrImageView(
               data: qrData,
               version: QrVersions.auto,
@@ -155,11 +157,11 @@ class OrderQrWidget extends StatelessWidget {
               backgroundColor: AppColors.white,
               eyeStyle: QrEyeStyle(
                 eyeShape: QrEyeShape.square,
-                color: theme.colorScheme.onSurface,
+                color: AppColors.black,
               ),
               dataModuleStyle: QrDataModuleStyle(
                 dataModuleShape: QrDataModuleShape.square,
-                color: theme.colorScheme.onSurface,
+                color: AppColors.black,
               ),
               errorCorrectionLevel: QrErrorCorrectLevel.M,
               errorStateBuilder: (context, error) {

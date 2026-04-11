@@ -83,24 +83,22 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: Responsive.padding(context, 100),
         margin: EdgeInsets.only(bottom: 5), // Fixed width for cards
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryLight
-              : Color(0xffF5F5F9), // Light blue for selected
+          color: isSelected ? scheme.primaryContainer : scheme.surface,
           borderRadius: BorderRadius.circular(Responsive.padding(context, 15)),
-          // border: Border.all(
-          //   color: isSelected ? const Color(0xFF1976D2) : Colors.grey.shade300,
-          //   width: 1,
-          // ),
+          border: Border.all(
+            color: scheme.outline.withValues(alpha: isSelected ? 0.35 : 0.2),
+          ),
           boxShadow: [
             if (isSelected)
               BoxShadow(
-                color: AppColors.primary,
+                color: scheme.primary.withValues(alpha: 0.35),
                 blurRadius: 3,
                 spreadRadius: -1,
                 offset: const Offset(0, 2),
@@ -141,7 +139,9 @@ class _CategoryCard extends StatelessWidget {
                           : category.category),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
-                  color: isSelected ? const Color(0xFF1976D2) : Colors.black87,
+                  color: isSelected
+                      ? scheme.onPrimaryContainer
+                      : scheme.onSurface.withValues(alpha: 0.87),
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
@@ -169,18 +169,22 @@ class _AllCategoriesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: Responsive.padding(context, 100),
         margin: EdgeInsets.only(bottom: 5),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLight : Color(0xffF5F5F9),
+          color: isSelected ? scheme.primaryContainer : scheme.surface,
           borderRadius: BorderRadius.circular(Responsive.padding(context, 15)),
+          border: Border.all(
+            color: scheme.outline.withValues(alpha: isSelected ? 0.35 : 0.2),
+          ),
           boxShadow: [
             if (isSelected)
               BoxShadow(
-                color: AppColors.primary,
+                color: scheme.primary.withValues(alpha: 0.35),
                 blurRadius: 3,
                 spreadRadius: -1,
                 offset: const Offset(0, 2),
@@ -198,7 +202,9 @@ class _AllCategoriesCard extends StatelessWidget {
               child: Icon(
                 Icons.apps,
                 size: Responsive.padding(context, 24),
-                color: isSelected ? AppColors.primary : Colors.grey[600],
+                color: isSelected
+                    ? scheme.primary
+                    : scheme.onSurfaceVariant,
               ),
             ),
             SizedBox(height: 5),
@@ -211,7 +217,9 @@ class _AllCategoriesCard extends StatelessWidget {
                 isEnglish ? 'All' : 'الكل',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
-                  color: isSelected ? const Color(0xFF1976D2) : Colors.black87,
+                  color: isSelected
+                      ? scheme.onPrimaryContainer
+                      : scheme.onSurface.withValues(alpha: 0.87),
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,

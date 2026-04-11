@@ -16,7 +16,6 @@ class VegToggleWidget extends StatelessWidget {
       builder: (context, provider, child) {
         return Row(
           children: [
-            // Veg button
             _buildToggleButton(
               context,
               label: provider.isEnglish ? 'Veg' : 'نباتي',
@@ -26,7 +25,6 @@ class VegToggleWidget extends StatelessWidget {
               color: AppColors.veg,
             ),
             SizedBox(width: Responsive.padding(context, 8)),
-            // Non-veg button
             _buildToggleButton(
               context,
               label: provider.isEnglish ? 'Non-Veg' : 'غير نباتي',
@@ -41,7 +39,6 @@ class VegToggleWidget extends StatelessWidget {
     );
   }
 
-  /// Build individual toggle button
   Widget _buildToggleButton(
     BuildContext context, {
     required String label,
@@ -50,50 +47,55 @@ class VegToggleWidget extends StatelessWidget {
     required IconData icon,
     required Color color,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        constraints: BoxConstraints(minWidth: 100),
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(
-          vertical: Responsive.padding(context, 12),
-          horizontal: Responsive.padding(context, 16),
-        ),
-        decoration: ShapeDecoration(
-          shadows: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary,
-                    blurRadius: 3,
-                    spreadRadius: -1,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-          shape: StadiumBorder(),
-          color: isSelected
-              ? AppColors.primaryLight
-              : Color(0xffF5F5F9), // Light blue for selected,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? color
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              size: Responsive.fontSize(context, 18),
-            ),
-            SizedBox(width: Responsive.padding(context, 8)),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: AppColors.black,
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          constraints: const BoxConstraints(minWidth: 100),
+          duration: const Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(
+            vertical: Responsive.padding(context, 12),
+            horizontal: Responsive.padding(context, 16),
+          ),
+          decoration: ShapeDecoration(
+            shadows: isSelected
+                ? [
+                    BoxShadow(
+                      color: scheme.primary.withValues(alpha: 0.35),
+                      blurRadius: 3,
+                      spreadRadius: -1,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+            shape: const StadiumBorder(),
+            color: isSelected ? scheme.primaryContainer : scheme.surface,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: isSelected
+                    ? color
+                    : scheme.onSurface.withValues(alpha: 0.6),
+                size: Responsive.fontSize(context, 18),
               ),
-            ),
-          ],
+              SizedBox(width: Responsive.padding(context, 8)),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? scheme.onPrimaryContainer
+                          : scheme.onSurface.withValues(alpha: 0.87),
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );

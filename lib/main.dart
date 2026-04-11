@@ -176,7 +176,7 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
         builder: (context, langState, cachedChild) {
           return MaterialApp(
             navigatorKey: _navigatorKey,
-            title: 'Digital Menu Order',
+            title: 'DineEase',
             debugShowCheckedModeBanner: false,
 
             // Enhanced scroll behavior for cross-platform support
@@ -185,7 +185,7 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
 
             // Theme configuration
             theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.system,
 
             // Localization configuration

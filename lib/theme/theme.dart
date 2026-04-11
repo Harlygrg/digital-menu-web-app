@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Responsive helper class for scaling UI elements based on screen width
@@ -206,8 +207,36 @@ class AppColorsDark {
   static const Color card = Color(0xFF2C2C2C);
 }
 
-/// App theme configuration
+/// App theme configuration (Material 3, Noto Sans for Latin + Arabic script).
 class AppTheme {
+  static TextTheme _lightTextTheme() {
+    final base = ThemeData(brightness: Brightness.light, useMaterial3: true);
+    return GoogleFonts.notoSansTextTheme(base.textTheme)
+        .apply(
+          bodyColor: AppColors.textPrimary,
+          displayColor: AppColors.textPrimary,
+        )
+        .copyWith(
+          bodySmall: GoogleFonts.notoSansTextTheme(
+            base.textTheme,
+          ).bodySmall?.copyWith(color: AppColors.textSecondary),
+        );
+  }
+
+  static TextTheme _darkTextTheme() {
+    final base = ThemeData(brightness: Brightness.dark, useMaterial3: true);
+    return GoogleFonts.notoSansTextTheme(base.textTheme)
+        .apply(
+          bodyColor: AppColorsDark.textPrimary,
+          displayColor: AppColorsDark.textPrimary,
+        )
+        .copyWith(
+          bodySmall: GoogleFonts.notoSansTextTheme(
+            base.textTheme,
+          ).bodySmall?.copyWith(color: AppColorsDark.textSecondary),
+        );
+  }
+
   /// Light theme
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
@@ -222,8 +251,12 @@ class AppTheme {
       onSurface: AppColors.textPrimary,
       onError: AppColors.white,
       outline: AppColors.grey700,
+      onSurfaceVariant: AppColors.textSecondary,
+      primaryContainer: AppColors.primaryLight,
+      onPrimaryContainer: AppColors.primaryDark,
       tertiary: AppColors.black,
     ),
+    textTheme: _lightTextTheme(),
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.primary,
       foregroundColor: AppColors.white,
@@ -242,35 +275,6 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     ),
-    textTheme: const TextTheme(
-      headlineLarge: TextStyle(
-        color: AppColors.textPrimary,
-        fontWeight: FontWeight.bold,
-      ),
-      headlineMedium: TextStyle(
-        color: AppColors.textPrimary,
-        fontWeight: FontWeight.bold,
-      ),
-      headlineSmall: TextStyle(
-        color: AppColors.textPrimary,
-        fontWeight: FontWeight.bold,
-      ),
-      titleLarge: TextStyle(
-        color: AppColors.textPrimary,
-        fontWeight: FontWeight.w600,
-      ),
-      titleMedium: TextStyle(
-        color: AppColors.textPrimary,
-        fontWeight: FontWeight.w600,
-      ),
-      titleSmall: TextStyle(
-        color: AppColors.textPrimary,
-        fontWeight: FontWeight.w600,
-      ),
-      bodyLarge: TextStyle(color: AppColors.textPrimary),
-      bodyMedium: TextStyle(color: AppColors.textPrimary),
-      bodySmall: TextStyle(color: AppColors.textSecondary),
-    ),
   );
 
   /// Dark theme
@@ -286,7 +290,13 @@ class AppTheme {
       onSecondary: AppColorsDark.black,
       onSurface: AppColorsDark.textPrimary,
       onError: AppColorsDark.black,
+      outline: AppColorsDark.grey600,
+      onSurfaceVariant: AppColorsDark.textSecondary,
+      primaryContainer: Color(0xFF1E3A5F),
+      onPrimaryContainer: AppColorsDark.primary,
+      tertiary: AppColorsDark.grey100,
     ),
+    textTheme: _darkTextTheme(),
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColorsDark.primary,
       foregroundColor: AppColorsDark.black,
@@ -304,35 +314,6 @@ class AppTheme {
         foregroundColor: AppColorsDark.black,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-    ),
-    textTheme: const TextTheme(
-      headlineLarge: TextStyle(
-        color: AppColorsDark.textPrimary,
-        fontWeight: FontWeight.bold,
-      ),
-      headlineMedium: TextStyle(
-        color: AppColorsDark.textPrimary,
-        fontWeight: FontWeight.bold,
-      ),
-      headlineSmall: TextStyle(
-        color: AppColorsDark.textPrimary,
-        fontWeight: FontWeight.bold,
-      ),
-      titleLarge: TextStyle(
-        color: AppColorsDark.textPrimary,
-        fontWeight: FontWeight.w600,
-      ),
-      titleMedium: TextStyle(
-        color: AppColorsDark.textPrimary,
-        fontWeight: FontWeight.w600,
-      ),
-      titleSmall: TextStyle(
-        color: AppColorsDark.textPrimary,
-        fontWeight: FontWeight.w600,
-      ),
-      bodyLarge: TextStyle(color: AppColorsDark.textPrimary),
-      bodyMedium: TextStyle(color: AppColorsDark.textPrimary),
-      bodySmall: TextStyle(color: AppColorsDark.textSecondary),
     ),
   );
 }

@@ -53,13 +53,13 @@ class AppBarSilver extends StatelessWidget implements PreferredSizeWidget {
             ],
       flexibleSpace: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.onPrimary,
-              Theme.of(context).colorScheme.onPrimary,
-            ],
+          color: Theme.of(context).colorScheme.onPrimary,
+          border: Border(
+            bottom: BorderSide(
+              color: Theme.of(context).colorScheme.outline.withValues(
+                    alpha: 0.2,
+                  ),
+            ),
           ),
         ),
         child: Responsive.isDesktop(context)
