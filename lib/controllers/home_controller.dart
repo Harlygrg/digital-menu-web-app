@@ -8,6 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../providers/home_provider.dart';
 import '../providers/branch_provider.dart';
+import '../providers/customer_provider.dart';
+import '../services/api/api_service.dart';
+import '../utils/qr_init_context.dart';
 import '../models/category_model.dart';
 import '../models/item_model.dart';
 import '../models/cart_item_model.dart';
@@ -21,9 +24,17 @@ class HomeController {
   final HomeProvider _provider;
   Timer? _searchDebounceTimer;
   final BranchProvider? _branchProvider;
+  final CustomerProvider? _customerProvider;
 
-  HomeController(this._provider, {BranchProvider? branchProvider})
-    : _branchProvider = branchProvider;
+  /// Single-flight QR resolve per controller instance (avoids duplicate POSTs).
+  Future<Map<String, dynamic>?>? _cachedQrResolveFuture;
+
+  HomeController(
+    this._provider, {
+    BranchProvider? branchProvider,
+    CustomerProvider? customerProvider,
+  }) : _branchProvider = branchProvider,
+       _customerProvider = customerProvider;
 
   /// Optimized initialization flow
   ///
@@ -35,16 +46,39 @@ class HomeController {
   Future<void> initialize({required BuildContext context}) async {
     appDebugLog('🚀 HomeController: initialize started');
 
-    try {
-      // STEP 1: Register guest user FIRST (critical for token availability)
-      // This must complete before any authenticated API calls
-      await _ensureGuestUserRegistered();
+    final token = Uri.base.queryParameters['token']?.trim();
+    final hasToken = token != null && token.isNotEmpty;
 
-      // STEP 2: Fetch product data immediately (main content, highest priority)
-      // This is what users see first, so it should load ASAP
-      final branchId = await LocalStorage.getBranchId() ?? '1';
-      appDebugLog('📦 Fetching product data for branch: $branchId');
-      await _provider.fetchProductRelatedData(branchId: branchId);
+    try {
+      Map<String, dynamic>? qrData;
+      if (hasToken) {
+        final outcomes = await Future.wait<Object?>([
+          _ensureGuestUserRegistered().then((_) => null),
+          _getQrResolveResult(token),
+        ]);
+        qrData = outcomes[1] as Map<String, dynamic>?;
+      } else {
+        await _ensureGuestUserRegistered();
+        QrInitContext.clear();
+      }
+
+      final qrSucceeded = hasToken && qrData != null;
+      if (qrData != null) {
+        await _applyQrResolvePayload(_extractQrPayload(qrData));
+      }
+
+      if (hasToken) {
+        _customerProvider?.syncFromQrInitContext();
+      }
+
+      final storedBranch = await LocalStorage.getBranchId();
+      appDebugLog(
+        '📦 Fetching product data (token=$hasToken, qrOk=$qrSucceeded, branch=$storedBranch)',
+      );
+      await _provider.fetchProductRelatedData(
+        branchId: storedBranch,
+        allowDefaultBranchId: !qrSucceeded,
+      );
       appDebugLog('✅ Product data loaded successfully');
 
       // STEP 3: Fetch branch list in background (lower priority)
@@ -75,6 +109,62 @@ class HomeController {
         appDebugLog('⚠️ Loading data with fallback...');
         await _provider.fetchProductRelatedData();
       }
+    }
+  }
+
+  Map<String, dynamic> _extractQrPayload(Map<String, dynamic> raw) {
+    final data = raw['data'];
+    if (data is Map<String, dynamic>) return data;
+    return raw;
+  }
+
+  Future<void> _applyQrResolvePayload(Map<String, dynamic> json) async {
+    final branchId = (json['branch_id'] as num?)?.toInt();
+    if (branchId == null) {
+      await LocalStorage.clearBranchId();
+    } else {
+      await LocalStorage.saveBranchId(branchId.toString());
+    }
+
+    final orderTypeRaw = json['order_type'];
+    if (orderTypeRaw == null) {
+      await LocalStorage.clearOrderType();
+    } else if (orderTypeRaw is num) {
+      await LocalStorage.saveOrderType(orderTypeRaw.toInt().toString());
+    } else {
+      final s = orderTypeRaw.toString().trim();
+      if (s.isEmpty) {
+        await LocalStorage.clearOrderType();
+      } else {
+        await LocalStorage.saveOrderType(s);
+      }
+    }
+
+    final tableId = (json['table_id'] as num?)?.toInt();
+    if (tableId == null) {
+      await LocalStorage.clearTableId();
+    } else {
+      await LocalStorage.saveTableId(tableId.toString());
+    }
+
+    QrInitContext.setShouldNotAddCustomer(
+      json['should_not_add_customer'] as bool?,
+    );
+  }
+
+  Future<Map<String, dynamic>?> _getQrResolveResult(String token) {
+    _cachedQrResolveFuture ??= _performQrResolve(token);
+    return _cachedQrResolveFuture!;
+  }
+
+  Future<Map<String, dynamic>?> _performQrResolve(String token) async {
+    try {
+      return await ApiService().resolveQrToken(token);
+    } catch (e) {
+      appDebugLog(
+        'QR resolve failed (continuing without QR context; stored ids unchanged): $e',
+      );
+      return null;
     }
   }
 
@@ -152,7 +242,7 @@ class HomeController {
 
       // Retry fetching data
       appDebugLog('✅ Re-registration successful. Retrying data fetch...');
-      final branchId = await LocalStorage.getBranchId() ?? '1';
+      final branchId = await LocalStorage.getBranchId();
       await _provider.fetchProductRelatedData(branchId: branchId);
 
       // Fetch branch list in background

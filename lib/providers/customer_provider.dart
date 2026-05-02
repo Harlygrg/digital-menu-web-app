@@ -10,6 +10,7 @@ import '../repositories/customer_repository.dart';
 import '../services/api/guest_user_api.dart';
 import '../storage/local_storage.dart';
 import '../firebase_options.dart';
+import '../utils/qr_init_context.dart';
 import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Provider for managing customer state
@@ -24,8 +25,8 @@ class CustomerProvider extends ChangeNotifier {
   // Customer data
   int? _customerId;
 
-  /// When true (from `?should_not_add_customer=true`), the Add Customer bottom sheet is never shown.
-  bool _shouldSkipCustomerInput = false;
+  /// From [QrInitContext] after QR resolve; `null` means unspecified.
+  bool? _shouldNotAddCustomerRaw;
 
   // Getters
   bool get isLoading => _isLoading;
@@ -33,8 +34,8 @@ class CustomerProvider extends ChangeNotifier {
   int? get customerId => _customerId;
   bool get isCustomerRegistered => _customerId != null;
 
-  /// True if the launch URL requested skipping customer collection (session-only; not persisted).
-  bool get shouldSkipCustomerInput => _shouldSkipCustomerInput;
+  /// True only when QR resolve set [QrInitContext.shouldNotAddCustomer] to `true`.
+  bool get shouldSkipCustomerInput => _shouldNotAddCustomerRaw == true;
 
   /// Initialize customer provider by loading saved customer ID
   ///
@@ -42,7 +43,7 @@ class CustomerProvider extends ChangeNotifier {
   Future<void> initialize() async {
     try {
       appDebugLog('CustomerProvider: Initializing...');
-      _shouldSkipCustomerInput = _readShouldSkipCustomerInputFromUrl();
+      _shouldNotAddCustomerRaw = QrInitContext.shouldNotAddCustomer;
       _customerId = await _repository.getCustomerId();
 
       if (_customerId != null) {
@@ -57,11 +58,10 @@ class CustomerProvider extends ChangeNotifier {
     }
   }
 
-  /// Parses [should_not_add_customer] from [Uri.base]; only the value `true` (case-insensitive) enables skip.
-  static bool _readShouldSkipCustomerInputFromUrl() {
-    final raw = Uri.base.queryParameters['should_not_add_customer']?.trim();
-    if (raw == null || raw.isEmpty) return false;
-    return raw.toLowerCase() == 'true';
+  /// Re-reads [QrInitContext.shouldNotAddCustomer] after QR resolve (call from [HomeController]).
+  void syncFromQrInitContext() {
+    _shouldNotAddCustomerRaw = QrInitContext.shouldNotAddCustomer;
+    notifyListeners();
   }
 
   /// Add a new customer

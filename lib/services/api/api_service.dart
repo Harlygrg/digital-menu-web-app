@@ -91,6 +91,34 @@ class ApiService {
     }
   }
 
+  /// Resolves a QR/table token; uses [token] as Bearer (not the guest access token).
+  ///
+  /// Sends [skipAuth] so [TokenInterceptor] does not overwrite `Authorization`.
+  Future<Map<String, dynamic>> resolveQrToken(String token) async {
+    appDebugLog('resolveQrToken: POST ${ApiConstants.qrResolve}');
+    try {
+      _ensureInitialized();
+      final response = await _dio!.post(
+        ApiConstants.qrResolve,
+        data: <String, dynamic>{},
+        options: Options(
+          headers: <String, dynamic>{'Authorization': 'Bearer $token'},
+          extra: <String, dynamic>{'skipAuth': true, 'skipTokenRefresh': true},
+        ),
+      );
+      if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+        return response.data as Map<String, dynamic>;
+      }
+      throw Exception('QR resolve failed: HTTP ${response.statusCode}');
+    } on DioException catch (e) {
+      appDebugLog('DioException during QR resolve: ${e.message}');
+      rethrow;
+    } catch (e) {
+      appDebugLog('Error resolving QR token: $e');
+      rethrow;
+    }
+  }
+
   /// Get product related data
   Future<Map<String, dynamic>> getProductRelatedData({
     required String branchId,
@@ -694,6 +722,7 @@ class RetryInterceptor extends Interceptor {
 /// - Guest user registration endpoint
 /// - Refresh token endpoint itself
 /// - Add FCM token endpoint
+/// - QR resolve (Bearer is the QR token; requests may set [Options.extra] `skipAuth`)
 class TokenInterceptor extends Interceptor {
   static bool _isRefreshing = false;
   static final List<Function> _requestsWaitingForRefresh = [];
@@ -703,6 +732,11 @@ class TokenInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    // Caller supplies Authorization (e.g. QR token); do not inject guest access token.
+    if (options.extra['skipAuth'] == true) {
+      return handler.next(options);
+    }
+
     // Skip token injection for guest user registration endpoint
     if (options.path.contains(ApiConstants.guestUserRegister)) {
       return handler.next(options);
@@ -727,6 +761,11 @@ class TokenInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
+    // QR resolve uses a different Bearer; never run refresh/clear-auth flow here.
+    if (err.requestOptions.path.contains(ApiConstants.qrResolve)) {
+      return handler.next(err);
+    }
+
     // Check if this is a 401 error with invalid token message
     if (err.response?.statusCode == 401) {
       final responseData = err.response?.data;

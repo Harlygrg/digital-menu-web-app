@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/home_provider.dart';
 import '../../providers/branch_provider.dart';
+import '../../providers/customer_provider.dart';
 import '../../controllers/home_controller.dart';
 import '../../controllers/cart_controller.dart';
 import '../../theme/theme.dart';
@@ -45,7 +46,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     final provider = context.read<HomeProvider>();
     final branchProvider = context.read<BranchProvider>();
-    _controller = HomeController(provider, branchProvider: branchProvider);
+    final customerProvider = context.read<CustomerProvider>();
+    _controller = HomeController(
+      provider,
+      branchProvider: branchProvider,
+      customerProvider: customerProvider,
+    );
 
     _startAppInitialization();
   }
@@ -608,119 +614,119 @@ class _HomeScreenState extends State<HomeScreen> {
       // memory pressure and speed up initial layout on low-end devices.
       cacheExtent: 250.0,
       slivers: [
-          // Search bar section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(Responsive.padding(context, 16)),
-              child: SearchBarWidget(controller: _controller),
+        // Search bar section
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(Responsive.padding(context, 16)),
+            child: SearchBarWidget(controller: _controller),
+          ),
+        ),
+
+        // Branch dropdown and Orders button
+        // SliverToBoxAdapter(
+        //   child: Padding(
+        //     padding: EdgeInsets.symmetric(
+        //       horizontal: Responsive.padding(context, 16),
+        //     ),
+        //     child: Row(
+        //       children: [
+        //         const BranchDropdownWidget(),
+        //         const Spacer(),
+        //         TextButton.icon(
+        //           onPressed: () {
+        //             Navigator.pushNamed(context, '/order-tracking');
+        //           },
+        //           icon: Icon(
+        //             Icons.receipt_long,
+        //             size: Responsive.fontSize(context, 20),
+        //             color: Theme.of(context).colorScheme.primary,
+        //           ),
+        //           label: Text(
+        //             provider.isEnglish ? 'Orders' : 'الطلبات',
+        //             style: TextStyle(
+        //               color: Theme.of(context).colorScheme.primary,
+        //               fontSize: Responsive.fontSize(context, 14),
+        //               fontWeight: FontWeight.w600,
+        //             ),
+        //           ),
+        //         ),
+        //       ],
+        //     ),
+        //   ),
+        // ),
+
+        // SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
+
+        // Veg/Non-veg toggle section
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: Responsive.padding(context, 16),
+            ),
+            child: Row(
+              children: [
+                VegToggleWidget(controller: _controller),
+                const Spacer(),
+                GridListToggleWidget(controller: _controller),
+              ],
             ),
           ),
+        ),
 
-          // Branch dropdown and Orders button
-          // SliverToBoxAdapter(
-          //   child: Padding(
-          //     padding: EdgeInsets.symmetric(
-          //       horizontal: Responsive.padding(context, 16),
-          //     ),
-          //     child: Row(
-          //       children: [
-          //         const BranchDropdownWidget(),
-          //         const Spacer(),
-          //         TextButton.icon(
-          //           onPressed: () {
-          //             Navigator.pushNamed(context, '/order-tracking');
-          //           },
-          //           icon: Icon(
-          //             Icons.receipt_long,
-          //             size: Responsive.fontSize(context, 20),
-          //             color: Theme.of(context).colorScheme.primary,
-          //           ),
-          //           label: Text(
-          //             provider.isEnglish ? 'Orders' : 'الطلبات',
-          //             style: TextStyle(
-          //               color: Theme.of(context).colorScheme.primary,
-          //               fontSize: Responsive.fontSize(context, 14),
-          //               fontWeight: FontWeight.w600,
-          //             ),
-          //           ),
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ),
+        SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
 
-          // SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
-
-          // Veg/Non-veg toggle section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: Responsive.padding(context, 16),
-              ),
-              child: Row(
-                children: [
-                  VegToggleWidget(controller: _controller),
-                  const Spacer(),
-                  GridListToggleWidget(controller: _controller),
-                ],
-              ),
+        // Category chips section
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: Responsive.padding(context, 16),
             ),
+            child: CategoryChipsWidget(controller: _controller),
           ),
+        ),
 
-          SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
+        SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
 
-          // Category chips section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: Responsive.padding(context, 16),
-              ),
-              child: CategoryChipsWidget(controller: _controller),
+        // Selected category name display
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: Responsive.padding(context, 16),
             ),
-          ),
-
-          SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
-
-          // Selected category name display
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: Responsive.padding(context, 16),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      provider.getCurrentTitle(provider.isEnglish),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    provider.getCurrentTitle(provider.isEnglish),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                  Text(
-                    '${provider.filteredItems.length} ${provider.isEnglish ? 'items' : 'صنف'}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: Responsive.fontSize(context, 14),
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                Text(
+                  '${provider.filteredItems.length} ${provider.isEnglish ? 'items' : 'صنف'}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: Responsive.fontSize(context, 14),
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+        ),
 
-          SizedBox(height: Responsive.padding(context, 12)).toSliverBox(),
+        SizedBox(height: Responsive.padding(context, 12)).toSliverBox(),
 
-          // Items grid or list based on view mode
-          if (provider.isGridView)
-            ItemsGridWidget(controller: _controller)
-          else
-            ItemsListWidget(controller: _controller),
+        // Items grid or list based on view mode
+        if (provider.isGridView)
+          ItemsGridWidget(controller: _controller)
+        else
+          ItemsListWidget(controller: _controller),
 
-          // Bottom padding
-          SizedBox(height: Responsive.padding(context, 80)).toSliverBox(),
+        // Bottom padding
+        SizedBox(height: Responsive.padding(context, 80)).toSliverBox(),
       ],
     );
 
@@ -747,130 +753,129 @@ class _HomeScreenState extends State<HomeScreen> {
           // Reduced cache extent — see mobile layout comment
           cacheExtent: 250.0,
           slivers: [
-              // Search bar section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(Responsive.padding(context, 16)),
-                  child: SearchBarWidget(controller: _controller),
-                ),
+            // Search bar section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(Responsive.padding(context, 16)),
+                child: SearchBarWidget(controller: _controller),
               ),
+            ),
 
-              // Branch dropdown and Orders button
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.padding(context, 16),
-                  ),
-                  child: Row(
-                    children: [
-                      const BranchDropdownWidget(),
-                      const Spacer(),
-                      TextButton.icon(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/order-tracking');
-                        },
-                        icon: Icon(
-                          Icons.receipt_long,
-                          size: Responsive.fontSize(context, 20),
+            // Branch dropdown and Orders button
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.padding(context, 16),
+                ),
+                child: Row(
+                  children: [
+                    const BranchDropdownWidget(),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/order-tracking');
+                      },
+                      icon: Icon(
+                        Icons.receipt_long,
+                        size: Responsive.fontSize(context, 20),
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      label: Text(
+                        provider.isEnglish ? 'Orders' : 'الطلبات',
+                        style: TextStyle(
                           color: Theme.of(context).colorScheme.primary,
-                        ),
-                        label: Text(
-                          provider.isEnglish ? 'Orders' : 'الطلبات',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontSize: Responsive.fontSize(context, 14),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
-
-              // Veg/Non-veg toggle section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.padding(context, 16),
-                  ),
-                  child: Row(
-                    children: [
-                      VegToggleWidget(controller: _controller),
-                      const Spacer(),
-                      GridListToggleWidget(controller: _controller),
-                    ],
-                  ),
-                ),
-              ),
-
-              SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
-
-              // Category chips section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.padding(context, 16),
-                  ),
-                  child: CategoryChipsWidget(controller: _controller),
-                ),
-              ),
-
-              SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
-
-              // Selected category name display
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.padding(context, 16),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        height: 4,
-                        width: 32,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          provider.getCurrentTitle(provider.isEnglish),
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontSize: Responsive.fontSize(context, 18),
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                        ),
-                      ),
-                      Text(
-                        '${provider.filteredItems.length} ${provider.isEnglish ? 'items' : 'صنف'}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontSize: Responsive.fontSize(context, 14),
-                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+            ),
 
-              SizedBox(height: Responsive.padding(context, 12)).toSliverBox(),
+            SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
 
-              // Items grid or list based on view mode
-              if (provider.isGridView)
-                ItemsGridWidget(controller: _controller)
-              else
-                ItemsListWidget(controller: _controller),
+            // Veg/Non-veg toggle section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.padding(context, 16),
+                ),
+                child: Row(
+                  children: [
+                    VegToggleWidget(controller: _controller),
+                    const Spacer(),
+                    GridListToggleWidget(controller: _controller),
+                  ],
+                ),
+              ),
+            ),
 
-              // Bottom padding
-              SizedBox(height: Responsive.padding(context, 80)).toSliverBox(),
+            SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
+
+            // Category chips section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.padding(context, 16),
+                ),
+                child: CategoryChipsWidget(controller: _controller),
+              ),
+            ),
+
+            SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
+
+            // Selected category name display
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.padding(context, 16),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      height: 4,
+                      width: 32,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        provider.getCurrentTitle(provider.isEnglish),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: Responsive.fontSize(context, 18),
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${provider.filteredItems.length} ${provider.isEnglish ? 'items' : 'صنف'}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontSize: Responsive.fontSize(context, 14),
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            SizedBox(height: Responsive.padding(context, 12)).toSliverBox(),
+
+            // Items grid or list based on view mode
+            if (provider.isGridView)
+              ItemsGridWidget(controller: _controller)
+            else
+              ItemsListWidget(controller: _controller),
+
+            // Bottom padding
+            SizedBox(height: Responsive.padding(context, 80)).toSliverBox(),
           ],
         ),
       ),

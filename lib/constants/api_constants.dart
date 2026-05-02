@@ -54,6 +54,9 @@ class ApiConstants {
   /// should remain the path segment only.
   static const String getCartPrices = "getCartPrices";
 
+  /// Resolve QR deep-link token (Authorization: Bearer \<token\>, not guest access token).
+  static const String qrResolve = "qr/resolve";
+
   /// Connection timeout duration in milliseconds
   static const int connectionTimeout = 30000;
 

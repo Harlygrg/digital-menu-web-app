@@ -104,14 +104,38 @@ class HomeProvider extends ChangeNotifier {
 
   /// Fetch product related data from API
   ///
-  /// [branchId] - The branch ID to fetch data for
+  /// [branchId] - The branch ID to fetch data for; if omitted and [allowDefaultBranchId]
+  /// is true, defaults to `'1'`. When [allowDefaultBranchId] is false (QR success path),
+  /// a null [branchId] stops the load without substituting a default branch.
   /// [silentRefresh] - If true, skips loading state updates to prevent UI stuttering during pull-to-refresh
   Future<void> fetchProductRelatedData({
-    String branchId = '1',
+    String? branchId,
+    bool allowDefaultBranchId = true,
     bool silentRefresh = false,
   }) async {
+    final String? resolvedBranchId =
+        branchId ?? (allowDefaultBranchId ? '1' : null);
+    if (resolvedBranchId == null) {
+      appDebugLog(
+        '---->📦 HomeProvider: fetchProductRelatedData aborted (no branch id, strict mode)',
+      );
+      if (!silentRefresh) {
+        _errorMessage = isEnglish
+            ? 'No branch is set for this link. Open a valid menu link.'
+            : 'لا يوجد فرع مرتبط بهذا الرابط. افتح رابط قائمة صالح.';
+        _isLoading = false;
+        notifyListeners();
+      } else {
+        _errorMessage = isEnglish
+            ? 'No branch is set for this link.'
+            : 'لا يوجد فرع مرتبط بهذا الرابط.';
+        notifyListeners();
+      }
+      return;
+    }
+
     appDebugLog(
-      '---->📦 HomeProvider: fetchProductRelatedData for branch $branchId (silent: $silentRefresh)',
+      '---->📦 HomeProvider: fetchProductRelatedData for branch $resolvedBranchId (silent: $silentRefresh)',
     );
     try {
       // Only show loading state if not a silent refresh
@@ -135,7 +159,7 @@ class HomeProvider extends ChangeNotifier {
       }
       appDebugLog('------->>> fetch product related data success1:');
       final response = await apiService.getProductRelatedData(
-        branchId: branchId,
+        branchId: resolvedBranchId,
       );
       appDebugLog('------->>> fetch product related data success2:');
       if (response['success'] == true && response['data'] != null) {

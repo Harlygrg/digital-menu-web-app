@@ -32,20 +32,28 @@ class _CartScreenState extends State<CartScreen> {
     text: '1',
   );
   final FocusNode _guestsFocusNode = FocusNode();
-  late final bool _showQrGuestsField;
+  bool _showQrGuestsField = false;
 
   @override
   void initState() {
     super.initState();
+    _loadQrGuestsFieldVisibilityFromStorage();
+  }
 
-    final queryParams = Uri.base.queryParameters;
-    final orderTypeId = int.tryParse(queryParams['order_type'] ?? '');
-    final tableId = int.tryParse(queryParams['table_id'] ?? '');
-    _showQrGuestsField =
+  /// Uses persisted order type + table id (from QR resolve), not URL query params.
+  Future<void> _loadQrGuestsFieldVisibilityFromStorage() async {
+    final orderTypeStr = await LocalStorage.getOrderType();
+    final tableStr = await LocalStorage.getTableId();
+    final orderTypeId = int.tryParse(orderTypeStr ?? '');
+    final tableId = int.tryParse(tableStr ?? '');
+    final show =
         orderTypeId != null &&
         tableId != null &&
         orderTypeId > 0 &&
         tableId > 0;
+    if (mounted) {
+      setState(() => _showQrGuestsField = show);
+    }
   }
 
   @override
@@ -1341,12 +1349,11 @@ class _CartScreenState extends State<CartScreen> {
 
   /// Show service type popup and place order
   Future<void> _showServiceTypeAndPlaceOrder(BuildContext context) async {
-    final queryParams = Uri.base.queryParameters;
-    final qrOrderTypeParam = queryParams['order_type'];
-    final qrTableIdParam = queryParams['table_id'];
-
-    final qrOrderTypeId = int.tryParse(qrOrderTypeParam ?? '');
-    final qrTableId = int.tryParse(qrTableIdParam ?? '');
+    final orderTypeStr = await LocalStorage.getOrderType();
+    final tableStr = await LocalStorage.getTableId();
+    if (!context.mounted) return;
+    final qrOrderTypeId = int.tryParse(orderTypeStr ?? '');
+    final qrTableId = int.tryParse(tableStr ?? '');
 
     // Both params must be present and look valid (IDs are expected to be positive).
     final qrHasBothParams =
@@ -1392,7 +1399,7 @@ class _CartScreenState extends State<CartScreen> {
       }
     }
 
-    // Launch context from LocalStorage (synced in main.dart from URL on startup).
+    // Launch context from LocalStorage (set by QR resolve or prior session).
     // When URL has order_type but not table_id, skip ServiceTypePopup and route by type.
     final storedOrderTypeRaw = (await LocalStorage.getOrderType())?.trim();
     if (!context.mounted) return;
