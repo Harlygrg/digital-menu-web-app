@@ -1,4 +1,10 @@
 import 'dart:async';
+import 'package:digital_menu_order/providers/language_provider.dart';
+import 'package:digital_menu_order/providers/order_type_provider.dart';
+import 'package:digital_menu_order/providers/table_provider.dart';
+import 'package:digital_menu_order/services/extract_url_token_service.dart';
+import 'package:digital_menu_order/utils/qr_gate_messages.dart';
+import 'package:digital_menu_order/utils/rul_reader.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -9,11 +15,12 @@ import '../../providers/customer_provider.dart';
 import '../../controllers/home_controller.dart';
 import '../../controllers/cart_controller.dart';
 import '../../theme/theme.dart';
-import '../../storage/local_storage.dart';
 import '../../services/notification_service.dart';
 import '../../firebase_options.dart';
 import '../../routes/routes.dart';
+import '../../utils/app_session.dart';
 import '../../utils/currency_format.dart';
+import '../../utils/qr_init_context.dart';
 import '../../utils/scroll_behavior_utils.dart';
 import '../../widgets/cart_price_sync_dialog.dart';
 import 'widgets/app_bar_silver.dart';
@@ -29,6 +36,8 @@ import 'widgets/items_list.dart';
 import 'dart:html' as html show window;
 import 'package:digital_menu_order/utils/app_debug_log.dart';
 
+enum _HomeInitState { loading, ready, failed }
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -37,53 +46,123 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late HomeController _controller;
+  HomeController? _controller;
   String? _lastShownErrorMessage;
   bool _didPromptCartPriceSync = false;
+  _HomeInitState _initState = _HomeInitState.loading;
+  String? _initErrorMessage;
+  StreamSubscription? _popStateSub;
+
+  HomeController get _activeController => _controller!;
 
   @override
   void initState() {
     super.initState();
-    final provider = context.read<HomeProvider>();
-    final branchProvider = context.read<BranchProvider>();
-    final customerProvider = context.read<CustomerProvider>();
-    _controller = HomeController(
-      provider,
-      branchProvider: branchProvider,
-      customerProvider: customerProvider,
-    );
 
-    _startAppInitialization();
+    _init();
+
+    // 🔥 Listen URL changes
+    if (kIsWeb) {
+      _popStateSub = html.window.onPopState.listen((event) {
+        _handleUrlChange();
+      });
+    }
   }
 
-  /// Optimized app initialization flow
-  ///
-  /// Phase 1: Core initialization (blocking) - Load main content ASAP
-  /// Phase 2: FCM initialization (non-blocking) - Happens in background after UI is visible
-  Future<void> _startAppInitialization() async {
-    try {
-      appDebugLog('🚀 Starting optimized app initialization...');
+  Future<void> _handleUrlChange() async {
+    final newToken = readQrTokenFromEnvironment();
 
-      // PHASE 1: Core initialization (MUST complete before UI renders)
-      // This loads the main content as fast as possible
-      appDebugLog('📱 Phase 1: Loading core content...');
-      await _controller.initialize(context: context);
-      appDebugLog('✅ Phase 1 complete: Main content loaded');
+    if (newToken != QrInitContext.initialToken) {
+      appDebugLog('🔄 New QR detected → $newToken');
+
+      QrInitContext.setInitialToken(newToken);
+
+      await _init();
+    }
+  }
+
+  Future<void> _init() async {
+    if (mounted) {
+      setState(() {
+        _initState = _HomeInitState.loading;
+        _initErrorMessage = null;
+      });
+    }
+
+    _controller?.dispose();
+    _controller = null;
+
+    try {
+      appDebugLog('🚀 Starting QR-first initialization...');
+
+      // STEP 1: Token + `qr/resolve` + persist only (circular progress).
+      final qrResult = await resolveQrFromInitialToken();
+
+      if (!mounted) return;
+
+      if (QrInitContext.isResolved) {
+        appDebugLog('🧹 Resetting provider state for new QR');
+
+        context.read<OrderTypeProvider>().clearSelection();
+        context.read<TableProvider>().clearAllSelections();
+      }
+
+      if (qrResult.shouldBlockUi) {
+        setState(() {
+          _initState = _HomeInitState.failed;
+          _initErrorMessage =
+              qrResult.errorMessage ??
+              'We could not open this menu link. Please try again.';
+        });
+        return;
+      }
+
+      // STEP 2: Create controller; show home shell + shimmer while bootstrapping.
+      final provider = context.read<HomeProvider>();
+      final branchProvider = context.read<BranchProvider>();
+      final customerProvider = context.read<CustomerProvider>();
+
+      final controller = HomeController(
+        provider,
+        branchProvider: branchProvider,
+        customerProvider: customerProvider,
+      );
+      _controller = controller;
+
+      customerProvider.syncFromQrInitContext();
+
+      if (!mounted) return;
+      setState(() {
+        _initState = _HomeInitState.ready;
+        _initErrorMessage = null;
+      });
+
+      await controller.initialize(context: context);
 
       await _handleCartPricingContextIfNeeded();
 
-      // PHASE 2: FCM initialization (happens in background, non-blocking)
-      // This doesn't block UI rendering and can happen asynchronously
-      appDebugLog(
-        '🔔 Phase 2: Initializing Firebase Messaging in background...',
-      );
       _initializeFirebaseMessagingInBackground();
 
-      appDebugLog('✅ App initialization complete');
+      appDebugLog('✅ Full initialization complete');
     } catch (e) {
-      appDebugLog('❌ Error during app initialization: $e');
-      // Even if there's an error, we should still try to initialize FCM in background
-      _initializeFirebaseMessagingInBackground();
+      appDebugLog('❌ Init error: $e');
+      if (!mounted) return;
+
+      final defaultMessage = QrInitContext.hasInitialToken
+          ? 'We could not open this QR menu. Please scan again or contact staff.'
+          : 'The app could not start. Please try again.';
+      final message = QrInitContext.failureMessage?.trim().isNotEmpty == true
+          ? QrInitContext.failureMessage!
+          : defaultMessage;
+
+      if (QrInitContext.hasInitialToken && !QrInitContext.isFailed) {
+        QrInitContext.markFailed(message);
+      }
+
+      setState(() {
+        _initState = _HomeInitState.failed;
+        _initErrorMessage = message;
+      });
     }
   }
 
@@ -480,7 +559,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Handle pull-to-refresh
   Future<void> _handleRefresh() async {
     final provider = context.read<HomeProvider>();
-    final branchId = await LocalStorage.getBranchId() ?? '1';
+    final branchId = (await AppSession.getBranchId())?.toString() ?? '1';
 
     // Use silentRefresh to prevent loading state flashing
     await provider.fetchProductRelatedData(
@@ -491,12 +570,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _popStateSub?.cancel();   // 🔥 stop URL listener
+    _controller?.dispose();   // 🔥 clean your controller
     super.dispose();
+  }
+
+  /// Token read + `qr/resolve` + persist only (no app chrome, no shimmer).
+  Widget _buildTokenPhaseLoading() {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_initState == _HomeInitState.failed) {
+      return _buildStartupErrorScaffold();
+    }
+
+    if (_initState == _HomeInitState.loading) {
+      return _buildTokenPhaseLoading();
+    }
+
     return Consumer<HomeProvider>(
       builder: (context, provider, child) {
         _showErrorSnackBarIfNeeded(provider);
@@ -512,6 +607,85 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
+  }
+
+  Widget _buildStartupErrorScaffold() {
+    final isEnglish = context.watch<LanguageProvider>().isEnglish;
+    final isQrLaunch = QrInitContext.hasInitialToken;
+    final rawMessage = _initErrorMessage;
+    final bodyText = _localizedStartupErrorBody(rawMessage, isEnglish);
+
+    final String title;
+    if (rawMessage == QrGateMessages.missingTokenEn) {
+      title = QrGateMessages.startupTitleMissingToken(isEnglish);
+    } else if (rawMessage == QrGateMessages.saveContextFailedEn) {
+      title = QrGateMessages.startupTitleTokenFailed(isEnglish);
+    } else if (isQrLaunch || QrInitContext.isFailed) {
+      title = QrGateMessages.startupTitleTokenFailed(isEnglish);
+    } else {
+      title = QrGateMessages.startupTitleGeneric(isEnglish);
+    }
+
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.qr_code_2_rounded,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    bodyText ??
+                        (isEnglish
+                            ? 'The app could not start. Please try again.'
+                            : 'تعذر تشغيل التطبيق. حاول مرة أخرى.'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _init,
+                      child: Text(QrGateMessages.retryButton(isEnglish)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String? _localizedStartupErrorBody(String? raw, bool isEnglish) {
+    if (raw == null) return null;
+    if (raw == QrGateMessages.missingTokenEn) {
+      return QrGateMessages.missingToken(isEnglish);
+    }
+    if (raw == QrGateMessages.saveContextFailedEn) {
+      return QrGateMessages.saveContextFailed(isEnglish);
+    }
+    return raw;
   }
 
   /// Shows error snackbar once per unique provider message.
@@ -608,6 +782,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Build mobile/tablet layout
   Widget _buildMobileLayout(HomeProvider provider) {
+    final controller = _activeController;
     final scrollView = CustomScrollView(
       physics: ScrollBehaviorUtils.getScrollPhysics(),
       // Reduced cache extent — preloads fewer off-screen items to lower
@@ -618,7 +793,7 @@ class _HomeScreenState extends State<HomeScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.all(Responsive.padding(context, 16)),
-            child: SearchBarWidget(controller: _controller),
+            child: SearchBarWidget(controller: controller),
           ),
         ),
 
@@ -665,9 +840,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Row(
               children: [
-                VegToggleWidget(controller: _controller),
+                VegToggleWidget(controller: controller),
                 const Spacer(),
-                GridListToggleWidget(controller: _controller),
+                GridListToggleWidget(controller: controller),
               ],
             ),
           ),
@@ -681,7 +856,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: EdgeInsets.symmetric(
               horizontal: Responsive.padding(context, 16),
             ),
-            child: CategoryChipsWidget(controller: _controller),
+            child: CategoryChipsWidget(controller: controller),
           ),
         ),
 
@@ -721,9 +896,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Items grid or list based on view mode
         if (provider.isGridView)
-          ItemsGridWidget(controller: _controller)
+          ItemsGridWidget(controller: controller)
         else
-          ItemsListWidget(controller: _controller),
+          ItemsListWidget(controller: controller),
 
         // Bottom padding
         SizedBox(height: Responsive.padding(context, 80)).toSliverBox(),
@@ -743,6 +918,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Build desktop layout with centered content
   Widget _buildDesktopLayout(HomeProvider provider) {
+    final controller = _activeController;
     final scrollView = Center(
       child: Container(
         constraints: BoxConstraints(
@@ -757,7 +933,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.all(Responsive.padding(context, 16)),
-                child: SearchBarWidget(controller: _controller),
+                child: SearchBarWidget(controller: controller),
               ),
             ),
 
@@ -804,9 +980,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Row(
                   children: [
-                    VegToggleWidget(controller: _controller),
+                    VegToggleWidget(controller: controller),
                     const Spacer(),
-                    GridListToggleWidget(controller: _controller),
+                    GridListToggleWidget(controller: controller),
                   ],
                 ),
               ),
@@ -820,7 +996,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: EdgeInsets.symmetric(
                   horizontal: Responsive.padding(context, 16),
                 ),
-                child: CategoryChipsWidget(controller: _controller),
+                child: CategoryChipsWidget(controller: controller),
               ),
             ),
 
@@ -870,9 +1046,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // Items grid or list based on view mode
             if (provider.isGridView)
-              ItemsGridWidget(controller: _controller)
+              ItemsGridWidget(controller: controller)
             else
-              ItemsListWidget(controller: _controller),
+              ItemsListWidget(controller: controller),
 
             // Bottom padding
             SizedBox(height: Responsive.padding(context, 80)).toSliverBox(),

@@ -1,9 +1,12 @@
+import 'package:digital_menu_order/utils/qr_init_context.dart';
+import 'package:digital_menu_order/widgets/qr_menu_access_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/cart_controller.dart';
 import '../../models/cart_item_model.dart';
 import '../../models/order_type_model.dart';
+import '../../utils/app_session.dart';
 import '../../utils/currency_format.dart';
 import '../../utils/image_utils.dart';
 import '../../theme/theme.dart';
@@ -42,10 +45,8 @@ class _CartScreenState extends State<CartScreen> {
 
   /// Uses persisted order type + table id (from QR resolve), not URL query params.
   Future<void> _loadQrGuestsFieldVisibilityFromStorage() async {
-    final orderTypeStr = await LocalStorage.getOrderType();
-    final tableStr = await LocalStorage.getTableId();
-    final orderTypeId = int.tryParse(orderTypeStr ?? '');
-    final tableId = int.tryParse(tableStr ?? '');
+    final orderTypeId = await AppSession.getOrderType();
+    final tableId = await AppSession.getTableId();
     final show =
         orderTypeId != null &&
         tableId != null &&
@@ -65,10 +66,11 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<HomeProvider>(
-      builder: (context, provider, child) {
-        return Scaffold(
-          appBar: AppBar(
+    return QrMenuAccessGate(
+      child: Consumer<HomeProvider>(
+        builder: (context, provider, child) {
+          return Scaffold(
+            appBar: AppBar(
             title: Responsive.isDesktop(context)
                 ? null // Hide default title for desktop
                 : Text(
@@ -216,12 +218,13 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   )
                 : null,
-          ),
-          body: Responsive.isDesktop(context)
-              ? _buildDesktopLayout(context, provider)
-              : _buildMobileLayout(context, provider),
-        );
-      },
+            ),
+            body: Responsive.isDesktop(context)
+                ? _buildDesktopLayout(context, provider)
+                : _buildMobileLayout(context, provider),
+          );
+        },
+      ),
     );
   }
 
@@ -1279,10 +1282,11 @@ class _CartScreenState extends State<CartScreen> {
 
     // Check if customer is already registered
     final needsRegistration = await customerProvider.needsRegistration();
+    final shouldSkip =
+        customerProvider.shouldSkipCustomerInput ||
+        (QrInitContext.shouldNotAddCustomer ?? false);
 
-    if (needsRegistration &&
-        !customerProvider.shouldSkipCustomerInput &&
-        context.mounted) {
+    if (needsRegistration && !shouldSkip) {
       // Show customer details bottom sheet
       final customerAdded = await _showCustomerBottomSheet(context);
 
@@ -1340,20 +1344,16 @@ class _CartScreenState extends State<CartScreen> {
 
   /// Returns a positive table id from [LocalStorage], or null if missing/invalid.
   Future<int?> _parsePositiveStoredTableId() async {
-    final raw = (await LocalStorage.getTableId())?.trim();
-    if (raw == null || raw.isEmpty) return null;
-    final id = int.tryParse(raw);
+    final id = await AppSession.getTableId();
     if (id == null || id <= 0) return null;
     return id;
   }
 
   /// Show service type popup and place order
   Future<void> _showServiceTypeAndPlaceOrder(BuildContext context) async {
-    final orderTypeStr = await LocalStorage.getOrderType();
-    final tableStr = await LocalStorage.getTableId();
     if (!context.mounted) return;
-    final qrOrderTypeId = int.tryParse(orderTypeStr ?? '');
-    final qrTableId = int.tryParse(tableStr ?? '');
+    final qrOrderTypeId = QrInitContext.orderType;
+    final qrTableId = QrInitContext.tableId;
 
     // Both params must be present and look valid (IDs are expected to be positive).
     final qrHasBothParams =
@@ -1401,50 +1401,47 @@ class _CartScreenState extends State<CartScreen> {
 
     // Launch context from LocalStorage (set by QR resolve or prior session).
     // When URL has order_type but not table_id, skip ServiceTypePopup and route by type.
-    final storedOrderTypeRaw = (await LocalStorage.getOrderType())?.trim();
+    final storedOrderTypeId = await AppSession.getOrderType();
     if (!context.mounted) return;
-    if (storedOrderTypeRaw != null && storedOrderTypeRaw.isNotEmpty) {
-      final storedOrderTypeId = int.tryParse(storedOrderTypeRaw);
-      if (storedOrderTypeId != null && storedOrderTypeId > 0) {
-        final orderTypeProvider = context.read<OrderTypeProvider>();
-        if (!orderTypeProvider.hasOrderTypes) {
-          await orderTypeProvider.fetchOrderTypes();
+    if (storedOrderTypeId != null && storedOrderTypeId > 0) {
+      final orderTypeProvider = context.read<OrderTypeProvider>();
+      if (!orderTypeProvider.hasOrderTypes) {
+        await orderTypeProvider.fetchOrderTypes();
+      }
+      if (!context.mounted) return;
+
+      OrderTypeModel? matchedFromStorage;
+      for (final orderType in orderTypeProvider.activeOrderTypes) {
+        if (orderType.id == storedOrderTypeId) {
+          matchedFromStorage = orderType;
+          break;
         }
+      }
+
+      if (matchedFromStorage != null && context.mounted) {
+        final isDineIn =
+            matchedFromStorage.orderType.toUpperCase() == 'DINE-IN';
+        final storedTableId = await _parsePositiveStoredTableId();
         if (!context.mounted) return;
 
-        OrderTypeModel? matchedFromStorage;
-        for (final orderType in orderTypeProvider.activeOrderTypes) {
-          if (orderType.id == storedOrderTypeId) {
-            matchedFromStorage = orderType;
-            break;
-          }
-        }
-
-        if (matchedFromStorage != null && context.mounted) {
-          final isDineIn =
-              matchedFromStorage.orderType.toUpperCase() == 'DINE-IN';
-          final storedTableId = await _parsePositiveStoredTableId();
-          if (!context.mounted) return;
-
-          if (isDineIn) {
-            if (storedTableId == null) {
-              Navigator.of(context).pushNamed(
-                AppRoutes.table,
-                arguments: {'selectedOrderType': matchedFromStorage},
-              );
-              return;
-            }
-            await _placeOrderForDineInFromQr(
-              context,
-              matchedFromStorage,
-              tableIdOverride: storedTableId,
+        if (isDineIn) {
+          if (storedTableId == null) {
+            Navigator.of(context).pushNamed(
+              AppRoutes.table,
+              arguments: {'selectedOrderType': matchedFromStorage},
             );
             return;
           }
-
-          await _placeOrderForNonDineIn(context, matchedFromStorage);
+          await _placeOrderForDineInFromQr(
+            context,
+            matchedFromStorage,
+            tableIdOverride: storedTableId,
+          );
           return;
         }
+
+        await _placeOrderForNonDineIn(context, matchedFromStorage);
+        return;
       }
     }
 
@@ -1528,8 +1525,8 @@ class _CartScreenState extends State<CartScreen> {
     }
 
     // Get branch ID from local storage
-    final branchIdString = await LocalStorage.getBranchId();
-    if (branchIdString == null) {
+    final branchId = await AppSession.getBranchId();
+    if (branchId == null || branchId <= 0) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1541,8 +1538,6 @@ class _CartScreenState extends State<CartScreen> {
       }
       return;
     }
-
-    final branchId = int.tryParse(branchIdString) ?? 0;
 
     // Show loading dialog
     if (context.mounted) {
@@ -1679,8 +1674,8 @@ class _CartScreenState extends State<CartScreen> {
     }
 
     // Get branch ID from local storage
-    final branchIdString = await LocalStorage.getBranchId();
-    if (branchIdString == null) {
+    final branchId = await AppSession.getBranchId();
+    if (branchId == null || branchId <= 0) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1692,8 +1687,6 @@ class _CartScreenState extends State<CartScreen> {
       }
       return;
     }
-
-    final branchId = int.tryParse(branchIdString) ?? 0;
 
     // Show loading dialog
     if (context.mounted) {

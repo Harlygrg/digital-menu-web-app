@@ -11,6 +11,8 @@ import '../../utils/scroll_behavior_utils.dart';
 import '../../widgets/table_shimmer_widget.dart';
 import '../../widgets/order_success_popup.dart';
 import '../../storage/local_storage.dart';
+import '../../utils/qr_init_context.dart';
+import '../../widgets/qr_menu_access_gate.dart';
 
 /// Table selection screen with floor tabs and table grid
 ///
@@ -52,8 +54,9 @@ class _TableScreenState extends State<TableScreen>
         _selectedOrderType = args['selectedOrderType'] as OrderTypeModel;
       }
 
-      // Fetch table data when screen loads
-      context.read<TableProvider>().fetchTableList();
+      if (QrInitContext.isResolved) {
+        context.read<TableProvider>().fetchTableList();
+      }
     });
   }
 
@@ -77,44 +80,46 @@ class _TableScreenState extends State<TableScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(context),
-      body: Consumer<TableProvider>(
-        builder: (context, tableProvider, child) {
-          // Show shimmer loading while data is being fetched
-          if (tableProvider.isLoading) {
-            return const TableShimmerWidget();
-          }
-
-          // Show error state if there's an error
-          if (tableProvider.errorMessage != null) {
-            return _buildErrorState(context, tableProvider);
-          }
-
-          // Show empty state if no floors available
-          if (tableProvider.floors.isEmpty) {
-            return _buildEmptyState(context);
-          }
-
-          // Initialize or update tab controller when floors are loaded
-          if (tableProvider.floors.isNotEmpty) {
-            if (_tabController == null ||
-                _tabController!.length != tableProvider.floors.length) {
-              _tabController?.dispose();
-              _tabController = TabController(
-                length: tableProvider.floors.length,
-                vsync: this,
-                initialIndex: _currentTabIndex.clamp(
-                  0,
-                  tableProvider.floors.length - 1,
-                ),
-              );
-              _tabController!.addListener(_onTabChanged);
+    return QrMenuAccessGate(
+      child: Scaffold(
+        appBar: _buildAppBar(context),
+        body: Consumer<TableProvider>(
+          builder: (context, tableProvider, child) {
+            // Show shimmer loading while data is being fetched
+            if (tableProvider.isLoading) {
+              return const TableShimmerWidget();
             }
-          }
 
-          return _buildTableSelectionContent(context, tableProvider);
-        },
+            // Show error state if there's an error
+            if (tableProvider.errorMessage != null) {
+              return _buildErrorState(context, tableProvider);
+            }
+
+            // Show empty state if no floors available
+            if (tableProvider.floors.isEmpty) {
+              return _buildEmptyState(context);
+            }
+
+            // Initialize or update tab controller when floors are loaded
+            if (tableProvider.floors.isNotEmpty) {
+              if (_tabController == null ||
+                  _tabController!.length != tableProvider.floors.length) {
+                _tabController?.dispose();
+                _tabController = TabController(
+                  length: tableProvider.floors.length,
+                  vsync: this,
+                  initialIndex: _currentTabIndex.clamp(
+                    0,
+                    tableProvider.floors.length - 1,
+                  ),
+                );
+                _tabController!.addListener(_onTabChanged);
+              }
+            }
+
+            return _buildTableSelectionContent(context, tableProvider);
+          },
+        ),
       ),
     );
   }

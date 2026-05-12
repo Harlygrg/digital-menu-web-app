@@ -35,7 +35,9 @@ class CustomerProvider extends ChangeNotifier {
   bool get isCustomerRegistered => _customerId != null;
 
   /// True only when QR resolve set [QrInitContext.shouldNotAddCustomer] to `true`.
-  bool get shouldSkipCustomerInput => _shouldNotAddCustomerRaw == true;
+  bool get shouldSkipCustomerInput =>
+      (_shouldNotAddCustomerRaw == true) ||
+          (QrInitContext.shouldNotAddCustomer == true);
 
   /// Initialize customer provider by loading saved customer ID
   ///

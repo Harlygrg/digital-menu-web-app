@@ -6,6 +6,7 @@ import '../../theme/theme.dart';
 import '../../routes/routes.dart';
 import '../../utils/currency_format.dart';
 import '../../widgets/order_qr.dart';
+import '../../widgets/qr_menu_access_gate.dart';
 
 /// Order Screen
 ///
@@ -38,11 +39,13 @@ class _OrderScreenState extends State<OrderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(context),
-      body: _orderResponse != null
-          ? _buildOrderContent(context)
-          : _buildErrorState(context),
+    return QrMenuAccessGate(
+      child: Scaffold(
+        appBar: _buildAppBar(context),
+        body: _orderResponse != null
+            ? _buildOrderContent(context)
+            : _buildErrorState(context),
+      ),
     );
   }
 

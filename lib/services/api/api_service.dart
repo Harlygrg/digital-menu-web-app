@@ -95,7 +95,7 @@ class ApiService {
   ///
   /// Sends [skipAuth] so [TokenInterceptor] does not overwrite `Authorization`.
   Future<Map<String, dynamic>> resolveQrToken(String token) async {
-    appDebugLog('resolveQrToken: POST ${ApiConstants.qrResolve}');
+    appWebDebugLog('resolveQrToken: POST ${ApiConstants.qrResolve} started');
     try {
       _ensureInitialized();
       final response = await _dio!.post(
@@ -107,14 +107,15 @@ class ApiService {
         ),
       );
       if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+        appWebDebugLog('resolveQrToken: success HTTP 200');
         return response.data as Map<String, dynamic>;
       }
       throw Exception('QR resolve failed: HTTP ${response.statusCode}');
     } on DioException catch (e) {
-      appDebugLog('DioException during QR resolve: ${e.message}');
+      appErrorLog('DioException during QR resolve: ${e.message}');
       rethrow;
     } catch (e) {
-      appDebugLog('Error resolving QR token: $e');
+      appErrorLog('Error resolving QR token: $e');
       rethrow;
     }
   }

@@ -1,3 +1,5 @@
+import 'package:digital_menu_order/utils/qr_init_context.dart';
+import 'package:digital_menu_order/utils/rul_reader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +29,9 @@ import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final token = readQrTokenFromEnvironment();
+  QrInitContext.setInitialToken(token);
 
   // Load external runtime configuration FIRST (before any API calls)
   // This allows clients to change the API URL by editing build/web/config.json

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/table_model.dart';
 import '../services/api/api_service.dart';
 import '../storage/local_storage.dart';
+import '../utils/app_session.dart';
 import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Provider for managing table screen state
@@ -46,7 +47,7 @@ class TableProvider extends ChangeNotifier {
 
       // Check if we have a valid access token before making the request
       final accessToken = await LocalStorage.getAccessToken();
-      String? branchId = await LocalStorage.getBranchId();
+      final branchId = (await AppSession.getBranchId())?.toString();
       if (accessToken == null) {
         throw Exception(
           'No access token available. Please register as a guest user first.',

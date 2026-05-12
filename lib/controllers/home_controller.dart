@@ -9,8 +9,8 @@ import 'package:uuid/uuid.dart';
 import '../providers/home_provider.dart';
 import '../providers/branch_provider.dart';
 import '../providers/customer_provider.dart';
-import '../services/api/api_service.dart';
 import '../utils/qr_init_context.dart';
+import '../utils/app_session.dart';
 import '../models/category_model.dart';
 import '../models/item_model.dart';
 import '../models/cart_item_model.dart';
@@ -45,126 +45,45 @@ class HomeController {
   /// 4. Register FCM token (background) - happens last, doesn't block UI
   Future<void> initialize({required BuildContext context}) async {
     appDebugLog('🚀 HomeController: initialize started');
-
-    final token = Uri.base.queryParameters['token']?.trim();
-    final hasToken = token != null && token.isNotEmpty;
+    final isQrTokenLaunch = QrInitContext.hasInitialToken;
 
     try {
-      Map<String, dynamic>? qrData;
-      if (hasToken) {
-        final outcomes = await Future.wait<Object?>([
-          _ensureGuestUserRegistered().then((_) => null),
-          _getQrResolveResult(token),
-        ]);
-        qrData = outcomes[1] as Map<String, dynamic>?;
-      } else {
-        await _ensureGuestUserRegistered();
-        QrInitContext.clear();
-      }
+      // ✅ STEP 1: Ensure guest user
+      await _ensureGuestUserRegistered();
 
-      final qrSucceeded = hasToken && qrData != null;
-      if (qrData != null) {
-        await _applyQrResolvePayload(_extractQrPayload(qrData));
-      }
-
-      if (hasToken) {
-        _customerProvider?.syncFromQrInitContext();
-      }
-
-      final storedBranch = await LocalStorage.getBranchId();
-      appDebugLog(
-        '📦 Fetching product data (token=$hasToken, qrOk=$qrSucceeded, branch=$storedBranch)',
+      // ✅ STEP 2: Apply QR context (already resolved before this)
+      await LocalStorage.saveQrContext(
+        branchId: QrInitContext.branchId,
+        orderType: QrInitContext.orderType,
+        tableId: QrInitContext.tableId,
       );
+
+      _customerProvider?.syncFromQrInitContext();
+
+      // ✅ STEP 3: Fetch product data
+      final currentBranchId = QrInitContext.branchId;
+
       await _provider.fetchProductRelatedData(
-        branchId: storedBranch,
-        allowDefaultBranchId: !qrSucceeded,
+        branchId: currentBranchId?.toString(),
+        allowDefaultBranchId: !isQrTokenLaunch,
       );
-      appDebugLog('✅ Product data loaded successfully');
 
-      // STEP 3: Fetch branch list in background (lower priority)
-      // This can happen after the main UI is rendered
+      // ✅ STEP 4: Background tasks
       if (_branchProvider != null) {
         _fetchBranchListInBackground();
       }
 
-      // STEP 4: Register FCM token in background (lowest priority, non-blocking)
-      // This happens last and doesn't affect UI rendering
       _registerFcmTokenInBackground();
 
       appDebugLog('✅ Initialization complete');
     } catch (e) {
       appDebugLog('❌ Error during initialization: $e');
 
-      // Handle authentication errors with retry logic
-      if (e.toString().contains('401') ||
-          e.toString().contains('Unauthorized') ||
-          e.toString().contains('Invalid access token') ||
-          e.toString().contains('Access token missing')) {
-        appDebugLog(
-          '🔄 Authentication error detected. Attempting to re-register...',
-        );
-        await _handleAuthenticationError();
-      } else {
-        // For other errors, try to load data without branch ID
-        appDebugLog('⚠️ Loading data with fallback...');
-        await _provider.fetchProductRelatedData();
+      if (isQrTokenLaunch) {
+        rethrow;
       }
-    }
-  }
 
-  Map<String, dynamic> _extractQrPayload(Map<String, dynamic> raw) {
-    final data = raw['data'];
-    if (data is Map<String, dynamic>) return data;
-    return raw;
-  }
-
-  Future<void> _applyQrResolvePayload(Map<String, dynamic> json) async {
-    final branchId = (json['branch_id'] as num?)?.toInt();
-    if (branchId == null) {
-      await LocalStorage.clearBranchId();
-    } else {
-      await LocalStorage.saveBranchId(branchId.toString());
-    }
-
-    final orderTypeRaw = json['order_type'];
-    if (orderTypeRaw == null) {
-      await LocalStorage.clearOrderType();
-    } else if (orderTypeRaw is num) {
-      await LocalStorage.saveOrderType(orderTypeRaw.toInt().toString());
-    } else {
-      final s = orderTypeRaw.toString().trim();
-      if (s.isEmpty) {
-        await LocalStorage.clearOrderType();
-      } else {
-        await LocalStorage.saveOrderType(s);
-      }
-    }
-
-    final tableId = (json['table_id'] as num?)?.toInt();
-    if (tableId == null) {
-      await LocalStorage.clearTableId();
-    } else {
-      await LocalStorage.saveTableId(tableId.toString());
-    }
-
-    QrInitContext.setShouldNotAddCustomer(
-      json['should_not_add_customer'] as bool?,
-    );
-  }
-
-  Future<Map<String, dynamic>?> _getQrResolveResult(String token) {
-    _cachedQrResolveFuture ??= _performQrResolve(token);
-    return _cachedQrResolveFuture!;
-  }
-
-  Future<Map<String, dynamic>?> _performQrResolve(String token) async {
-    try {
-      return await ApiService().resolveQrToken(token);
-    } catch (e) {
-      appDebugLog(
-        'QR resolve failed (continuing without QR context; stored ids unchanged): $e',
-      );
-      return null;
+      await _provider.fetchProductRelatedData();
     }
   }
 
@@ -231,30 +150,6 @@ class HomeController {
     });
   }
 
-  /// Handle authentication errors by re-registering guest user
-  Future<void> _handleAuthenticationError() async {
-    try {
-      // Clear old authentication data
-      await LocalStorage.clearAuthData();
-
-      // Re-register guest user
-      await _ensureGuestUserRegistered();
-
-      // Retry fetching data
-      appDebugLog('✅ Re-registration successful. Retrying data fetch...');
-      final branchId = await LocalStorage.getBranchId();
-      await _provider.fetchProductRelatedData(branchId: branchId);
-
-      // Fetch branch list in background
-      if (_branchProvider != null) {
-        _fetchBranchListInBackground();
-      }
-    } catch (reRegisterError) {
-      appDebugLog('❌ Re-registration failed: $reRegisterError');
-      // Last resort: load without authentication
-      await _provider.fetchProductRelatedData();
-    }
-  }
 
   /// Generate a unique device ID for the current device
   Future<String> generateDeviceId() async {

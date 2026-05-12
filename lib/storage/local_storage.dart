@@ -546,6 +546,51 @@ class LocalStorage {
   //   }
   // }
 
+
+  // ✅ NEW SAFE TYPED GETTERS
+
+  static Future<int?> getBranchIdAsInt() async {
+    final value = await getBranchId();
+    return int.tryParse(value ?? '');
+  }
+
+  static Future<int?> getOrderTypeAsInt() async {
+    final value = await getOrderType();
+    return int.tryParse(value ?? '');
+  }
+
+  static Future<int?> getTableIdAsInt() async {
+    final value = await getTableId();
+    return int.tryParse(value ?? '');
+  }
+
+  static Future<void> saveQrContext({
+    int? branchId,
+    int? orderType,
+    int? tableId,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // 🔴 STEP 1: ALWAYS CLEAR FIRST
+    await prefs.remove(_branchIdKey);
+    await prefs.remove(_orderTypeKey);
+    await prefs.remove(_tableIdKey);
+
+    // 🔴 STEP 2: SET NEW VALUES (if available)
+    if (branchId != null) {
+      await prefs.setString(_branchIdKey, branchId.toString());
+    }
+
+    if (orderType != null) {
+      await prefs.setString(_orderTypeKey, orderType.toString());
+    }
+
+    if (tableId != null) {
+      await prefs.setString(_tableIdKey, tableId.toString());
+    }
+  }
+
+
   /// Clears all stored data
   ///
   /// Returns: Future<bool> indicating success or failure

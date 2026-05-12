@@ -6,6 +6,7 @@
 import '../services/api/api_service.dart';
 import '../storage/local_storage.dart';
 import '../models/customer_model.dart';
+import '../utils/app_session.dart';
 import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Repository for managing customer data
@@ -29,7 +30,11 @@ class CustomerRepository {
       appDebugLog(
         'CustomerRepository: Adding customer - name: $name, phone: $phone',
       );
-      int branchId = 1;
+      final branchId = await AppSession.getBranchId();
+      if (branchId == null || branchId <= 0) {
+        throw Exception('No valid branch is available for customer creation.');
+      }
+
       final request = CustomerAddRequest(
         name: name,
         phone: phone,

@@ -11,6 +11,7 @@ import '../../controllers/order_tracking_controller.dart';
 import '../../models/user_order_model.dart';
 import '../../theme/theme.dart';
 import '../../widgets/order_qr.dart';
+import '../../widgets/qr_menu_access_gate.dart';
 
 /// Screen for displaying detailed order information
 class OrderDetailsScreen extends StatefulWidget {
@@ -27,7 +28,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: _buildAppBar(), body: _buildBody(context));
+    return QrMenuAccessGate(
+      child: Scaffold(appBar: _buildAppBar(), body: _buildBody(context)),
+    );
   }
 
   /// Build app bar
@@ -185,11 +188,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   children: [
                     _buildDetailRow(
                       provider.isEnglish ? 'Order Type' : 'نوع الطلب',
-                      widget.order.orderType == '1'
-                          ? (provider.isEnglish ? "Dine in" : "تناول الطعام")
-                          : (provider.isEnglish
-                                ? "Take away"
-                                : "الوجبات الجاهزة"),
+                      widget.order.orderTypeName,
                     ),
                     if (widget.order.orderType == '1')
                       _buildDetailRow(

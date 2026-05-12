@@ -1,3 +1,4 @@
+import 'package:digital_menu_order/utils/qr_init_context.dart';
 import 'package:flutter/material.dart';
 import '../models/branch_model.dart';
 import '../services/api/api_service.dart';
@@ -74,7 +75,8 @@ class BranchProvider extends ChangeNotifier {
         appDebugLog('✅ Fetched ${_branches.length} active branches');
 
         // Reload saved branch ID to ensure we have the latest
-        _savedBranchId = await LocalStorage.getBranchId();
+        _savedBranchId = QrInitContext.branchId?.toString()
+            ?? await LocalStorage.getBranchId();
 
         // If there's a saved branch ID, try to match it with fetched branches
         if (_savedBranchId != null && _savedBranchId!.isNotEmpty) {

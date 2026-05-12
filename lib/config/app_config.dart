@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:digital_menu_order/utils/app_debug_log.dart';
+import 'package:digital_menu_order/utils/logging_flags.dart';
 
 /// AppConfig - External Runtime Configuration
 ///
@@ -33,6 +34,10 @@ import 'package:digital_menu_order/utils/app_debug_log.dart';
 ///   the dropdown is hidden. Omitted key defaults to `true`.
 /// - **currencySymbol**: Label shown before monetary amounts (e.g. `QR`, `$`,
 ///   `€`). Omitted or invalid values default to `QR`.
+///
+/// - **consoleLogging** (Web): When `true`, Flutter logs are forwarded to the
+///   browser console in release. When `false` (or omitted), logs are gated
+///   off in release.
 ///
 /// Note: Always include a trailing slash in the API base URL
 class AppConfig {
@@ -90,6 +95,12 @@ class AppConfig {
       if (response.statusCode == 200) {
         // Parse JSON
         final configData = json.decode(response.body) as Map<String, dynamic>;
+
+        if (configData.containsKey('consoleLogging') &&
+            configData['consoleLogging'] is bool) {
+          LoggingFlags.consoleLoggingEnabled =
+              configData['consoleLogging'] as bool;
+        }
 
         // Extract apiBase field
         if (configData.containsKey('apiBase') &&

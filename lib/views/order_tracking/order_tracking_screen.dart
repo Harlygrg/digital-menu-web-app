@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../controllers/order_tracking_controller.dart';
+import '../../utils/qr_init_context.dart';
+import '../../widgets/qr_menu_access_gate.dart';
 import '../../models/user_order_model.dart';
 import '../../theme/theme.dart';
 import 'order_details_screen.dart';
@@ -26,7 +28,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeOrderTracking();
+    if (QrInitContext.isResolved) {
+      _initializeOrderTracking();
+    }
   }
 
   /// Initialize order tracking
@@ -37,7 +41,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: _buildAppBar(), body: _buildBody(context));
+    return QrMenuAccessGate(
+      child: Scaffold(appBar: _buildAppBar(), body: _buildBody(context)),
+    );
   }
 
   /// Build app bar with refresh action

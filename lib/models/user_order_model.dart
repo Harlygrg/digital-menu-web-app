@@ -180,6 +180,7 @@ class UserOrder {
   final double taxamnt;
   final double roundoff;
   final String orderType;
+  final String orderTypeName;
   final int tableId;
   final String tableName;
   final int custid;
@@ -206,6 +207,7 @@ class UserOrder {
     required this.taxamnt,
     required this.roundoff,
     required this.orderType,
+    required this.orderTypeName,
     required this.tableId,
     required this.custid,
     required this.onlineuserid,
@@ -233,6 +235,7 @@ class UserOrder {
       taxamnt: _safeToDouble(json['taxamnt']),
       roundoff: _safeToDouble(json['roundoff']),
       orderType: _safeToString(json['OrderType']),
+      orderTypeName:_safeToString(json['orderTypeName']),
       tableId: _safeToInt(json['tableID']),
       custid: _safeToInt(json['custid']),
       onlineuserid: _safeToInt(json['onlineuserid']),
@@ -268,6 +271,7 @@ class UserOrder {
       'taxamnt': taxamnt,
       'roundoff': roundoff,
       'OrderType': orderType,
+      'orderTypeName':orderTypeName,
       'tableID': tableId,
       'custid': custid,
       'onlineuserid': onlineuserid,
