@@ -254,11 +254,6 @@ class _HomeScreenState extends State<HomeScreen> {
           '📱 Browser notification permission (live): $browserPermission',
         );
 
-        // DEPRECATED: Old approach that relied on locally stored permission state
-        // This caused mismatches when users changed browser settings
-        // final wasGranted = await LocalStorage.wasNotificationPermissionGranted();
-        // appDebugLog('📱 Notification permission previously granted: $wasGranted');
-
         if (kIsWeb) {
           if (browserPermission == 'granted') {
             // Permission already granted - skip dialog and get token directly
@@ -280,9 +275,6 @@ class _HomeScreenState extends State<HomeScreen> {
             // Permission not yet requested (default state)
             appDebugLog('📱 Permission not yet requested, showing dialog...');
 
-            // DEPRECATED: Old approach saved permission to local storage
-            // await LocalStorage.setNotificationPermissionAsked(true);
-
             // Show permission dialog (non-blocking for UI, happens after content is visible)
             final shouldRequestPermission =
                 await _showNotificationPermissionDialog();
@@ -291,9 +283,6 @@ class _HomeScreenState extends State<HomeScreen> {
               appDebugLog(
                 'ℹ️ User declined notification permission from app dialog',
               );
-
-              // DEPRECATED: Old approach saved declined state to local storage
-              // await LocalStorage.setNotificationPermissionGranted(false);
 
               return; // Exit early without FCM token
             }
@@ -324,18 +313,11 @@ class _HomeScreenState extends State<HomeScreen> {
         if (fcmToken.isNotEmpty) {
           appDebugLog('✅ FCM Token obtained: ${fcmToken.substring(0, 20)}...');
 
-          // DEPRECATED: Old approach saved permission state to local storage
-          // This caused mismatches when users changed browser settings later
-          // await LocalStorage.setNotificationPermissionGranted(true);
-
           appDebugLog(
             '✅ FCM token automatically registered with server via NotificationService',
           );
         } else {
           appDebugLog('⚠️ FCM token is empty');
-
-          // DEPRECATED: Old approach saved permission state to local storage
-          // await LocalStorage.setNotificationPermissionGranted(false);
         }
 
         // Setup token refresh listener
@@ -797,41 +779,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
 
-        // Branch dropdown and Orders button
-        // SliverToBoxAdapter(
-        //   child: Padding(
-        //     padding: EdgeInsets.symmetric(
-        //       horizontal: Responsive.padding(context, 16),
-        //     ),
-        //     child: Row(
-        //       children: [
-        //         const BranchDropdownWidget(),
-        //         const Spacer(),
-        //         TextButton.icon(
-        //           onPressed: () {
-        //             Navigator.pushNamed(context, '/order-tracking');
-        //           },
-        //           icon: Icon(
-        //             Icons.receipt_long,
-        //             size: Responsive.fontSize(context, 20),
-        //             color: Theme.of(context).colorScheme.primary,
-        //           ),
-        //           label: Text(
-        //             provider.isEnglish ? 'Orders' : 'الطلبات',
-        //             style: TextStyle(
-        //               color: Theme.of(context).colorScheme.primary,
-        //               fontSize: Responsive.fontSize(context, 14),
-        //               fontWeight: FontWeight.w600,
-        //             ),
-        //           ),
-        //         ),
-        //       ],
-        //     ),
-        //   ),
-        // ),
-
-        // SizedBox(height: Responsive.padding(context, 16)).toSliverBox(),
-
         // Veg/Non-veg toggle section
         SliverToBoxAdapter(
           child: Padding(
@@ -949,7 +896,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Spacer(),
                     TextButton.icon(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/order-tracking');
+                        Navigator.pushNamed(context, AppRoutes.orderTracking);
                       },
                       icon: Icon(
                         Icons.receipt_long,

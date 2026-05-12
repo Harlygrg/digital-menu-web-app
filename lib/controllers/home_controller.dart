@@ -10,7 +10,6 @@ import '../providers/home_provider.dart';
 import '../providers/branch_provider.dart';
 import '../providers/customer_provider.dart';
 import '../utils/qr_init_context.dart';
-import '../utils/app_session.dart';
 import '../models/category_model.dart';
 import '../models/item_model.dart';
 import '../models/cart_item_model.dart';
@@ -25,9 +24,6 @@ class HomeController {
   Timer? _searchDebounceTimer;
   final BranchProvider? _branchProvider;
   final CustomerProvider? _customerProvider;
-
-  /// Single-flight QR resolve per controller instance (avoids duplicate POSTs).
-  Future<Map<String, dynamic>?>? _cachedQrResolveFuture;
 
   HomeController(
     this._provider, {

@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 extension StringExtension on String {
   String capitalizeFirst() {
     if (isEmpty) {
@@ -15,7 +13,3 @@ extension StringExtension on String {
         .join(' ');
   }
 }
-
-// Usage:
-String myString = "hello world";
-String capitalizedString = myString.capitalizeFirst(); // "Hello world"

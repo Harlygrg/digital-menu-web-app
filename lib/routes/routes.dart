@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../views/landing/landing_shell_screen.dart';
-import '../views/home/home_screen.dart';
 import '../views/cart/cart_screen.dart';
 import '../views/table/table_screen.dart';
 import '../views/order/order_screen.dart';
@@ -13,7 +12,6 @@ class AppRoutes {
   static const String table = '/table';
   static const String order = '/order';
   static const String orderTracking = '/order-tracking';
-  static const String itemDetail = '/item-detail';
 
   /// Generate routes based on route settings
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -45,33 +43,12 @@ class AppRoutes {
           builder: (context) => const OrderTrackingScreen(),
           settings: settings,
         );
-      case itemDetail:
-        final args = settings.arguments as Map<String, dynamic>?;
-        return MaterialPageRoute(
-          builder: (context) => ItemDetailScreen(itemId: args?['itemId'] ?? ''),
-          settings: settings,
-        );
       default:
         return MaterialPageRoute(
           builder: (context) => const NotFoundScreen(),
           settings: settings,
         );
     }
-  }
-}
-
-/// Placeholder item detail screen
-class ItemDetailScreen extends StatelessWidget {
-  final String itemId;
-
-  const ItemDetailScreen({super.key, required this.itemId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Item Details')),
-      body: Center(child: Text('Item details for: $itemId')),
-    );
   }
 }
 

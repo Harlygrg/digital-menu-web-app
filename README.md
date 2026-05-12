@@ -36,7 +36,6 @@ lib/
         └── widgets/          # Reusable UI components
             ├── app_bar_silver.dart
             ├── language_dropdown.dart
-            ├── cart_button.dart
             ├── search_bar.dart
             ├── category_chips.dart
             ├── veg_toggle.dart
