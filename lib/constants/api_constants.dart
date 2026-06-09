@@ -54,6 +54,9 @@ class ApiConstants {
   /// should remain the path segment only.
   static const String getCartPrices = "getCartPrices";
 
+  /// Tax settings for a branch (query: branch_id)
+  static const String getTaxSettings = "getTaxSettings";
+
   /// Resolve QR deep-link token (Authorization: Bearer \<token\>, not guest access token).
   static const String qrResolve = "qr/resolve";
 

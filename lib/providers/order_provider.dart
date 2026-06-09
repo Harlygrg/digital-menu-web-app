@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/cart_item_model.dart';
 import '../models/create_order_response_model.dart';
+import '../models/tax_settings_model.dart';
 import '../services/api/api_service.dart';
+import '../utils/tax_calculation.dart';
 import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// Provider for managing order placement state
@@ -30,6 +32,7 @@ class OrderProvider extends ChangeNotifier {
   /// - [branchId]: Branch ID from SharedPreferences
   /// - [orderNotes]: Optional order notes/instructions
   /// - [noOfGuest]: Number of guests (for dine-in orders)
+  /// - [taxSettings]: Branch tax settings snapshot (null = no tax; still sends taxamnt 0)
   ///
   /// Returns: [CreateOrderResponseModel] on success, null on failure
   Future<CreateOrderResponseModel?> createOrder({
@@ -39,6 +42,7 @@ class OrderProvider extends ChangeNotifier {
     required int branchId,
     String? orderNotes,
     int noOfGuest = 0,
+    TaxSettingsData? taxSettings,
   }) async {
     try {
       _isLoading = true;
@@ -90,12 +94,27 @@ class OrderProvider extends ChangeNotifier {
         }
       }
 
+      final taxBreakdown = computeTaxBreakdown(
+        settings: taxSettings,
+        grossTotal: grossTotal,
+      );
+
+      final primaryTax = (taxSettings != null &&
+              taxSettings.taxEnabled &&
+              taxSettings.taxes.isNotEmpty)
+          ? taxSettings.taxes.first
+          : null;
+
       // Create order request model
       final requestModel = CreateOrderRequestModel(
         grosstotal: grossTotal,
         discount: 0,
         servicecharge: 0,
-        nettotal: grossTotal,
+        taxamnt: taxBreakdown.totalTax,
+        nettotal: taxBreakdown.netTotal,
+        taxtype: primaryTax?.taxType ?? '',
+        taxname: primaryTax?.taxName ?? '',
+        taxpercent: primaryTax?.taxPercentage ?? 0,
         tableID: tableId,
         orderType: orderTypeId,
         cid: branchId,

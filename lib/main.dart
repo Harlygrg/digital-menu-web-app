@@ -14,6 +14,7 @@ import 'providers/table_provider.dart';
 import 'providers/order_type_provider.dart';
 import 'providers/branch_provider.dart';
 import 'providers/order_provider.dart';
+import 'providers/tax_provider.dart';
 import 'providers/customer_provider.dart';
 import 'controllers/cart_controller.dart';
 import 'controllers/order_tracking_controller.dart';
@@ -107,6 +108,7 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
         ChangeNotifierProvider(create: (_) => OrderTypeProvider()),
         ChangeNotifierProvider(create: (_) => BranchProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => TaxProvider()),
         ChangeNotifierProvider(create: (_) => CartController()),
         ChangeNotifierProvider(create: (_) => OrderTrackingController()),
         ChangeNotifierProvider(create: (_) => CustomerProvider()..initialize()),

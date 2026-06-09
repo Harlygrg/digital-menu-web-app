@@ -11,6 +11,7 @@ import '../../models/create_order_response_model.dart';
 import '../../models/customer_model.dart';
 import '../../models/user_order_model.dart';
 import '../../models/cart_pricing/cart_price_sync_dtos.dart';
+import '../../models/tax_settings_model.dart';
 import 'package:digital_menu_order/utils/app_debug_log.dart';
 
 /// API Service for handling HTTP requests
@@ -358,6 +359,47 @@ class ApiService {
     } catch (e) {
       appDebugLog('Error fetching branch list: $e');
       rethrow;
+    }
+  }
+
+  /// Tax settings for [branchId] (GET getTaxSettings?branch_id=…).
+  ///
+  /// Uses the same JWT flow as other authenticated GETs. On non-200 or parse
+  /// issues, returns a response with [TaxSettingsResponse.success] false.
+  Future<TaxSettingsResponse> getTaxSettings({required int branchId}) async {
+    try {
+      _ensureInitialized();
+
+      appDebugLog('Fetching tax settings for branch $branchId...');
+      final response = await _dio!.get(
+        ApiConstants.getTaxSettings,
+        queryParameters: <String, dynamic>{'branch_id': branchId},
+      );
+
+      appDebugLog('Tax settings API response : ${response.statusCode}: response:${response.data}');
+
+      if (response.statusCode == 200 && response.data != null) {
+        return TaxSettingsResponse.fromJson(response.data);
+      }
+      return const TaxSettingsResponse(
+        success: false,
+        message: 'Failed to load tax settings',
+        data: null,
+      );
+    } on DioException catch (e) {
+      appDebugLog('DioException during tax settings fetch: ${e.message}');
+      return const TaxSettingsResponse(
+        success: false,
+        message: 'Network error',
+        data: null,
+      );
+    } catch (e) {
+      appDebugLog('Error fetching tax settings: $e');
+      return const TaxSettingsResponse(
+        success: false,
+        message: 'Error',
+        data: null,
+      );
     }
   }
 

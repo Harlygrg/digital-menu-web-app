@@ -178,6 +178,9 @@ class UserOrder {
   final double servicecharge;
   final double nettotal;
   final double taxamnt;
+  final String taxtype;
+  final String taxname;
+  final double taxpercent;
   final double roundoff;
   final String orderType;
   final String orderTypeName;
@@ -205,6 +208,9 @@ class UserOrder {
     required this.servicecharge,
     required this.nettotal,
     required this.taxamnt,
+    required this.taxtype,
+    required this.taxname,
+    required this.taxpercent,
     required this.roundoff,
     required this.orderType,
     required this.orderTypeName,
@@ -232,7 +238,14 @@ class UserOrder {
       discount: _safeToDouble(json['discount']),
       servicecharge: _safeToDouble(json['servicecharge']),
       nettotal: _safeToDouble(json['nettotal']),
-      taxamnt: _safeToDouble(json['taxamnt']),
+      taxamnt: _safeToDouble(
+        json['taxamnt'] ?? json['TaxAmnt'] ?? json['tax_amnt'],
+      ),
+      taxtype: _safeToString(json['taxtype'] ?? json['TaxType'] ?? json['tax_type']),
+      taxname: _safeToString(json['taxname'] ?? json['TaxName'] ?? json['tax_name']),
+      taxpercent: _safeToDouble(
+        json['taxpercent'] ?? json['TaxPercent'] ?? json['tax_percent'],
+      ),
       roundoff: _safeToDouble(json['roundoff']),
       orderType: _safeToString(json['OrderType']),
       orderTypeName:_safeToString(json['orderTypeName']),
@@ -269,6 +282,9 @@ class UserOrder {
       'servicecharge': servicecharge,
       'nettotal': nettotal,
       'taxamnt': taxamnt,
+      'taxtype': taxtype,
+      'taxname': taxname,
+      'taxpercent': taxpercent,
       'roundoff': roundoff,
       'OrderType': orderType,
       'orderTypeName':orderTypeName,
@@ -286,6 +302,10 @@ class UserOrder {
       'order_details': orderDetails.map((detail) => detail.toJson()).toList(),
     };
   }
+
+  bool get isInclusiveTax => taxtype.toLowerCase() == 'inclusive';
+
+  bool get hasTaxInfo => taxname.trim().isNotEmpty || taxamnt > 0;
 
   /// Get order status as a readable string
   /// 0 = Pending, 1 = Accepted, 2 = Cancelled, 3 = Completed

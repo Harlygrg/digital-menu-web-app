@@ -9,6 +9,8 @@ import 'package:uuid/uuid.dart';
 import '../providers/home_provider.dart';
 import '../providers/branch_provider.dart';
 import '../providers/customer_provider.dart';
+import '../providers/tax_provider.dart';
+import '../utils/app_session.dart';
 import '../utils/qr_init_context.dart';
 import '../models/category_model.dart';
 import '../models/item_model.dart';
@@ -24,13 +26,16 @@ class HomeController {
   Timer? _searchDebounceTimer;
   final BranchProvider? _branchProvider;
   final CustomerProvider? _customerProvider;
+  final TaxProvider? _taxProvider;
 
   HomeController(
     this._provider, {
     BranchProvider? branchProvider,
     CustomerProvider? customerProvider,
+    TaxProvider? taxProvider,
   }) : _branchProvider = branchProvider,
-       _customerProvider = customerProvider;
+       _customerProvider = customerProvider,
+       _taxProvider = taxProvider;
 
   /// Optimized initialization flow
   ///
@@ -64,6 +69,8 @@ class HomeController {
         allowDefaultBranchId: !isQrTokenLaunch,
       );
 
+      await _syncTaxSettingsAfterMenuLoad();
+
       // ✅ STEP 4: Background tasks
       if (_branchProvider != null) {
         _fetchBranchListInBackground();
@@ -80,6 +87,18 @@ class HomeController {
       }
 
       await _provider.fetchProductRelatedData();
+      await _syncTaxSettingsAfterMenuLoad();
+    }
+  }
+
+  Future<void> _syncTaxSettingsAfterMenuLoad() async {
+    try {
+      final bid = await AppSession.getBranchId();
+      if (bid != null && bid > 0) {
+        await _taxProvider?.fetchTaxSettings(bid);
+      }
+    } catch (e) {
+      appDebugLog('⚠️ Tax settings sync skipped: $e');
     }
   }
 

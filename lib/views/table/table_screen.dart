@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/table_provider.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/tax_provider.dart';
 import '../../controllers/cart_controller.dart';
 import '../../models/table_model.dart';
 import '../../models/order_type_model.dart';
@@ -653,6 +654,7 @@ class _TableScreenState extends State<TableScreen>
 
     // Call create order API
     final orderProvider = context.read<OrderProvider>();
+    final taxSettings = context.read<TaxProvider>().settings;
     final response = await orderProvider.createOrder(
       cartItems: cartController.cartItems,
       tableId: selectedTable.tableId,
@@ -662,6 +664,7 @@ class _TableScreenState extends State<TableScreen>
           ? cartController.orderNotes
           : null,
       noOfGuest: numberOfGuests,
+      taxSettings: taxSettings,
     );
 
     // Close loading dialog

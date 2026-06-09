@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../../providers/home_provider.dart';
 import '../../providers/branch_provider.dart';
 import '../../providers/customer_provider.dart';
+import '../../providers/tax_provider.dart';
 import '../../controllers/home_controller.dart';
 import '../../controllers/cart_controller.dart';
 import '../../theme/theme.dart';
@@ -121,11 +122,13 @@ class _HomeScreenState extends State<HomeScreen> {
       final provider = context.read<HomeProvider>();
       final branchProvider = context.read<BranchProvider>();
       final customerProvider = context.read<CustomerProvider>();
+      final taxProvider = context.read<TaxProvider>();
 
       final controller = HomeController(
         provider,
         branchProvider: branchProvider,
         customerProvider: customerProvider,
+        taxProvider: taxProvider,
       );
       _controller = controller;
 
@@ -548,6 +551,10 @@ class _HomeScreenState extends State<HomeScreen> {
       branchId: branchId,
       silentRefresh: true,
     );
+
+    if (!mounted) return;
+    final taxBranchId = int.tryParse(branchId) ?? 1;
+    await context.read<TaxProvider>().fetchTaxSettings(taxBranchId);
   }
 
   @override

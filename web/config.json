@@ -2,7 +2,7 @@
   "apiBase": "https://msibusinesssolutions.com/demo_api_qrmenu/api/v1/",
   "multiLanguage": false,
   "currencySymbol": "₹",
-  "consoleLogging": false
+  "consoleLogging": true
 }
 
 

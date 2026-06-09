@@ -8,12 +8,14 @@ import '../../models/cart_item_model.dart';
 import '../../models/order_type_model.dart';
 import '../../utils/app_session.dart';
 import '../../utils/currency_format.dart';
+import '../../utils/tax_calculation.dart';
 import '../../utils/image_utils.dart';
 import '../../theme/theme.dart';
 import '../../routes/routes.dart';
 import '../../widgets/service_type_popup.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/order_type_provider.dart';
+import '../../providers/tax_provider.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/home_provider.dart';
 import '../../constants/customer_defaults.dart';
@@ -923,27 +925,121 @@ class _CartScreenState extends State<CartScreen> {
           _buildOrderNotesField(context, cartController, isEnglish),
           SizedBox(height: Responsive.padding(context, 16)),
           // Order summary
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                isEnglish
-                    ? 'Total ($itemCount ${itemCount == 1 ? 'item' : 'items'}):'
-                    : 'المجموع ($itemCount ${itemCount == 1 ? 'عنصر' : 'عناصر'}):',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: Responsive.fontSize(context, 16),
-                ),
-              ),
-              Text(
-                formatCurrencyAmount(total),
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                  fontSize: Responsive.fontSize(context, 20),
-                ),
-              ),
-            ],
+          Consumer<TaxProvider>(
+            builder: (context, taxProvider, _) {
+              final applyTax = taxProvider.shouldApplyTax;
+              final breakdown = computeTaxBreakdown(
+                settings: taxProvider.settings,
+                grossTotal: total,
+              );
+
+              if (!applyTax) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      isEnglish
+                          ? 'Total ($itemCount ${itemCount == 1 ? 'item' : 'items'}):'
+                          : 'المجموع ($itemCount ${itemCount == 1 ? 'عنصر' : 'عناصر'}):',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: Responsive.fontSize(context, 16),
+                      ),
+                    ),
+                    Text(
+                      formatCurrencyAmount(total),
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                        fontSize: Responsive.fontSize(context, 20),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              final subtleStyle = theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+                fontSize: Responsive.fontSize(context, 14),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+              );
+              final taxLineStyle = theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+                fontSize: Responsive.fontSize(context, 14),
+              );
+              final netLabelStyle = theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                fontSize: Responsive.fontSize(context, 18),
+              );
+              final netAmountStyle = theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+                fontSize: Responsive.fontSize(context, 22),
+              );
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        isEnglish
+                            ? 'Gross Total ($itemCount ${itemCount == 1 ? 'item' : 'items'})'
+                            : 'الإجمالي الكلي ($itemCount ${itemCount == 1 ? 'عنصر' : 'عناصر'})',
+                        style: subtleStyle,
+                      ),
+                      Text(
+                        formatCurrencyAmount(breakdown.cartTotal),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: Responsive.fontSize(context, 15),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.85,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  for (final line in breakdown.lines) ...[
+                    SizedBox(height: Responsive.padding(context, 8)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            line.isInclusive
+                                ? '${line.taxName} (${formatCurrencyAmount(line.pretaxBase)})'
+                                : line.taxName,
+                            style: taxLineStyle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          formatCurrencyAmount(line.amount),
+                          style: taxLineStyle,
+                        ),
+                      ],
+                    ),
+                  ],
+                  SizedBox(height: Responsive.padding(context, 12)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        isEnglish ? 'Net Payable' : 'الصافي المستحق',
+                        style: netLabelStyle,
+                      ),
+                      Text(
+                        formatCurrencyAmount(breakdown.netTotal),
+                        style: netAmountStyle,
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
           SizedBox(height: Responsive.padding(context, 20)),
           if (_showQrGuestsField) ...[
@@ -1577,6 +1673,7 @@ class _CartScreenState extends State<CartScreen> {
     // Call create order API for non-dine-in orders.
     // For QR bypass: use the QR-provided tableId. For manual flow: fallback to 0.
     final orderProvider = context.read<OrderProvider>();
+    final taxSettings = context.read<TaxProvider>().settings;
     final response = await orderProvider.createOrder(
       cartItems: cartController.cartItems,
       tableId: tableIdOverride ?? 0, // table_id = 0 for non-dine-in orders
@@ -1586,6 +1683,7 @@ class _CartScreenState extends State<CartScreen> {
           ? cartController.orderNotes
           : null,
       noOfGuest: numberOfGuests ?? 0,
+      taxSettings: taxSettings,
     );
 
     // Close loading dialog
@@ -1724,6 +1822,7 @@ class _CartScreenState extends State<CartScreen> {
     }
 
     final orderProvider = context.read<OrderProvider>();
+    final taxSettings = context.read<TaxProvider>().settings;
     final response = await orderProvider.createOrder(
       cartItems: cartController.cartItems,
       tableId: tableIdOverride,
@@ -1733,6 +1832,7 @@ class _CartScreenState extends State<CartScreen> {
           ? cartController.orderNotes
           : null,
       noOfGuest: numberOfGuests,
+      taxSettings: taxSettings,
     );
 
     // Close loading dialog

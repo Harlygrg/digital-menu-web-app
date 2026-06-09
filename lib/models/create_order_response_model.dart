@@ -113,7 +113,11 @@ class CreateOrderRequestModel {
   final double grosstotal;
   final double discount;
   final double servicecharge;
+  final double taxamnt;
   final double nettotal;
+  final String taxtype;
+  final String taxname;
+  final double taxpercent;
   final int tableID;
   final String orderType;
   final int cid;
@@ -127,7 +131,11 @@ class CreateOrderRequestModel {
     required this.grosstotal,
     required this.discount,
     required this.servicecharge,
+    required this.taxamnt,
     required this.nettotal,
+    required this.taxtype,
+    required this.taxname,
+    required this.taxpercent,
     required this.tableID,
     required this.orderType,
     required this.cid,
@@ -144,7 +152,11 @@ class CreateOrderRequestModel {
       'grosstotal': grosstotal,
       'discount': discount,
       'servicecharge': servicecharge,
+      'taxamnt': taxamnt,
       'nettotal': nettotal,
+      'taxtype': taxtype,
+      'taxname': taxname,
+      'taxpercent': taxpercent,
       'tableID': tableID,
       'OrderType': orderType,
       'cid': cid,
@@ -158,6 +170,6 @@ class CreateOrderRequestModel {
 
   @override
   String toString() {
-    return 'CreateOrderRequestModel(grosstotal: $grosstotal, nettotal: $nettotal, tableID: $tableID, orderType: $orderType, cid: $cid, orderDtls: ${orderDtls.length} items)';
+    return 'CreateOrderRequestModel(grosstotal: $grosstotal, taxamnt: $taxamnt, nettotal: $nettotal, tableID: $tableID, orderType: $orderType, cid: $cid, orderDtls: ${orderDtls.length} items)';
   }
 }

@@ -238,36 +238,40 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
             Consumer<HomeProvider>(
               builder: (context, provider, child) {
+                final order = widget.order;
+                final grossTotalLabel = order.isInclusiveTax
+                    ? (provider.isEnglish
+                        ? 'Gross Total (Inclusive)'
+                        : 'الإجمالي الكلي (شامل)')
+                    : (provider.isEnglish ? 'Gross Total' : 'الإجمالي الكلي');
+
                 return Column(
                   children: [
-                    _buildPriceRow(
-                      provider.isEnglish ? 'Gross Total' : 'الإجمالي الكلي',
-                      widget.order.grosstotal,
-                    ),
-                    if (widget.order.discount > 0)
+                    _buildPriceRow(grossTotalLabel, order.grosstotal),
+                    if (order.discount > 0)
                       _buildPriceRow(
                         provider.isEnglish ? 'Discount' : 'الخصم',
-                        -widget.order.discount,
+                        -order.discount,
                       ),
-                    if (widget.order.servicecharge > 0)
+                    if (order.servicecharge > 0)
                       _buildPriceRow(
                         provider.isEnglish ? 'Service Charge' : 'رسوم الخدمة',
-                        widget.order.servicecharge,
+                        order.servicecharge,
                       ),
-                    if (widget.order.taxamnt > 0)
+                    if (order.taxamnt > 0)
                       _buildPriceRow(
-                        provider.isEnglish ? 'Tax Amount' : 'مبلغ الضريبة',
-                        widget.order.taxamnt,
+                        _taxRowLabel(order),
+                        order.taxamnt,
                       ),
-                    if (widget.order.roundoff != 0)
+                    if (order.roundoff != 0)
                       _buildPriceRow(
                         provider.isEnglish ? 'Round Off' : 'التقريب',
-                        widget.order.roundoff,
+                        order.roundoff,
                       ),
                     Divider(height: Responsive.padding(context, 16)),
                     _buildPriceRow(
                       provider.isEnglish ? 'Net Total' : 'الإجمالي الصافي',
-                      widget.order.nettotal,
+                      order.nettotal,
                       isTotal: true,
                     ),
                   ],
@@ -803,6 +807,16 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         ],
       ),
     );
+  }
+
+  /// Tax row label from API fields (no tax calculation).
+  String _taxRowLabel(UserOrder order) {
+    final name = order.taxname.trim().isNotEmpty ? order.taxname : 'Tax';
+    if (order.isInclusiveTax) {
+      final pretaxBase = order.grosstotal - order.taxamnt;
+      return '$name (${formatCurrencyAmount(pretaxBase)})';
+    }
+    return name;
   }
 
   /// Build price row

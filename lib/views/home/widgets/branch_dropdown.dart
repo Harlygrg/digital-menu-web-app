@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../providers/branch_provider.dart';
 import '../../../providers/home_provider.dart';
+import '../../../providers/tax_provider.dart';
 import '../../../controllers/cart_controller.dart';
 import '../../../theme/theme.dart';
 import 'package:digital_menu_order/utils/app_debug_log.dart';
@@ -241,6 +242,10 @@ class BranchDropdownWidget extends StatelessWidget {
         await cartController.clearCart();
       },
     );
+
+    if (context.mounted) {
+      await context.read<TaxProvider>().fetchTaxSettings(branch.id);
+    }
 
     // Show success message
     if (context.mounted) {
