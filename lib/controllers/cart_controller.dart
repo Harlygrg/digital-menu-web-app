@@ -128,6 +128,7 @@ class CartController extends ChangeNotifier {
         name: addon['title'] as String? ?? '',
         price: (addon['price'] as num?)?.toDouble() ?? 0.0,
         quantity: addon['qty'] as int? ?? 1,
+        taxId: addon['taxId'] as int?,
       );
     }).toList();
 
@@ -291,6 +292,7 @@ class CartController extends ChangeNotifier {
               name: modifier.modifier,
               price: modifier.price,
               quantity: 1, // Default quantity for modifiers
+              taxId: modifier.taxId,
             );
           })
           .toList();

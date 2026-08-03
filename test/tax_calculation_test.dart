@@ -155,4 +155,183 @@ void main() {
       expect(tax.isInclusive, isTrue);
     });
   });
+
+  group('TaxSettingsData.taxmode', () {
+    test('parses taxmode and taxById lookup', () {
+      final settings = TaxSettingsData.fromJson({
+        'branch_id': 2,
+        'tax_enabled': true,
+        'taxmode': 1,
+        'taxes': [
+          {
+            'ID': 1,
+            'TaxType': 'exclusive',
+            'TaxName': 'VAT 5%',
+            'TaxPercentage': 5,
+            'gstsplit': false,
+            'UserID': 1,
+            'Date': '',
+            'ModifiedBy': null,
+            'MDate': null,
+            'active': 1,
+            'isUploaded': 0,
+            'CID': 2,
+          },
+          {
+            'ID': 2,
+            'TaxType': 'inclusive',
+            'TaxName': 'GST 12%',
+            'TaxPercentage': 12,
+            'gstsplit': true,
+            'UserID': 1,
+            'Date': '',
+            'ModifiedBy': null,
+            'MDate': null,
+            'active': 1,
+            'isUploaded': 0,
+            'CID': 2,
+          },
+        ],
+      });
+
+      expect(settings.taxmode, 1);
+      expect(settings.isItemWise, isTrue);
+      expect(settings.taxById(1)?.taxPercentage, 5);
+      expect(settings.taxById(2)?.isInclusive, isTrue);
+      expect(settings.taxById(99), isNull);
+    });
+  });
+
+  group('computeOrderTax item-wise', () {
+    TaxItemModel exclusiveVat() => const TaxItemModel(
+          id: 1,
+          taxType: 'exclusive',
+          taxName: 'VAT 5%',
+          taxPercentage: 5,
+          gstSplit: false,
+          userId: 0,
+          date: '',
+          modifiedBy: 0,
+          mDate: '',
+          active: 1,
+          isUploaded: 0,
+          cid: 2,
+        );
+
+    TaxItemModel inclusiveGst() => const TaxItemModel(
+          id: 2,
+          taxType: 'inclusive',
+          taxName: 'GST 12%',
+          taxPercentage: 12,
+          gstSplit: true,
+          userId: 0,
+          date: '',
+          modifiedBy: 0,
+          mDate: '',
+          active: 1,
+          isUploaded: 0,
+          cid: 2,
+        );
+
+    test('exclusive 50 @ 5% → tax 2.50', () {
+      final settings = TaxSettingsData(
+        branchId: 2,
+        taxEnabled: true,
+        taxmode: 1,
+        taxes: [exclusiveVat(), inclusiveGst()],
+      );
+
+      final breakdown = computeOrderTax(
+        settings: settings,
+        lines: const [TaxableLineInput(taxId: 1, total: 50)],
+      );
+
+      expect(breakdown.isValid, isTrue);
+      expect(breakdown.lineTaxes.first!.taxAmnt, 2.50);
+      expect(breakdown.totalTax, 2.50);
+      expect(breakdown.cartTotal, 50);
+      expect(breakdown.netTotal, 52.50);
+    });
+
+    test('inclusive 60 @ 12% → tax 6.43', () {
+      final settings = TaxSettingsData(
+        branchId: 2,
+        taxEnabled: true,
+        taxmode: 1,
+        taxes: [exclusiveVat(), inclusiveGst()],
+      );
+
+      final breakdown = computeOrderTax(
+        settings: settings,
+        lines: const [TaxableLineInput(taxId: 2, total: 60)],
+      );
+
+      expect(breakdown.isValid, isTrue);
+      expect(breakdown.lineTaxes.first!.taxAmnt, 6.43);
+      expect(breakdown.totalTax, 6.43);
+      expect(breakdown.cartTotal, 60);
+      expect(breakdown.netTotal, 60);
+    });
+
+    test('combined A=50 exclusive + B=60 inclusive', () {
+      final settings = TaxSettingsData(
+        branchId: 2,
+        taxEnabled: true,
+        taxmode: 1,
+        taxes: [exclusiveVat(), inclusiveGst()],
+      );
+
+      final breakdown = computeOrderTax(
+        settings: settings,
+        lines: const [
+          TaxableLineInput(taxId: 1, total: 50),
+          TaxableLineInput(taxId: 2, total: 60),
+        ],
+      );
+
+      expect(breakdown.isValid, isTrue);
+      expect(breakdown.cartTotal, 110);
+      expect(breakdown.totalTax, 8.93);
+      expect(breakdown.netTotal, 112.50);
+      expect(breakdown.pretaxSubtotal, 103.57);
+      expect(breakdown.lines, hasLength(1));
+      expect(breakdown.lines.first.amount, 8.93);
+      expect(breakdown.omitHeaderTaxMeta, isTrue);
+    });
+
+    test('missing TaxId is invalid', () {
+      final settings = TaxSettingsData(
+        branchId: 2,
+        taxEnabled: true,
+        taxmode: 1,
+        taxes: [exclusiveVat()],
+      );
+
+      final breakdown = computeOrderTax(
+        settings: settings,
+        lines: const [TaxableLineInput(taxId: null, total: 50)],
+      );
+
+      expect(breakdown.isValid, isFalse);
+      expect(breakdown.validationError, isNotNull);
+      expect(breakdown.totalTax, 0);
+    });
+
+    test('unknown TaxId is invalid', () {
+      final settings = TaxSettingsData(
+        branchId: 2,
+        taxEnabled: true,
+        taxmode: 1,
+        taxes: [exclusiveVat()],
+      );
+
+      final breakdown = computeOrderTax(
+        settings: settings,
+        lines: const [TaxableLineInput(taxId: 99, total: 50)],
+      );
+
+      expect(breakdown.isValid, isFalse);
+      expect(breakdown.validationError, isNotNull);
+    });
+  });
 }

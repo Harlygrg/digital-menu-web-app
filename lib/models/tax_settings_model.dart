@@ -109,17 +109,38 @@ class TaxItemModel {
 class TaxSettingsData {
   final int branchId;
   final bool taxEnabled;
+
+  /// `0` = bill-wise, `1` = item-wise.
+  final int taxmode;
   final List<TaxItemModel> taxes;
 
   const TaxSettingsData({
     required this.branchId,
     required this.taxEnabled,
+    this.taxmode = 0,
     required this.taxes,
   });
 
+  bool get isItemWise => taxmode == 1;
+
+  bool get isBillWise => taxmode == 0;
+
+  /// Lookup a taxmaster row by [id], or null if not found.
+  TaxItemModel? taxById(int id) {
+    for (final t in taxes) {
+      if (t.id == id) return t;
+    }
+    return null;
+  }
+
   factory TaxSettingsData.fromJson(dynamic raw) {
     if (raw is! Map) {
-      return const TaxSettingsData(branchId: 0, taxEnabled: false, taxes: []);
+      return const TaxSettingsData(
+        branchId: 0,
+        taxEnabled: false,
+        taxmode: 0,
+        taxes: [],
+      );
     }
     final json = Map<String, dynamic>.from(raw);
     final taxesRaw = json['taxes'];
@@ -135,9 +156,11 @@ class TaxSettingsData {
         }
       }
     }
+    final mode = _taxSafeInt(json['taxmode'] ?? json['tax_mode']);
     return TaxSettingsData(
       branchId: _taxSafeInt(json['branch_id'] ?? json['branchId']),
       taxEnabled: _taxSafeBool(json['tax_enabled'] ?? json['taxEnabled']),
+      taxmode: mode == 1 ? 1 : 0,
       taxes: taxes,
     );
   }

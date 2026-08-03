@@ -19,11 +19,17 @@ class CartModifierAdapter extends TypeAdapter<CartModifier> {
     // Backward compatibility: older persisted data won't have these fields.
     bool isAvailable = true;
     String? unavailableReason;
+    int? taxId;
     try {
       isAvailable = reader.readBool();
       unavailableReason = reader.read() as String?;
     } catch (_) {
       // Defaults already set.
+    }
+    try {
+      taxId = reader.read() as int?;
+    } catch (_) {
+      // Older carts without taxId.
     }
 
     return CartModifier(
@@ -33,6 +39,7 @@ class CartModifierAdapter extends TypeAdapter<CartModifier> {
       quantity: quantity,
       isAvailable: isAvailable,
       unavailableReason: unavailableReason,
+      taxId: taxId,
     );
   }
 
@@ -44,6 +51,7 @@ class CartModifierAdapter extends TypeAdapter<CartModifier> {
     writer.writeInt(obj.quantity);
     writer.writeBool(obj.isAvailable);
     writer.write(obj.unavailableReason);
+    writer.write(obj.taxId);
   }
 }
 
@@ -150,7 +158,7 @@ class ItemModelAdapter extends TypeAdapter<ItemModel> {
 
   @override
   ItemModel read(BinaryReader reader) {
-    return ItemModel(
+    final model = ItemModel(
       id: reader.readInt(),
       iname: reader.readString(),
       icode: reader.readString(),
@@ -183,6 +191,13 @@ class ItemModelAdapter extends TypeAdapter<ItemModel> {
       relatedModifiers: (reader.read() as List).cast<int>(),
       preparationtime: reader.readString(),
     );
+    int? taxId;
+    try {
+      taxId = reader.read() as int?;
+    } catch (_) {
+      // Older carts without TaxId on items.
+    }
+    return model.copyWith(taxId: taxId);
   }
 
   @override
@@ -218,6 +233,7 @@ class ItemModelAdapter extends TypeAdapter<ItemModel> {
     writer.write(obj.productdetails);
     writer.write(obj.relatedModifiers);
     writer.writeString(obj.preparationtime);
+    writer.write(obj.taxId);
   }
 }
 

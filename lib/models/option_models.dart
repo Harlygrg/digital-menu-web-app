@@ -27,6 +27,20 @@ bool _safeToBool(dynamic value) {
   return false;
 }
 
+int _safeToInt(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? 0;
+  return 0;
+}
+
+int? _optionalPositiveInt(dynamic value) {
+  if (value == null) return null;
+  final parsed = _safeToInt(value);
+  return parsed > 0 ? parsed : null;
+}
+
 /// Unit price list model for products (matches new API structure)
 class UnitPriceListModel {
   final int unitFkId;
@@ -144,6 +158,9 @@ class ModifierModel {
   final int cid;
   final String otherLang;
 
+  /// Default taxmaster ID for this modifier (`TaxId`). Null if absent.
+  final int? taxId;
+
   const ModifierModel({
     required this.id,
     required this.modifier,
@@ -154,13 +171,14 @@ class ModifierModel {
     required this.isUploaded,
     required this.cid,
     required this.otherLang,
+    this.taxId,
   });
 
   /// Create from JSON
   factory ModifierModel.fromJson(Map<String, dynamic> json) {
     return ModifierModel(
       id: json['ID'] ?? 0,
-      modifier: _safeToString(json['Modifier']),
+      modifier: _safeToString(json['modifier']),
       rate: _safeToString(json['Rate'] ?? '0'),
       date: _safeToString(json['Date']),
       userID: json['UserID'] ?? 0,
@@ -168,6 +186,9 @@ class ModifierModel {
       isUploaded: json['isUploaded'] ?? 0,
       cid: json['CID'] ?? 0,
       otherLang: _safeToString(json['other_lang']),
+      taxId: _optionalPositiveInt(
+        json['TaxId'] ?? json['tax_id'] ?? json['taxId'],
+      ),
     );
   }
 
@@ -175,7 +196,7 @@ class ModifierModel {
   Map<String, dynamic> toJson() {
     return {
       'ID': id,
-      'Modifier': modifier,
+      'modifier': modifier,
       'Rate': rate,
       'Date': date,
       'UserID': userID,
@@ -183,6 +204,7 @@ class ModifierModel {
       'isUploaded': isUploaded,
       'CID': cid,
       'other_lang': otherLang,
+      'TaxId': taxId,
     };
   }
 
@@ -200,6 +222,7 @@ class ModifierModel {
     int? isUploaded,
     int? cid,
     String? otherLang,
+    int? taxId,
   }) {
     return ModifierModel(
       id: id ?? this.id,
@@ -211,6 +234,7 @@ class ModifierModel {
       isUploaded: isUploaded ?? this.isUploaded,
       cid: cid ?? this.cid,
       otherLang: otherLang ?? this.otherLang,
+      taxId: taxId ?? this.taxId,
     );
   }
 

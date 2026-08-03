@@ -34,6 +34,12 @@ int _safeToInt(dynamic value) {
   return 0;
 }
 
+int? _optionalPositiveInt(dynamic value) {
+  if (value == null) return null;
+  final parsed = _safeToInt(value);
+  return parsed > 0 ? parsed : null;
+}
+
 /// Product details model (matches new API structure)
 class ProductDetailsModel {
   final int id;
@@ -174,6 +180,9 @@ class ItemModel {
   final List<int> relatedModifiers;
   final String preparationtime;
 
+  /// Default taxmaster ID for this product (`TaxId`). Null if absent.
+  final int? taxId;
+
   const ItemModel({
     required this.id,
     required this.iname,
@@ -206,6 +215,7 @@ class ItemModel {
     required this.productdetails,
     required this.relatedModifiers,
     required this.preparationtime,
+    this.taxId,
   });
 
   /// Create from JSON
@@ -254,6 +264,7 @@ class ItemModel {
               .toList() ??
           [],
       preparationtime: _safeToString(json['preparationtime']),
+      taxId: _optionalPositiveInt(json['TaxId'] ?? json['tax_id'] ?? json['taxId']),
     );
   }
 
@@ -291,6 +302,7 @@ class ItemModel {
       'productdetails': productdetails.map((item) => item.toJson()).toList(),
       'related_modifiers': relatedModifiers,
       'preparationtime': preparationtime,
+      'TaxId': taxId,
     };
   }
 
@@ -373,6 +385,8 @@ class ItemModel {
     List<UnitPriceListModel>? unitPriceList,
     List<ProductDetailsModel>? productdetails,
     List<int>? relatedModifiers,
+    String? preparationtime,
+    int? taxId,
   }) {
     return ItemModel(
       id: id ?? this.id,
@@ -405,7 +419,8 @@ class ItemModel {
       unitPriceList: unitPriceList ?? this.unitPriceList,
       productdetails: productdetails ?? this.productdetails,
       relatedModifiers: relatedModifiers ?? this.relatedModifiers,
-      preparationtime: preparationtime,
+      preparationtime: preparationtime ?? this.preparationtime,
+      taxId: taxId ?? this.taxId,
     );
   }
 

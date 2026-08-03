@@ -834,7 +834,14 @@ class _CartScreenState extends State<CartScreen> {
     final itemCount = cartController.itemCount;
     final needsSync = cartController.needsPriceSync;
     final hasUnavailable = cartController.hasUnavailableItems;
-    final canCheckout = !needsSync && !hasUnavailable;
+    final taxProvider = context.watch<TaxProvider>();
+    final taxBreakdown = computeOrderTax(
+      settings: taxProvider.settings,
+      lines: taxableLinesFromCart(cartController.cartItems),
+    );
+    final taxBlocksCheckout =
+        taxProvider.shouldApplyTax && !taxBreakdown.isValid;
+    final canCheckout = !needsSync && !hasUnavailable && !taxBlocksCheckout;
 
     return Container(
       padding: EdgeInsets.all(Responsive.padding(context, 20)),
@@ -928,9 +935,9 @@ class _CartScreenState extends State<CartScreen> {
           Consumer<TaxProvider>(
             builder: (context, taxProvider, _) {
               final applyTax = taxProvider.shouldApplyTax;
-              final breakdown = computeTaxBreakdown(
+              final breakdown = computeOrderTax(
                 settings: taxProvider.settings,
-                grossTotal: total,
+                lines: taxableLinesFromCart(cartController.cartItems),
               );
 
               if (!applyTax) {
@@ -1001,42 +1008,55 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                     ],
                   ),
-                  for (final line in breakdown.lines) ...[
+                  if (!breakdown.isValid) ...[
                     SizedBox(height: Responsive.padding(context, 8)),
+                    Text(
+                      isEnglish
+                          ? (breakdown.validationError ??
+                              'Tax is missing for one or more items.')
+                          : 'الضريبة مفقودة لبعض العناصر.',
+                      style: taxLineStyle?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                  ] else ...[
+                    for (final line in breakdown.lines) ...[
+                      SizedBox(height: Responsive.padding(context, 8)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              line.isInclusive
+                                  ? '${line.taxName} (${formatCurrencyAmount(line.pretaxBase)})'
+                                  : line.taxName,
+                              style: taxLineStyle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            formatCurrencyAmount(line.amount),
+                            style: taxLineStyle,
+                          ),
+                        ],
+                      ),
+                    ],
+                    SizedBox(height: Responsive.padding(context, 12)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Text(
-                            line.isInclusive
-                                ? '${line.taxName} (${formatCurrencyAmount(line.pretaxBase)})'
-                                : line.taxName,
-                            style: taxLineStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        Text(
+                          isEnglish ? 'Net Payable' : 'الصافي المستحق',
+                          style: netLabelStyle,
                         ),
                         Text(
-                          formatCurrencyAmount(line.amount),
-                          style: taxLineStyle,
+                          formatCurrencyAmount(breakdown.netTotal),
+                          style: netAmountStyle,
                         ),
                       ],
                     ),
                   ],
-                  SizedBox(height: Responsive.padding(context, 12)),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        isEnglish ? 'Net Payable' : 'الصافي المستحق',
-                        style: netLabelStyle,
-                      ),
-                      Text(
-                        formatCurrencyAmount(breakdown.netTotal),
-                        style: netAmountStyle,
-                      ),
-                    ],
-                  ),
                 ],
               );
             },
@@ -1344,6 +1364,29 @@ class _CartScreenState extends State<CartScreen> {
   void _placeOrder(BuildContext context) async {
     final cartController = context.read<CartController>();
     final homeProvider = context.read<HomeProvider>();
+    final taxProvider = context.read<TaxProvider>();
+    if (taxProvider.shouldApplyTax) {
+      final taxBreakdown = computeOrderTax(
+        settings: taxProvider.settings,
+        lines: taxableLinesFromCart(cartController.cartItems),
+      );
+      if (!taxBreakdown.isValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              homeProvider.isEnglish
+                  ? (taxBreakdown.validationError ??
+                      'Tax is missing for one or more items. Please refresh the menu or remove those items.')
+                  : 'الضريبة مفقودة لبعض العناصر. يرجى تحديث القائمة أو إزالة تلك العناصر.',
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+    }
+
     if (cartController.needsPriceSync) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

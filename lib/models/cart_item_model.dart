@@ -10,6 +10,9 @@ class CartModifier {
   final bool isAvailable;
   final String? unavailableReason;
 
+  /// Taxmaster ID from the modifier (`TaxId`). Null if absent.
+  final int? taxId;
+
   const CartModifier({
     required this.id,
     required this.name,
@@ -17,6 +20,7 @@ class CartModifier {
     required this.quantity,
     this.isAvailable = true,
     this.unavailableReason,
+    this.taxId,
   });
 
   /// Calculate total price for this modifier
@@ -30,6 +34,7 @@ class CartModifier {
     int? quantity,
     bool? isAvailable,
     String? unavailableReason,
+    int? taxId,
   }) {
     return CartModifier(
       id: id ?? this.id,
@@ -38,6 +43,7 @@ class CartModifier {
       quantity: quantity ?? this.quantity,
       isAvailable: isAvailable ?? this.isAvailable,
       unavailableReason: unavailableReason ?? this.unavailableReason,
+      taxId: taxId ?? this.taxId,
     );
   }
 
@@ -52,7 +58,7 @@ class CartModifier {
 
   @override
   String toString() {
-    return 'CartModifier(id: $id, name: $name, price: $price, quantity: $quantity, isAvailable: $isAvailable)';
+    return 'CartModifier(id: $id, name: $name, price: $price, quantity: $quantity, taxId: $taxId, isAvailable: $isAvailable)';
   }
 }
 
@@ -81,6 +87,9 @@ class CartItemModel {
     this.unavailableReason,
     this.itemTotal = 0,
   });
+
+  /// Product taxmaster ID from the menu item.
+  int? get taxId => item.taxId;
 
   /// Calculate total price for this cart item (including modifiers)
 

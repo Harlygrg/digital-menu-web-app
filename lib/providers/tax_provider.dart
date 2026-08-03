@@ -9,6 +9,11 @@ class TaxProvider extends ChangeNotifier {
 
   TaxSettingsData? get settings => _settings;
 
+  /// Branch tax mode: `0` bill-wise, `1` item-wise (defaults to `0`).
+  int get taxmode => _settings?.taxmode ?? 0;
+
+  bool get isItemWise => _settings?.isItemWise ?? false;
+
   /// True when the API says tax is on and at least one tax line exists.
   bool get shouldApplyTax =>
       _settings != null &&

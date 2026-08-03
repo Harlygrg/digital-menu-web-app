@@ -190,6 +190,7 @@ class _AddToCartPopupState<T> extends State<AddToCartPopup<T>> {
                           : widget.addons[i].modifier),
                 'qty': _addonQuantities[i],
                 'price': widget.addons[i].price,
+                'taxId': widget.addons[i].taxId,
               },
         ],
         'note': _noteController.text.trim(),

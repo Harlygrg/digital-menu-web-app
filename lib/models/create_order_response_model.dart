@@ -77,6 +77,14 @@ class OrderDetailItem {
   final double total;
   final int itmType;
 
+  /// Item-wise tax fields (omit from JSON when null).
+  final int? taxId;
+  final double? taxAmnt;
+  final double? taxpercent;
+  final String? taxtype;
+  final String? taxname;
+  final int itmCancld;
+
   const OrderDetailItem({
     required this.slno,
     required this.itmId,
@@ -86,11 +94,17 @@ class OrderDetailItem {
     required this.rate,
     required this.total,
     required this.itmType,
+    this.taxId,
+    this.taxAmnt,
+    this.taxpercent,
+    this.taxtype,
+    this.taxname,
+    this.itmCancld = 0,
   });
 
   /// Convert to JSON
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{
       'slno': slno,
       'itmId': itmId,
       'itmremarks': itmremarks,
@@ -100,11 +114,20 @@ class OrderDetailItem {
       'total': total,
       'itmType': itmType,
     };
+    if (taxId != null) {
+      map['TaxId'] = taxId;
+      map['TaxAmnt'] = taxAmnt ?? 0;
+      map['taxpercent'] = taxpercent ?? 0;
+      map['taxtype'] = taxtype ?? '';
+      map['taxname'] = taxname ?? '';
+      map['ItmCancld'] = itmCancld;
+    }
+    return map;
   }
 
   @override
   String toString() {
-    return 'OrderDetailItem(slno: $slno, itmId: $itmId, qty: $qty, rate: $rate, total: $total, itmType: $itmType)';
+    return 'OrderDetailItem(slno: $slno, itmId: $itmId, qty: $qty, rate: $rate, total: $total, itmType: $itmType, taxId: $taxId)';
   }
 }
 
@@ -115,9 +138,11 @@ class CreateOrderRequestModel {
   final double servicecharge;
   final double taxamnt;
   final double nettotal;
+  final int taxmode;
   final String taxtype;
   final String taxname;
   final double taxpercent;
+  final bool omitHeaderTaxMeta;
   final int tableID;
   final String orderType;
   final int cid;
@@ -133,9 +158,11 @@ class CreateOrderRequestModel {
     required this.servicecharge,
     required this.taxamnt,
     required this.nettotal,
+    this.taxmode = 0,
     required this.taxtype,
     required this.taxname,
     required this.taxpercent,
+    this.omitHeaderTaxMeta = false,
     required this.tableID,
     required this.orderType,
     required this.cid,
@@ -148,15 +175,13 @@ class CreateOrderRequestModel {
 
   /// Convert to JSON
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{
       'grosstotal': grosstotal,
       'discount': discount,
       'servicecharge': servicecharge,
       'taxamnt': taxamnt,
       'nettotal': nettotal,
-      'taxtype': taxtype,
-      'taxname': taxname,
-      'taxpercent': taxpercent,
+      'taxmode': taxmode,
       'tableID': tableID,
       'OrderType': orderType,
       'cid': cid,
@@ -166,10 +191,16 @@ class CreateOrderRequestModel {
       'defaults_info': defaultsInfo,
       'no_of_guest': noOfGuest,
     };
+    if (!omitHeaderTaxMeta) {
+      map['taxtype'] = taxtype;
+      map['taxname'] = taxname;
+      map['taxpercent'] = taxpercent;
+    }
+    return map;
   }
 
   @override
   String toString() {
-    return 'CreateOrderRequestModel(grosstotal: $grosstotal, taxamnt: $taxamnt, nettotal: $nettotal, tableID: $tableID, orderType: $orderType, cid: $cid, orderDtls: ${orderDtls.length} items)';
+    return 'CreateOrderRequestModel(grosstotal: $grosstotal, taxamnt: $taxamnt, nettotal: $nettotal, taxmode: $taxmode, tableID: $tableID, orderType: $orderType, cid: $cid, orderDtls: ${orderDtls.length} items)';
   }
 }

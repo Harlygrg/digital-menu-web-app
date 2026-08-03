@@ -50,14 +50,30 @@ class OrderProvider extends ChangeNotifier {
       notifyListeners();
 
       // Build order details from cart items
+      final taxableInputs = taxableLinesFromCart(cartItems);
+      final taxBreakdown = computeOrderTax(
+        settings: taxSettings,
+        lines: taxableInputs,
+      );
+
+      if (!taxBreakdown.isValid) {
+        _errorMessage = taxBreakdown.validationError ??
+            'Unable to calculate tax for this order';
+        _isLoading = false;
+        notifyListeners();
+        return null;
+      }
+
       final orderDetails = <OrderDetailItem>[];
       int slno = 1;
-      double grossTotal = 0.0;
+      var lineTaxIndex = 0;
 
       for (final cartItem in cartItems) {
-        // Add main item entry
         final itemTotal = cartItem.unitPrice * cartItem.quantity;
-        grossTotal += itemTotal;
+        final itemLineTax = lineTaxIndex < taxBreakdown.lineTaxes.length
+            ? taxBreakdown.lineTaxes[lineTaxIndex]
+            : null;
+        lineTaxIndex++;
 
         orderDetails.add(
           OrderDetailItem(
@@ -69,14 +85,21 @@ class OrderProvider extends ChangeNotifier {
             rate: cartItem.unitPrice,
             total: itemTotal,
             itmType: 0, // 0 = product
+            taxId: itemLineTax?.taxId,
+            taxAmnt: itemLineTax?.taxAmnt,
+            taxpercent: itemLineTax?.taxpercent,
+            taxtype: itemLineTax?.taxtype,
+            taxname: itemLineTax?.taxname,
           ),
         );
 
-        // Add modifier entries if any
         for (final modifier in cartItem.modifiers) {
           if (modifier.quantity > 0) {
             final modifierTotal = modifier.totalPrice;
-            grossTotal += modifierTotal;
+            final modLineTax = lineTaxIndex < taxBreakdown.lineTaxes.length
+                ? taxBreakdown.lineTaxes[lineTaxIndex]
+                : null;
+            lineTaxIndex++;
 
             orderDetails.add(
               OrderDetailItem(
@@ -88,33 +111,32 @@ class OrderProvider extends ChangeNotifier {
                 rate: modifier.price,
                 total: modifierTotal,
                 itmType: 1, // 1 = modifier
+                taxId: modLineTax?.taxId,
+                taxAmnt: modLineTax?.taxAmnt,
+                taxpercent: modLineTax?.taxpercent,
+                taxtype: modLineTax?.taxtype,
+                taxname: modLineTax?.taxname,
               ),
             );
           }
         }
       }
 
-      final taxBreakdown = computeTaxBreakdown(
-        settings: taxSettings,
-        grossTotal: grossTotal,
-      );
-
-      final primaryTax = (taxSettings != null &&
-              taxSettings.taxEnabled &&
-              taxSettings.taxes.isNotEmpty)
-          ? taxSettings.taxes.first
-          : null;
+      final primaryTax = taxBreakdown.primaryTax;
+      final taxmode = taxSettings?.taxmode ?? 0;
 
       // Create order request model
       final requestModel = CreateOrderRequestModel(
-        grosstotal: grossTotal,
+        grosstotal: taxBreakdown.grossTotal,
         discount: 0,
         servicecharge: 0,
         taxamnt: taxBreakdown.totalTax,
         nettotal: taxBreakdown.netTotal,
+        taxmode: taxmode,
         taxtype: primaryTax?.taxType ?? '',
         taxname: primaryTax?.taxName ?? '',
         taxpercent: primaryTax?.taxPercentage ?? 0,
+        omitHeaderTaxMeta: taxBreakdown.omitHeaderTaxMeta,
         tableID: tableId,
         orderType: orderTypeId,
         cid: branchId,
